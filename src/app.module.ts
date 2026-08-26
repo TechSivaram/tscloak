@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { getDatabaseConfig } from './config/database.config';
 import { IdentityModule } from './identity/identity.module';
+import { AuthenticationModule } from './authentication/authentication.module';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
@@ -14,6 +16,10 @@ import { IdentityModule } from './identity/identity.module';
     TypeOrmModule.forRoot(getDatabaseConfig()),
 
     IdentityModule,
+
+    AuthenticationModule,
+
+    SessionsModule,
   ],
 })
 export class AppModule {}
