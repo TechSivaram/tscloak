@@ -18,7 +18,7 @@ export interface CreateUserInput {
 export class IdentityService {
   constructor(
     private readonly users: UserRepository,
-  ) {}
+  ) { }
 
   async createUser(input: CreateUserInput): Promise<User> {
     const existingUsername =
@@ -57,5 +57,11 @@ export class IdentityService {
     username: string,
   ): Promise<User | null> {
     return this.users.findByUsername(username);
+  }
+
+  async findById(
+    id: string,
+  ): Promise<User | null> {
+    return this.users.findById(id);
   }
 }

@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RouterModule } from '@nestjs/core';
 
 import { getDatabaseConfig } from './config/database.config';
-import { IdentityModule } from './identity/identity.module';
-import { AuthenticationModule } from './authentication/authentication.module';
-import { SessionsModule } from './sessions/sessions.module';
+
+import { OidcModule } from './oidc/oidc.module';
+import { ApiModule } from './api/api.module';
 
 @Module({
   imports: [
@@ -13,13 +14,13 @@ import { SessionsModule } from './sessions/sessions.module';
       isGlobal: true,
     }),
 
-    TypeOrmModule.forRoot(getDatabaseConfig()),
+    TypeOrmModule.forRoot(
+      getDatabaseConfig(),
+    ),
 
-    IdentityModule,
+    ApiModule,
 
-    AuthenticationModule,
-
-    SessionsModule,
+    OidcModule,
   ],
 })
 export class AppModule {}
