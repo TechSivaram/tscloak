@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ TsCloak
+# 🛡️ TSCloak
 
 ### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
 
@@ -19,7 +19,7 @@
 
 ## 📖 Overview
 
-**TsCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
+**TSCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
 
 It uses [`oidc-provider`](https://github.com/panva/node-oidc-provider) for standards-compliant OAuth 2.0 and OpenID Connect protocol handling while keeping application concerns such as identity, client management, persistence, and infrastructure cleanly separated.
 
