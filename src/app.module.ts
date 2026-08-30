@@ -7,9 +7,13 @@ import { getDatabaseConfig } from './config/database.config';
 
 import { OidcModule } from './oidc/oidc.module';
 import { ApiModule } from './api/api.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+
+    ScheduleModule.forRoot(),
+    
     ConfigModule.forRoot({
       isGlobal: true,
     }),

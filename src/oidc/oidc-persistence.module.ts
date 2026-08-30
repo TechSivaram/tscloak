@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Oidc } from './entities/oidc.entity';
 import { OidcRepository } from './repositories/oidc.repository';
 import { TypeOrmOidcRepository } from './repositories/typeorm-oidc.repository';
+import { OidcCleanupService } from './oidc-cleanup.service';
 
 @Module({
   imports: [
@@ -17,10 +18,12 @@ import { TypeOrmOidcRepository } from './repositories/typeorm-oidc.repository';
       provide: OidcRepository,
       useClass: TypeOrmOidcRepository,
     },
+
+    OidcCleanupService,
   ],
 
   exports: [
     OidcRepository,
   ],
 })
-export class OidcPersistenceModule {}
+export class OidcPersistenceModule { }
