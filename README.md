@@ -65,28 +65,18 @@ TSCloak supports a hosted consent page and can also be integrated with a client-
 
 During authorization, TSCloak evaluates the authenticated user session, the existing Grant, and the requested scopes. A consent interaction is shown when user approval is required.
 
-```text
-Authorization Request
-        │
-        ▼
-Existing Session?
-        │
-   ┌────┴────┐
-   │         │
-  No        Yes
-   │         │
-Login UI    Check Grant
-             │
-             ▼
-      Missing permissions?
-          │         │
-         Yes        No
-          │         │
-      Consent UI   Continue
-          │         │
-          └────┬────┘
-               ▼
-      Authorization Code
+```mermaid
+flowchart TD
+    N0["Authorization Request"] --> N1
+    N1["Existing Session?"] --> N2
+    N2["┴"] --> N3
+    N3["No        Yes"] --> N4
+    N4["Login UI    Check Grant"] --> N5
+    N5["Missing permissions?"] --> N6
+    N6["Yes        No"] --> N7
+    N7["Consent UI   Continue"] --> N8
+    N8["┬"] --> N9
+    N9["Authorization Code"]
 ```
 
 <div align="center">
@@ -131,14 +121,11 @@ For normal scopes, when a client requests permissions that have not yet been app
 
 For example:
 
-```text
-Existing Grant:
-openid profile email
-
-New Request:
-openid profile email api.read
-                     ↑
-               Additional scope
+```mermaid
+flowchart LR
+    A["Existing Grant<br/>openid profile email"] --> B{New scope requested?}
+    C["New Request<br/>openid profile email api.read"] --> B
+    B -->|api.read missing| D["Show Consent UI"]
 ```
 
 ### `offline_access` and Refresh Tokens
@@ -171,88 +158,32 @@ This allows TSCloak to work both as a standalone Identity Provider with built-in
 
 Hosted UI is the default behavior.
 
-```text
-┌──────────────────────┐
-│  Client Application  │
-└──────────┬───────────┘
-           │
-           │ GET /auth
-           ▼
-┌──────────────────────┐
-│       TSCloak        │
-│ Authorization Server │
-└──────────┬───────────┘
-           │
-           ▼
-    Interaction Required?
-           │
-     ┌─────┴─────┐
-     │           │
-   Login       Consent
-     │           │
-     ▼           ▼
-┌─────────┐  ┌───────────┐
-│ Hosted  │  │  Hosted   │
-│ Login   │  │  Consent  │
-│   UI    │  │    UI     │
-└────┬────┘  └─────┬─────┘
-     │             │
-     └──────┬──────┘
-            ▼
-   interactionFinished()
-            │
-            ▼
- Authorization Response
-            │
-            ▼
-     Client Callback
+```mermaid
+flowchart TD
+    A["Client Application"] -->|GET /auth| B["TSCloak Authorization Server"]
+    B --> C{Interaction Required?}
+    C -->|Login| D["Hosted Login UI"]
+    C -->|Consent| E["Hosted Consent UI"]
+    D --> F["interactionFinished"]
+    E --> F
+    F --> G["Authorization Response"]
+    G --> H["Client Callback"]
 ```
-
-In this mode, TSCloak controls the complete authentication and consent experience.
 
 ### Custom Interaction UI Flow
 
 Organizations may already have their own Login UI, branding, or consent experience. TSCloak allows the interaction experience to be delegated to an external application.
 
-```text
-┌──────────────────────┐
-│  Client Application  │
-└──────────┬───────────┘
-           │
-           │ GET /auth
-           ▼
-┌──────────────────────┐
-│       TSCloak        │
-│ Authorization Server │
-└──────────┬───────────┘
-           │
-           │ Interaction Required
-           ▼
-┌──────────────────────┐
-│ Interaction Redirect │
-└──────────┬───────────┘
-           │
-           │ interaction_uid
-           │ prompt=login | consent
-           ▼
-┌──────────────────────┐
-│   Custom UI App      │
-│                      │
-│  Login / Consent UI  │
-└──────────┬───────────┘
-           │
-           │ User completes interaction
-           ▼
-┌──────────────────────┐
-│       TSCloak        │
-│ interactionFinished()│
-└──────────┬───────────┘
-           │
-           ▼
- Authorization Response
-           │
-           ▼
-    Client Callback
+```mermaid
+flowchart TD
+    A["Client Application"] -->|GET /auth| B["TSCloak Authorization Server"]
+    B -->|Interaction Required| C["Create OIDC Interaction"]
+    C -->|interaction_uid + prompt| D["Redirect to Custom UI"]
+    D --> E["Custom Login / Consent UI"]
+    E -->|User completes interaction| F["Submit Interaction Result"]
+    F --> G["interactionFinished"]
+    G --> H["Authorization Response"]
+    H --> I["Client Callback"]
 ```
 
 ### Interaction URL Configuration
@@ -290,29 +221,21 @@ http://localhost:4200/login?interaction_uid=<uid>&prompt=consent
 
 The `interaction_uid` identifies the current OIDC interaction.
 
-The Custom UI must preserve this value throughout the Login or Consent flow so that the interaction can be completed against the correct authorization request.
+```mermaid
+sequenceDiagram
+    participant C as Client Application
+    participant T as TSCloak
+    participant U as Custom UI
 
-Conceptually:
-
-```text
-Authorization Request
-       │
-       ▼
-OIDC Interaction Created
-       │
-       ▼
-interaction_uid = abc123
-       │
-       ▼
-Redirect Custom UI
-?interaction_uid=abc123
-       │
-       ▼
-User Login / Consent
-       │
-       ▼
-Complete Interaction abc123
+    C->>T: Authorization Request
+    T->>T: Create OIDC Interaction
+    T-->>U: Redirect with interaction_uid
+    U->>U: User Login / Consent
+    U->>T: Complete interaction using interaction_uid
+    T-->>C: Authorization Response
 ```
+
+The Custom UI must preserve this value throughout the Login or Consent flow so that the interaction can be completed against the correct authorization request.
 
 ### Prompt-Aware Custom UI
 
@@ -352,44 +275,21 @@ This architecture allows organizations to fully customize branding and user expe
 
 ## 🏗️ Architecture
 
-```text
-                              ┌─────────────────────┐
-                              │     Client App      │
-                              │   SPA / Web / API   │
-                              └──────────┬──────────┘
-                                         │
-                                    OAuth / OIDC
-                                         │
-                                         ▼
-                        ┌────────────────────────────────┐
-                        │            TSCloak             │
-                        │          NestJS Host           │
-                        └───────────────┬────────────────┘
-                                        │
-            ┌───────────────────────────┼───────────────────────────┐
-            │                           │                           │
-            ▼                           ▼                           ▼
-    ┌───────────────┐           ┌───────────────┐          ┌───────────────┐
-    │    Clients    │           │   Identity    │          │     OIDC      │
-    │    Module     │           │    Module     │          │    Module     │
-    └───────┬───────┘           └───────┬───────┘          └───────┬───────┘
-            │                           │                           │
-            └───────────────────────────┼───────────────────────────┘
-                                        │
-                                        ▼
-                           ┌────────────────────────┐
-                           │ Repository Abstractions │
-                           └────────────┬───────────┘
-                                        │
-                                        ▼
-                           ┌────────────────────────┐
-                           │        TypeORM         │
-                           └────────────┬───────────┘
-                                        │
-                                        ▼
-                           ┌────────────────────────┐
-                           │       SQLite DB        │
-                           └────────────────────────┘
+```mermaid
+flowchart TD
+    N0["Client App"] --> N1
+    N1["SPA / Web / API"] --> N2
+    N2["┬"] --> N3
+    N3["OAuth / OIDC"] --> N4
+    N4["TSCloak"] --> N5
+    N5["NestJS Host"] --> N6
+    N6["┼"] --> N7
+    N7["Clients                  Identity                   OIDC"] --> N8
+    N8["Module                    Module                   Module"] --> N9
+    N9["┬           ┬          ┬"] --> N10
+    N10["Repository Abstractions"] --> N11
+    N11["TypeORM"] --> N12
+    N12["SQLite DB"]
 ```
 
 ---
@@ -410,32 +310,22 @@ This architecture allows organizations to fully customize branding and user expe
 
 ## 📁 Project Structure
 
-```text
-src/
-│
-├── clients/
-│   ├── entities/
-│   ├── repositories/
-│   └── services/
-│
-├── identity/
-│   ├── entities/
-│   └── services/
-│
-├── sessions/
-│   ├── entities/
-│   └── services/
-│
-├── oidc/
-│   ├── adapters/
-│   ├── entities/
-│   ├── repositories/
-│   ├── oidc-options.service.ts
-│   ├── oidc-cleanup.service.ts
-│   └── oidc.module.ts
-│
-├── app.module.ts
-└── main.ts
+```mermaid
+flowchart TD
+    N0["src/"] --> N1
+    N1["clients/"] --> N2
+    N2["entities/"] --> N3
+    N3["repositories/"] --> N4
+    N4["services/"] --> N5
+    N5["identity/"] --> N6
+    N6["sessions/"] --> N7
+    N7["oidc/"] --> N8
+    N8["adapters/"] --> N9
+    N9["oidc-options.service.ts"] --> N10
+    N10["oidc-cleanup.service.ts"] --> N11
+    N11["oidc.module.ts"] --> N12
+    N12["app.module.ts"] --> N13
+    N13["main.ts"]
 ```
 
 ### Module Responsibilities
@@ -453,28 +343,18 @@ src/
 
 TSCloak currently supports the **Authorization Code Flow with PKCE**.
 
-```text
-┌──────────────┐                                  ┌──────────────────┐
-│              │                                  │                  │
-│  Client App  │                                  │     TSCloak      │
-│              │                                  │                  │
-└──────┬───────┘                                  └────────┬─────────┘
-       │                                                   │
-       │  1. Authorization Request + PKCE Challenge        │
-       │──────────────────────────────────────────────────>│
-       │                                                   │
-       │                                                   │ Authenticate
-       │                                                   │ User
-       │                                                   │
-       │  2. Redirect with Authorization Code              │
-       │<──────────────────────────────────────────────────│
-       │                                                   │
-       │  3. Exchange Code + PKCE Verifier                 │
-       │──────────────────────────────────────────────────>│
-       │                                                   │
-       │  4. Tokens                                        │
-       │<──────────────────────────────────────────────────│
-       │                                                   │
+```mermaid
+flowchart TD
+    N0["Client App                                         TSCloak"] --> N1
+    N1["┬                                  ┬"] --> N2
+    N2["1. Authorization Request + PKCE Challenge"] --> N3
+    N3[">"] --> N4
+    N4["Authenticate"] --> N5
+    N5["User"] --> N6
+    N6["2. Redirect with Authorization Code"] --> N7
+    N7["<"] --> N8
+    N8["3. Exchange Code + PKCE Verifier"] --> N9
+    N9["4. Tokens"]
 ```
 
 ### Token Response
@@ -643,45 +523,30 @@ Example response:
 
 TSCloak supports refresh token rotation through `oidc-provider`.
 
-```text
-Old Refresh Token
-       │
-       ▼
-POST /token
-grant_type=refresh_token
-       │
-       ▼
-New Access Token
-+
-New Refresh Token
-       │
-       ▼
-Old Refresh Token Invalidated
+```mermaid
+flowchart TD
+    N0["Old Refresh Token"] --> N1
+    N1["POST /token"] --> N2
+    N2["grant_type=refresh_token"] --> N3
+    N3["New Access Token"] --> N4
+    N4["+"] --> N5
+    N5["New Refresh Token"] --> N6
+    N6["Old Refresh Token Invalidated"]
 ```
 
 > ⚠️ **Important:** After refresh token rotation, store the newly returned refresh token. Reusing the old refresh token should fail.
 
 ### Typical Token Lifecycle
 
-```text
-User Login
-    │
-    ▼
-Authorization Code
-    │
-    ▼
-Access Token + Refresh Token
-    │
-    ├──► Call /me using Access Token
-    │
-    ▼
-Access Token Expires
-    │
-    ▼
-Use Refresh Token
-    │
-    ▼
-New Access Token + New Refresh Token
+```mermaid
+flowchart TD
+    N0["User Login"] --> N1
+    N1["Authorization Code"] --> N2
+    N2["Access Token + Refresh Token"] --> N3
+    N3["► Call /me using Access Token"] --> N4
+    N4["Access Token Expires"] --> N5
+    N5["Use Refresh Token"] --> N6
+    N6["New Access Token + New Refresh Token"]
 ```
 
 ---
@@ -710,20 +575,13 @@ Clients are resolved dynamically when an authorization request is processed.
 
 TSCloak does **not preload all clients during application startup**.
 
-```text
-Authorization Request
-        │
-        ▼
-    client_id
-        │
-        ▼
-Client Repository
-        │
-        ▼
-Database
-        │
-        ▼
-OIDC Client Configuration
+```mermaid
+flowchart TD
+    N0["Authorization Request"] --> N1
+    N1["client_id"] --> N2
+    N2["Client Repository"] --> N3
+    N3["Database"] --> N4
+    N4["OIDC Client Configuration"]
 ```
 
 This approach allows client configuration to be managed independently of the OIDC provider lifecycle.
@@ -877,23 +735,15 @@ PKCE should be used with the Authorization Code Flow.
 
 Dynamically registered clients are persisted through the existing client repository and TypeORM infrastructure:
 
-```text
-POST /reg
-    │
-    ▼
-oidc-provider
-    │
-    ▼
-OidcClientAdapter.upsert()
-    │
-    ▼
-ClientRepository
-    │
-    ▼
-TypeORM
-    │
-    ▼
-SQLite
+```mermaid
+flowchart LR
+    A["Dynamic Client Registration Request"]
+        --> B["OIDC Registration Endpoint"]
+    B --> C["oidc-provider"]
+    C --> D["OidcClientAdapter"]
+    D --> E["Client Repository"]
+    E --> F["TypeORM"]
+    F --> G[("Database")]
 ```
 
 This means dynamically registered clients survive application restarts.
@@ -906,30 +756,14 @@ This means dynamically registered clients survive application restarts.
 
 OIDC runtime objects are persisted in the database rather than memory.
 
-```text
-┌─────────────────┐
-│  oidc-provider  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   OidcAdapter   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ OidcRepository  │
-└────────┬────────┘
-         │
-         ▼
-┌──────────────────────┐
-│ TypeOrmOidcRepository│
-└───────────┬──────────┘
-            │
-            ▼
-┌─────────────────┐
-│    Database     │
-└─────────────────┘
+```mermaid
+flowchart TD
+    N0["oidc-provider"] --> N1
+    N1["┬"] --> N2
+    N2["OidcAdapter"] --> N3
+    N3["OidcRepository"] --> N4
+    N4["TypeOrmOidcRepository"] --> N5
+    N5["Database"]
 ```
 
 This enables OIDC state to survive application restarts.
@@ -952,27 +786,16 @@ The persistence layer supports OIDC models such as:
 
 The OIDC adapter is isolated from database-specific implementations.
 
-```text
-                   ┌─────────────────┐
-                   │   OidcAdapter   │
-                   └────────┬────────┘
-                            │
-                            ▼
-                   ┌─────────────────┐
-                   │ OidcRepository  │
-                   └────────┬────────┘
-                            │
-             ┌──────────────┴──────────────┐
-             │                             │
-             ▼                             ▼
-  ┌─────────────────────┐       ┌─────────────────────┐
-  │ TypeORM Repository  │       │ Future Repository   │
-  │                     │       │                     │
-  └──────────┬──────────┘       └──────────┬──────────┘
-             │                             │
-             ▼                             ▼
-          SQLite                      PostgreSQL
-                                    Redis / Others
+```mermaid
+flowchart TD
+    N0["OidcAdapter"] --> N1
+    N1["┬"] --> N2
+    N2["OidcRepository"] --> N3
+    N3["┴"] --> N4
+    N4["TypeORM Repository          Future Repository"] --> N5
+    N5["┬       ┬"] --> N6
+    N6["SQLite                      PostgreSQL"] --> N7
+    N7["Redis / Others"]
 ```
 
 This allows persistence implementations to evolve without changing OIDC protocol integration.
@@ -987,18 +810,13 @@ OIDC runtime objects have different lifetimes. TSCloak handles expired records u
 
 When a record is read:
 
-```text
-Record Requested
-       │
-       ▼
-Check Expiration
-       │
-   ┌───┴────┐
-   │        │
-Expired    Valid
-   │        │
-   ▼        ▼
-Delete    Return
+```mermaid
+flowchart TD
+    N0["Record Requested"] --> N1
+    N1["Check Expiration"] --> N2
+    N2["┴"] --> N3
+    N3["Expired    Valid"] --> N4
+    N4["Delete    Return"]
 ```
 
 Expired records are removed when encountered.
@@ -1007,19 +825,13 @@ Expired records are removed when encountered.
 
 A scheduled background job periodically removes expired records.
 
-```text
-┌──────────────────────┐
-│ OIDC Cleanup Service │
-└──────────┬───────────┘
-           │
-           ▼
-     Scheduled Job
-           │
-           ▼
-   Find Expired Records
-           │
-           ▼
-     Delete Records
+```mermaid
+flowchart TD
+    N0["OIDC Cleanup Service"] --> N1
+    N1["┬"] --> N2
+    N2["Scheduled Job"] --> N3
+    N3["Find Expired Records"] --> N4
+    N4["Delete Records"]
 ```
 
 An index on `expiresAt` improves cleanup query performance.
@@ -1169,17 +981,12 @@ HTTP 200 OK
 
 After revocation, attempting to use the revoked refresh token to obtain new access tokens should fail.
 
-```text
-Refresh Token
-      │
-      ▼
-POST /token/revocation
-      │
-      ▼
-Token Invalidated
-      │
-      ▼
-Cannot Refresh Tokens
+```mermaid
+flowchart TD
+    N0["Refresh Token"] --> N1
+    N1["POST /token/revocation"] --> N2
+    N2["Token Invalidated"] --> N3
+    N3["Cannot Refresh Tokens"]
 ```
 
 ---
@@ -1194,19 +1001,15 @@ POST /token/introspection
 
 A resource API can submit a token to the endpoint:
 
-```text
-Resource API
-     │
-     │ Token Introspection Request
-     ▼
-TSCloak
-     │
-     ├── Check token validity
-     ├── Check expiration
-     ├── Check token state
-     │
-     ▼
-Return token metadata
+```mermaid
+flowchart TD
+    N0["Resource API"] --> N1
+    N1["Token Introspection Request"] --> N2
+    N2["TSCloak"] --> N3
+    N3["Check token validity"] --> N4
+    N4["Check expiration"] --> N5
+    N5["Check token state"] --> N6
+    N6["Return token metadata"]
 ```
 
 Example response for an active token:
