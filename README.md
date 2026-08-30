@@ -42,6 +42,20 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ---
 
+## 🖥️ Login Experience
+
+TsCloak provides an authentication interaction page for users to securely sign in before authorization is completed.
+
+<div align="center">
+
+![TsCloak Login Screen](docs/images/tscloak-login.png)
+
+*TsCloak authentication interaction page*
+
+</div>
+
+---
+
 ## 🏗️ Architecture
 
 ```text
