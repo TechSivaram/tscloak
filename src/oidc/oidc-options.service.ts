@@ -47,6 +47,14 @@ export class OidcOptionsService
          */
         clients: [],
 
+        extraClientMetadata: {
+          properties: [
+            'interaction_mode',
+            'interaction_login_url',
+            'interaction_consent_url',
+          ],
+        },
+
         /**
          * ACCOUNT LOOKUP
          */

@@ -1,4 +1,5 @@
 import { Client } from '../../../clients/entities/client.entity';
+import { InteractionMode } from '../../../clients/enums/interaction-mode.enum';
 import { ClientRepository } from '../../../clients/repositories/client.repository';
 
 export class OidcClientAdapter {
@@ -83,6 +84,24 @@ export class OidcClientAdapter {
         ? payload.token_endpoint_auth_method
         : 'none';
 
+    /**
+     * TSCloak-specific interaction configuration
+     */
+    client.interactionMode =
+      payload.interaction_mode === InteractionMode.EXTERNAL
+        ? InteractionMode.EXTERNAL
+        : InteractionMode.HOSTED;
+
+    client.interactionLoginUrl =
+      typeof payload.interaction_login_url === 'string'
+        ? payload.interaction_login_url
+        : null;
+
+    client.interactionConsentUrl =
+      typeof payload.interaction_consent_url === 'string'
+        ? payload.interaction_consent_url
+        : null;
+
     await this.clientRepository.save(client);
   }
 
@@ -128,6 +147,25 @@ export class OidcClientAdapter {
 
       token_endpoint_auth_method:
         client.tokenEndpointAuthMethod,
+
+      /**
+       * TSCloak-specific metadata
+       */
+      interaction_mode: client.interactionMode,
+
+      ...(client.interactionLoginUrl
+        ? {
+            interaction_login_url:
+              client.interactionLoginUrl,
+          }
+        : {}),
+
+      ...(client.interactionConsentUrl
+        ? {
+            interaction_consent_url:
+              client.interactionConsentUrl,
+          }
+        : {}),
     };
   }
 }

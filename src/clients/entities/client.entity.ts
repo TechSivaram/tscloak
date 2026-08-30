@@ -44,17 +44,38 @@ export class Client {
   })
   tokenEndpointAuthMethod: string;
 
+  /**
+   * Determines where OIDC interactions are rendered.
+   *
+   * HOSTED   - TSCloak hosted Login and Consent pages
+   * EXTERNAL - Client-provided external interaction pages
+   */
   @Column({
     type: 'varchar',
     default: InteractionMode.HOSTED,
   })
   interactionMode: InteractionMode;
 
+  /**
+   * External login page URL.
+   * Required when interactionMode is EXTERNAL.
+   */
   @Column({
     type: 'varchar',
     nullable: true,
   })
   interactionLoginUrl: string | null;
+
+  /**
+   * External consent page URL.
+   * Required when interactionMode is EXTERNAL and
+   * a consent interaction is required.
+   */
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  interactionConsentUrl: string | null;
 
   @Column({
     default: true,

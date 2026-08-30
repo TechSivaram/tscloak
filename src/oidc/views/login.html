@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Sign in - TSCloak</title>
 
@@ -136,24 +134,14 @@
 
     {{ERROR}}
 
-    <form
-      method="POST"
-      action="/interaction/{{UID}}"
-    >
+    <form method="POST" action="/interaction/{{UID}}/login">
 
       <div class="form-group">
         <label for="username">
           Username
         </label>
 
-        <input
-          id="username"
-          name="username"
-          type="text"
-          autocomplete="username"
-          required
-          autofocus
-        />
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus />
       </div>
 
       <div class="form-group">
@@ -161,13 +149,7 @@
           Password
         </label>
 
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autocomplete="current-password"
-          required
-        />
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
       </div>
 
       <button type="submit">
@@ -179,4 +161,5 @@
   </div>
 
 </body>
+
 </html>
