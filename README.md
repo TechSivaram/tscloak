@@ -1,98 +1,558 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<div align="center">
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# 🛡️ TsCloak
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
 
-## Description
+[![NestJS](https://img.shields.io/badge/NestJS-10+-E0234E?logo=nestjs)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![OIDC](https://img.shields.io/badge/OpenID-Connect-F78C40?logo=openid)](https://openid.net/connect/)
+[![OAuth 2.0](https://img.shields.io/badge/OAuth-2.0-3C3C3D)](https://oauth.net/2/)
+[![TypeORM](https://img.shields.io/badge/TypeORM-ORM-FE0803)](https://typeorm.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**Protocol-driven. Modular. Persistent. Extensible.**
 
-## Project setup
+</div>
 
-```bash
-$ npm install
+---
+
+## 📖 Overview
+
+**TsCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
+
+It uses [`oidc-provider`](https://github.com/panva/node-oidc-provider) for standards-compliant OAuth 2.0 and OpenID Connect protocol handling while keeping application concerns such as identity, client management, persistence, and infrastructure cleanly separated.
+
+The goal is to provide a maintainable architecture for building an authorization server without tightly coupling business logic to protocol or database implementations.
+
+### ✨ Highlights
+
+- 🔐 OAuth 2.0 Authorization Code Flow
+- 🪪 OpenID Connect support
+- 🔑 PKCE
+- 🎫 Access Tokens and ID Tokens
+- ♻️ Refresh Tokens with rotation
+- 📴 Offline access
+- 👤 UserInfo endpoint
+- ⚡ Dynamic client resolution
+- 💾 Persistent OIDC runtime state
+- 🔄 State survives application restarts
+- 🧹 Automatic expiration cleanup
+- 🗄️ Repository-based persistence abstraction
+
+---
+
+## 🏗️ Architecture
+
+```text
+                              ┌─────────────────────┐
+                              │     Client App      │
+                              │   SPA / Web / API   │
+                              └──────────┬──────────┘
+                                         │
+                                    OAuth / OIDC
+                                         │
+                                         ▼
+                        ┌────────────────────────────────┐
+                        │            TsCloak             │
+                        │          NestJS Host           │
+                        └───────────────┬────────────────┘
+                                        │
+            ┌───────────────────────────┼───────────────────────────┐
+            │                           │                           │
+            ▼                           ▼                           ▼
+    ┌───────────────┐           ┌───────────────┐          ┌───────────────┐
+    │    Clients    │           │   Identity    │          │     OIDC      │
+    │    Module     │           │    Module     │          │    Module     │
+    └───────┬───────┘           └───────┬───────┘          └───────┬───────┘
+            │                           │                           │
+            └───────────────────────────┼───────────────────────────┘
+                                        │
+                                        ▼
+                           ┌────────────────────────┐
+                           │ Repository Abstractions │
+                           └────────────┬───────────┘
+                                        │
+                                        ▼
+                           ┌────────────────────────┐
+                           │        TypeORM         │
+                           └────────────┬───────────┘
+                                        │
+                                        ▼
+                           ┌────────────────────────┐
+                           │       SQLite DB        │
+                           └────────────────────────┘
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 🧩 Technology Stack
 
-# watch mode
-$ npm run start:dev
+| Technology | Purpose |
+|---|---|
+| **NestJS** | Application framework |
+| **TypeScript** | Programming language |
+| **oidc-provider** | OAuth 2.0 & OpenID Connect protocol engine |
+| **nest-oidc-provider** | NestJS integration |
+| **TypeORM** | Persistence abstraction |
+| **SQLite** | Current database implementation |
+| **better-sqlite3** | SQLite driver |
 
-# production mode
-$ npm run start:prod
+---
+
+## 📁 Project Structure
+
+```text
+src/
+│
+├── clients/
+│   ├── entities/
+│   ├── repositories/
+│   └── services/
+│
+├── identity/
+│   ├── entities/
+│   └── services/
+│
+├── sessions/
+│   ├── entities/
+│   └── services/
+│
+├── oidc/
+│   ├── adapters/
+│   ├── entities/
+│   ├── repositories/
+│   ├── oidc-options.service.ts
+│   ├── oidc-cleanup.service.ts
+│   └── oidc.module.ts
+│
+├── app.module.ts
+└── main.ts
 ```
 
-## Run tests
+### Module Responsibilities
 
-```bash
-# unit tests
-$ npm run test
+| Module | Responsibility |
+|---|---|
+| **Clients** | Client registration and lookup |
+| **Identity** | User identity and account claims |
+| **Sessions** | Application session management |
+| **OIDC** | Protocol configuration and OIDC integration |
 
-# e2e tests
-$ npm run test:e2e
+---
 
-# test coverage
-$ npm run test:cov
+## 🔐 Authentication Flow
+
+TsCloak currently supports the **Authorization Code Flow with PKCE**.
+
+```text
+┌──────────────┐                                  ┌──────────────────┐
+│              │                                  │                  │
+│  Client App  │                                  │     TsCloak      │
+│              │                                  │                  │
+└──────┬───────┘                                  └────────┬─────────┘
+       │                                                   │
+       │  1. Authorization Request + PKCE Challenge        │
+       │──────────────────────────────────────────────────>│
+       │                                                   │
+       │                                                   │ Authenticate
+       │                                                   │ User
+       │                                                   │
+       │  2. Redirect with Authorization Code              │
+       │<──────────────────────────────────────────────────│
+       │                                                   │
+       │  3. Exchange Code + PKCE Verifier                 │
+       │──────────────────────────────────────────────────>│
+       │                                                   │
+       │  4. Tokens                                        │
+       │<──────────────────────────────────────────────────│
+       │                                                   │
 ```
 
-## Deployment
+### Token Response
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```json
+{
+  "access_token": "...",
+  "id_token": "...",
+  "refresh_token": "...",
+  "expires_in": 3600,
+  "scope": "openid profile email offline_access",
+  "token_type": "Bearer"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🎯 Supported Scopes
 
-Check out a few resources that may come in handy when working with NestJS:
+| Scope | Description |
+|---|---|
+| `openid` | Enables OpenID Connect |
+| `profile` | Requests user profile information |
+| `email` | Requests email claims |
+| `offline_access` | Enables refresh token issuance |
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Example:
 
-## Support
+```text
+scope=openid profile email offline_access
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 🎫 Token Types
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Access Token
 
-## License
+Used to access protected resources.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### ID Token
+
+Represents the authenticated user and contains OpenID Connect claims.
+
+Example:
+
+```json
+{
+  "sub": "user-id",
+  "aud": "client-id",
+  "iss": "http://localhost:3000"
+}
+```
+
+### Refresh Token
+
+Allows clients to obtain new access tokens without requiring the user to authenticate again.
+
+TsCloak supports refresh token rotation through the underlying OIDC provider.
+
+> ⚠️ A rotated refresh token should not be reused.
+
+---
+
+## 👤 UserInfo Endpoint
+
+User identity claims can be retrieved using the UserInfo endpoint with a valid access token.
+
+Example response:
+
+```json
+{
+  "sub": "user-id",
+  "name": "username",
+  "preferred_username": "username",
+  "email": "user@example.com",
+  "email_verified": true
+}
+```
+
+---
+
+## ⚡ Dynamic Client Resolution
+
+Clients are resolved dynamically when an authorization request is processed.
+
+TsCloak does **not preload all clients during application startup**.
+
+```text
+Authorization Request
+        │
+        ▼
+    client_id
+        │
+        ▼
+Client Repository
+        │
+        ▼
+Database
+        │
+        ▼
+OIDC Client Configuration
+```
+
+This approach allows client configuration to be managed independently of the OIDC provider lifecycle.
+
+---
+
+## 💾 Persistent OIDC Storage
+
+OIDC runtime objects are persisted in the database rather than memory.
+
+```text
+┌─────────────────┐
+│  oidc-provider  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   OidcAdapter   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ OidcRepository  │
+└────────┬────────┘
+         │
+         ▼
+┌──────────────────────┐
+│ TypeOrmOidcRepository│
+└───────────┬──────────┘
+            │
+            ▼
+┌─────────────────┐
+│    Database     │
+└─────────────────┘
+```
+
+This enables OIDC state to survive application restarts.
+
+### Persisted Runtime Objects
+
+The persistence layer supports OIDC models such as:
+
+- AuthorizationCode
+- AccessToken
+- RefreshToken
+- Session
+- Grant
+- DeviceCode
+- BackchannelAuthenticationRequest
+
+---
+
+## 🗄️ Storage Architecture
+
+The OIDC adapter is isolated from database-specific implementations.
+
+```text
+                   ┌─────────────────┐
+                   │   OidcAdapter   │
+                   └────────┬────────┘
+                            │
+                            ▼
+                   ┌─────────────────┐
+                   │ OidcRepository  │
+                   └────────┬────────┘
+                            │
+             ┌──────────────┴──────────────┐
+             │                             │
+             ▼                             ▼
+  ┌─────────────────────┐       ┌─────────────────────┐
+  │ TypeORM Repository  │       │ Future Repository   │
+  │                     │       │                     │
+  └──────────┬──────────┘       └──────────┬──────────┘
+             │                             │
+             ▼                             ▼
+          SQLite                      PostgreSQL
+                                    Redis / Others
+```
+
+This allows persistence implementations to evolve without changing OIDC protocol integration.
+
+---
+
+## ⏳ Expiration Handling
+
+OIDC runtime objects have different lifetimes. TsCloak handles expired records using two complementary strategies.
+
+### 1. Lazy Cleanup
+
+When a record is read:
+
+```text
+Record Requested
+       │
+       ▼
+Check Expiration
+       │
+   ┌───┴────┐
+   │        │
+Expired    Valid
+   │        │
+   ▼        ▼
+Delete    Return
+```
+
+Expired records are removed when encountered.
+
+### 2. Background Cleanup
+
+A scheduled background job periodically removes expired records.
+
+```text
+┌──────────────────────┐
+│ OIDC Cleanup Service │
+└──────────┬───────────┘
+           │
+           ▼
+     Scheduled Job
+           │
+           ▼
+   Find Expired Records
+           │
+           ▼
+     Delete Records
+```
+
+An index on `expiresAt` improves cleanup query performance.
+
+---
+
+## 🗃️ OIDC Storage Model
+
+OIDC runtime records are stored in a common persistence model.
+
+| Column | Description |
+|---|---|
+| `id` | OIDC record identifier |
+| `model` | OIDC model type |
+| `payload` | Serialized OIDC payload |
+| `expiresAt` | Record expiration timestamp |
+| `grantId` | Associated grant identifier |
+| `uid` | OIDC UID lookup identifier |
+| `userCode` | Device flow user code |
+| `createdAt` | Record creation timestamp |
+| `updatedAt` | Record update timestamp |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js
+- npm
+- Git
+
+### Installation
+
+```bash
+git clone <repository-url>
+cd tscloak
+npm install
+```
+
+### Run in Development
+
+```bash
+npm run start:dev
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+### Run in Production
+
+```bash
+npm run start:prod
+```
+
+---
+
+## 🧪 Example Authorization Request
+
+```text
+http://localhost:3000/auth?
+client_id=YOUR_CLIENT_ID
+&redirect_uri=http://localhost:4200/callback
+&response_type=code
+&scope=openid profile email offline_access
+&prompt=consent
+&state=test123
+&code_challenge=CODE_CHALLENGE
+&code_challenge_method=S256
+```
+
+---
+
+## 🔄 Example Token Request
+
+```http
+POST /token
+Content-Type: application/x-www-form-urlencoded
+```
+
+Request body:
+
+```text
+grant_type=authorization_code
+&code=AUTHORIZATION_CODE
+&redirect_uri=http://localhost:4200/callback
+&client_id=YOUR_CLIENT_ID
+&code_verifier=CODE_VERIFIER
+```
+
+---
+
+## 🎯 Design Principles
+
+TsCloak is designed around the following principles:
+
+- **Separation of concerns** — Protocol, identity, clients, and persistence remain independent.
+- **Repository abstraction** — Infrastructure is isolated behind application-level contracts.
+- **Storage independence** — Persistence implementations can evolve without changing OIDC integration.
+- **Dynamic resolution** — Clients are resolved when needed rather than eagerly loaded.
+- **Persistent state** — OIDC runtime state survives application restarts.
+- **Modular architecture** — NestJS modules represent distinct responsibilities.
+- **Protocol isolation** — OAuth/OIDC protocol implementation is delegated to a dedicated provider engine.
+
+---
+
+## 🗺️ Roadmap
+
+### Implemented
+
+- [x] NestJS application structure
+- [x] Client management
+- [x] User identity management
+- [x] Authorization Code Flow
+- [x] PKCE
+- [x] Access Tokens
+- [x] ID Tokens
+- [x] Refresh Tokens
+- [x] Refresh Token Rotation
+- [x] Offline Access
+- [x] UserInfo endpoint
+- [x] Dynamic client resolution
+- [x] Database-backed OIDC persistence
+- [x] OIDC state survives application restart
+- [x] Lazy expiration cleanup
+- [x] Background expiration cleanup
+
+### Planned
+
+- [ ] Client Credentials Flow
+- [ ] Token Revocation Endpoint
+- [ ] Token Introspection Endpoint
+- [ ] Dynamic Client Registration
+- [ ] PostgreSQL support
+- [ ] Redis caching
+- [ ] Horizontal scaling
+- [ ] Admin API
+- [ ] Audit logging
+
+---
+
+## 🤝 Contributing
+
+Contributions, ideas, and architectural discussions are welcome.
+
+Please open an issue or submit a pull request.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+<div align="center">
+
+Built with ❤️ using NestJS, TypeScript, and OpenID Connect
+
+</div>
