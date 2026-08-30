@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ TSCloak
+# 🛡️ TsCloak
 
 ### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
 
@@ -19,7 +19,7 @@
 
 ## 📖 Overview
 
-**TSCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
+**TsCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
 
 It uses [`oidc-provider`](https://github.com/panva/node-oidc-provider) for standards-compliant OAuth 2.0 and OpenID Connect protocol handling while keeping application concerns such as identity, client management, persistence, and infrastructure cleanly separated.
 
@@ -38,6 +38,8 @@ The goal is to provide a maintainable architecture for building an authorization
 - 💾 Persistent OIDC runtime state
 - 🔄 State survives application restarts
 - 🧹 Automatic expiration cleanup
+- 🚫 Token Revocation Endpoint (RFC 7009)
+- 🔍 Token Introspection Endpoint (RFC 7662)
 - 🗄️ Repository-based persistence abstraction
 
 ---
@@ -660,6 +662,118 @@ TsCloak is designed around the following principles:
 
 ---
 
+## 🔒 Token Management Endpoints
+
+TsCloak provides standard OAuth 2.0 token management capabilities through the underlying OIDC provider.
+
+### 🚫 Token Revocation Endpoint
+
+The Token Revocation endpoint allows a client to explicitly invalidate an issued token.
+
+```text
+POST /token/revocation
+```
+
+Typical use cases include:
+
+- User logout
+- Revoking a refresh token
+- Revoking compromised credentials
+- Preventing future access token renewal
+
+Example request:
+
+```http
+POST /token/revocation
+Content-Type: application/x-www-form-urlencoded
+```
+
+```text
+token=REFRESH_TOKEN
+&token_type_hint=refresh_token
+&client_id=YOUR_CLIENT_ID
+```
+
+A successful revocation request returns:
+
+```text
+HTTP 200 OK
+```
+
+After revocation, attempting to use the revoked refresh token to obtain new access tokens should fail.
+
+```text
+Refresh Token
+      │
+      ▼
+POST /token/revocation
+      │
+      ▼
+Token Invalidated
+      │
+      ▼
+Cannot Refresh Tokens
+```
+
+---
+
+### 🔍 Token Introspection Endpoint
+
+The Token Introspection endpoint allows a resource server to query TsCloak and determine whether a token is currently active.
+
+```text
+POST /token/introspection
+```
+
+A resource API can submit a token to the endpoint:
+
+```text
+Resource API
+     │
+     │ Token Introspection Request
+     ▼
+TsCloak
+     │
+     ├── Check token validity
+     ├── Check expiration
+     ├── Check token state
+     │
+     ▼
+Return token metadata
+```
+
+Example response for an active token:
+
+```json
+{
+  "active": true,
+  "scope": "openid profile email",
+  "client_id": "YOUR_CLIENT_ID",
+  "token_type": "Bearer",
+  "sub": "USER_ID",
+  "iss": "http://localhost:3000"
+}
+```
+
+An inactive, expired, or invalid token returns:
+
+```json
+{
+  "active": false
+}
+```
+
+### Token Management Summary
+
+| Endpoint | Purpose | Primary Consumer |
+|---|---|---|
+| `/token` | Issue and refresh tokens | OAuth client |
+| `/token/revocation` | Explicitly invalidate a token | OAuth client |
+| `/token/introspection` | Check token status and metadata | Resource server/API |
+| `/me` | Retrieve authenticated user claims | Client application |
+
+---
+
 ## 🗺️ Roadmap
 
 ### Implemented
@@ -680,12 +794,12 @@ TsCloak is designed around the following principles:
 - [x] OIDC state survives application restart
 - [x] Lazy expiration cleanup
 - [x] Background expiration cleanup
+- [x] Token Revocation Endpoint (RFC 7009)
+- [x] Token Introspection Endpoint (RFC 7662)
 
 ### Planned
 
 - [ ] Client Credentials Flow
-- [ ] Token Revocation Endpoint
-- [ ] Token Introspection Endpoint
 - [ ] Dynamic Client Registration
 - [ ] PostgreSQL support
 - [ ] Redis caching
