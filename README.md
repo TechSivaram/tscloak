@@ -70,14 +70,14 @@ During authorization, TSCloak evaluates the authenticated user session, the exis
 ```mermaid
 flowchart TD
     A["Authorization Request"] --> B{"Existing Session?"}
-    B -->|No| C["Login UI"]
-    B -->|Yes| D["Check Existing Grant"]
-    C --> D
-    D --> E{"Missing Permissions?"}
-    E -->|Yes| F["Consent UI"]
-    E -->|No| G["Continue"]
-    F --> H["Authorization Code"]
-    G --> H
+    B -->|No| C["Login Interaction"]
+    C --> D["POST Login"]
+    D --> E{"Consent Required?"}
+    B -->|Yes| E
+    E -->|Yes| F["Consent Interaction"]
+    F --> G["POST Consent"]
+    G --> H["Authorization Code"]
+    E -->|No| H
 ```
 
 <div align="center">
@@ -88,7 +88,42 @@ flowchart TD
 
 </div>
 
----
+### Hosted Consent Endpoint
+
+The hosted consent UI submits the user's decision to:
+
+```text
+POST /interaction/:uid/consent
+```
+
+The consent decision values must be:
+
+| User Action | Value |
+|---|---|
+| Allow | `accept` |
+| Deny | `reject` |
+
+Example hosted form:
+
+```html
+<form method="POST" action="/interaction/{{UID}}/consent">
+  <button type="submit" name="decision" value="reject">Deny</button>
+  <button type="submit" name="decision" value="accept">Allow</button>
+</form>
+```
+
+> `accept` and `reject` are the values expected by the interaction controller.
+
+### Standard Scope Descriptions
+
+The hosted consent UI displays human-readable descriptions for standard scopes.
+
+| Scope | Description |
+|---|---|
+| `openid` | Authenticate you and verify your identity |
+| `profile` | Access your basic profile information, such as your name and profile details |
+| `email` | Access your email address and email verification status |
+| `offline_access` | Maintain access when you are not actively using the application and allow refresh token usage |
 
 ### Consent Persistence
 
@@ -155,67 +190,117 @@ TSCloak supports two approaches for handling OIDC interactions:
 
 This allows TSCloak to work both as a standalone Identity Provider with built-in screens and as a backend authorization server integrated with an organization's existing UI.
 
+### Interaction Endpoints
+
+TSCloak separates displaying an interaction from completing it.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/interaction/:uid` | Resolves and displays the current OIDC interaction |
+| `POST` | `/interaction/:uid/login` | Completes a login interaction |
+| `POST` | `/interaction/:uid/consent` | Completes a consent interaction |
+
+The current interaction type is determined by the OIDC provider and can include `login` or `consent`.
+
 ### Hosted UI Flow
 
 Hosted UI is the default behavior.
 
 ```mermaid
 flowchart TD
-    A["Client Application"] -->|GET /auth| B["TSCloak Authorization Server"]
-    B --> C{"Interaction Required?"}
-    C -->|Login| D["Hosted Login UI"]
-    C -->|Consent| E["Hosted Consent UI"]
-    D --> F["Complete Interaction"]
-    E --> F
-    F --> G["Authorization Response"]
-    G --> H["Client Callback"]
+    A["Client Application"] --> B["Authorization Request"]
+    B --> C["TSCloak Authorization Server"]
+    C --> D{"Interaction Required?"}
+    D -->|Login| E["GET Interaction"]
+    E --> F["Hosted Login UI"]
+    F --> G["POST Login Interaction"]
+    G --> H{"Consent Required?"}
+    H -->|Yes| I["GET Interaction"]
+    I --> J["Hosted Consent UI"]
+    J --> K["POST Consent Interaction"]
+    H -->|No| L["Authorization Response"]
+    K --> L
+    L --> M["Client Callback"]
+```
+
+#### Hosted Login UI
+
+When a login interaction is required and no external login UI is configured, TSCloak renders its built-in login page.
+
+The login page submits credentials to:
+
+```text
+POST /interaction/:uid/login
+```
+
+#### Hosted Consent UI
+
+When consent is required and no external consent UI is configured, TSCloak renders its built-in consent page.
+
+The page displays the client application, requested scopes, human-readable scope descriptions, and Allow/Deny actions.
+
+The consent page submits to:
+
+```text
+POST /interaction/:uid/consent
 ```
 
 ### Custom Interaction UI Flow
 
-Organizations may already have their own Login UI, branding, or consent experience. TSCloak allows the interaction experience to be delegated to an external application.
+Organizations may already have their own Login UI, branding, or consent experience. TSCloak allows Login and Consent interactions to be delegated independently to an external application.
 
 ```mermaid
 flowchart TD
-    A["Client Application"] -->|GET /auth| B["TSCloak Authorization Server"]
-    B -->|Interaction Required| C["Create OIDC Interaction"]
-    C -->|interaction_uid + prompt| D["Redirect to Custom UI"]
-    D --> E["Custom Login / Consent UI"]
-    E -->|User completes interaction| F["Submit Interaction Result"]
-    F --> G["Complete Interaction"]
-    G --> H["Authorization Response"]
-    H --> I["Client Callback"]
+    A["Client Application"] --> B["Authorization Request"]
+    B --> C["TSCloak"]
+    C --> D{"Interaction Prompt"}
+    D -->|login| E{"External Login URL Configured?"}
+    E -->|Yes| F["Redirect to External Login UI"]
+    E -->|No| G["Hosted Login UI"]
+    D -->|consent| H{"External Consent URL Configured?"}
+    H -->|Yes| I["Redirect to External Consent UI"]
+    H -->|No| J["Hosted Consent UI"]
+    F --> K["Complete Interaction"]
+    G --> K
+    I --> K
+    J --> K
+    K --> L["Authorization Response"]
+    L --> M["Client Callback"]
 ```
 
 ### Interaction URL Configuration
 
-The interaction UI can be configured using an external interaction URL.
-
-Conceptually:
+Each client can configure interaction mode and separate URLs for Login and Consent.
 
 ```typescript
+interactionMode: 'HOSTED' | 'EXTERNAL';
 interactionLoginUrl?: string;
+interactionConsentUrl?: string;
 ```
 
-Behavior:
+| Configuration | Login Behavior | Consent Behavior |
+|---|---|---|
+| `HOSTED` | TSCloak Hosted Login UI | TSCloak Hosted Consent UI |
+| `EXTERNAL` with Login URL | External Login UI | Depends on Consent URL |
+| `EXTERNAL` with Consent URL | Depends on Login URL | External Consent UI |
+| URL missing | Hosted fallback | Hosted fallback |
 
-| Configuration | Behavior |
-|---|---|
-| `interactionLoginUrl` not configured | TSCloak uses its built-in Hosted UI |
-| `interactionLoginUrl` configured | TSCloak redirects the interaction to the Custom UI |
+This allows Login and Consent to be customized independently while preserving a hosted fallback.
 
-The Custom UI receives the interaction identifier and prompt information.
+### External Interaction Redirect
+
+When TSCloak delegates an interaction to an external UI, it redirects the browser with interaction information.
 
 Example login redirect:
 
 ```text
-http://localhost:4200/login?interaction_uid=<uid>&prompt=login
+http://localhost:4200/login?interaction_uid=<uid>&prompt=login&client_id=<client_id>
 ```
 
 Example consent redirect:
 
 ```text
-http://localhost:4200/login?interaction_uid=<uid>&prompt=consent
+http://localhost:4200/consent?interaction_uid=<uid>&prompt=consent&client_id=<client_id>
 ```
 
 ### `interaction_uid`
@@ -231,7 +316,7 @@ sequenceDiagram
     C->>T: Authorization Request
     T->>T: Create OIDC Interaction
     T-->>U: Redirect with interaction_uid
-    U->>U: User Login / Consent
+    U->>U: User Login or Consent
     U->>T: Complete interaction using interaction_uid
     T-->>C: Authorization Response
 ```
@@ -240,7 +325,7 @@ The Custom UI must preserve this value throughout the Login or Consent flow so t
 
 ### Prompt-Aware Custom UI
 
-The `prompt` parameter allows a single Custom UI application to handle multiple interaction types.
+The `prompt` parameter allows a Custom UI application to determine which interaction experience should be rendered.
 
 ```text
 prompt=login
@@ -253,22 +338,6 @@ prompt=consent
 ```
 
 The application should render its consent experience.
-
-Example frontend routing logic:
-
-```typescript
-const prompt = queryParams.get('prompt');
-
-switch (prompt) {
-  case 'login':
-    // Render login screen
-    break;
-
-  case 'consent':
-    // Render consent screen
-    break;
-}
-```
 
 This architecture allows organizations to fully customize branding and user experience while TSCloak continues to own the OAuth 2.0 / OpenID Connect protocol flow, sessions, grants, authorization codes, and tokens.
 
@@ -644,7 +713,10 @@ Example request:
   "scope": "openid profile email offline_access",
   "grant_types": ["authorization_code", "refresh_token"],
   "response_types": ["code"],
-  "token_endpoint_auth_method": "none"
+  "token_endpoint_auth_method": "none",
+  "interaction_mode": "EXTERNAL",
+  "interaction_login_url": "http://localhost:4200/login",
+  "interaction_consent_url": "http://localhost:4200/consent"
 }
 ```
 
@@ -659,7 +731,10 @@ curl -X POST http://localhost:3000/reg \
     "scope": "openid profile email offline_access",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
-    "token_endpoint_auth_method": "none"
+    "token_endpoint_auth_method": "none",
+    "interaction_mode": "EXTERNAL",
+    "interaction_login_url": "http://localhost:4200/login",
+    "interaction_consent_url": "http://localhost:4200/consent"
   }'
 ```
 
@@ -702,6 +777,21 @@ TSCloak maps standard Dynamic Client Registration metadata to its internal clien
 | `grant_types` | `grantTypes` |
 | `response_types` | `responseTypes` |
 | `token_endpoint_auth_method` | `tokenEndpointAuthMethod` |
+| `interaction_mode` | `interactionMode` |
+| `interaction_login_url` | `interactionLoginUrl` |
+| `interaction_consent_url` | `interactionConsentUrl` |
+
+### Interaction UI Registration Metadata
+
+Dynamic clients can choose the built-in hosted UI or configure external interaction URLs.
+
+| Registration Metadata | Description |
+|---|---|
+| `interaction_mode` | `HOSTED` or `EXTERNAL` |
+| `interaction_login_url` | External Login UI URL |
+| `interaction_consent_url` | External Consent UI URL |
+
+When an external URL is not configured for a specific interaction type, TSCloak falls back to the corresponding Hosted UI.
 
 The standard registration `scope` value is converted internally from:
 
@@ -1061,7 +1151,8 @@ An inactive, expired, or invalid token returns:
 - [x] Consent Reuse
 - [x] Hosted Login UI
 - [x] Hosted Consent UI
-- [x] Custom Interaction UI support
+- [x] External Login UI support
+- [x] External Consent UI support
 - [x] Prompt-aware Custom Login / Consent flow
 - [x] UserInfo endpoint
 - [x] Dynamic client resolution
