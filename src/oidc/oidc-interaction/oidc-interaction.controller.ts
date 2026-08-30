@@ -119,17 +119,13 @@ export class OidcInteractionController {
           ?.split(' ')
           .filter(Boolean) ?? [];
 
+      
+
       // --------------------------------------------------------
       // Approve OIDC scopes.
       // --------------------------------------------------------
 
-      const oidcScopes =
-        requestedScopes.filter(
-          (scope) =>
-            scope === 'openid' ||
-            scope === 'profile' ||
-            scope === 'email',
-        );
+      const oidcScopes = requestedScopes;
 
       // --------------------------------------------------------
       // Create Grant
@@ -149,6 +145,8 @@ export class OidcInteractionController {
         grant.addOIDCScope(
           oidcScopes.join(' '),
         );
+
+        console.log(details.params?.scope);
       }
 
       // --------------------------------------------------------

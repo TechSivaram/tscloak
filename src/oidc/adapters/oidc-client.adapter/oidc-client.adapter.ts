@@ -3,7 +3,7 @@ import { ClientRepository } from '../../../clients/repositories/client.repositor
 export class OidcClientAdapter {
   constructor(
     private readonly clientRepository: ClientRepository,
-  ) {}
+  ) { }
 
   async find(
     clientId: string,
