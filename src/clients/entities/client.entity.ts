@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { InteractionMode } from '../enums/interaction-mode.enum';
+
 @Entity('clients')
 export class Client {
   @PrimaryGeneratedColumn('uuid')
@@ -41,6 +43,18 @@ export class Client {
     default: 'none',
   })
   tokenEndpointAuthMethod: string;
+
+  @Column({
+    type: 'varchar',
+    default: InteractionMode.HOSTED,
+  })
+  interactionMode: InteractionMode;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  interactionLoginUrl: string | null;
 
   @Column({
     default: true,

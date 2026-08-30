@@ -16,14 +16,13 @@ import { OidcClientAdapter } from './adapters/oidc-client.adapter/oidc-client.ad
 
 @Injectable()
 export class OidcOptionsService
-  implements OidcModuleOptionsFactory
-{
+  implements OidcModuleOptionsFactory {
   constructor(
     private readonly config: ConfigService,
     private readonly identityService: IdentityService,
     private readonly clientRepository: ClientRepository,
     private readonly oidcRepository: OidcRepository,
-  ) {}
+  ) { }
 
   /**
    * OIDC Provider configuration.
@@ -106,6 +105,9 @@ export class OidcOptionsService
           },
 
           introspection: {
+            enabled: true,
+          },
+          registration: {
             enabled: true,
           },
         },

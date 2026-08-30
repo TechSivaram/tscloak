@@ -16,6 +16,7 @@ import { AuthenticationModule } from 'src/authentication/authentication.module';
 import { SessionsModule } from 'src/sessions/sessions.module';
 import { ClientsModule } from 'src/clients/clients.module';
 import { IdentityModule } from 'src/identity/identity.module';
+import { OidcErrorLoggerService } from './oidc-error-logger.service';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { IdentityModule } from 'src/identity/identity.module';
 
   providers: [
     OidcOptionsService,
+    OidcErrorLoggerService,
   ],
 })
 export class OidcModule {}
