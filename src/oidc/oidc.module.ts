@@ -10,6 +10,7 @@ import {
 
 import { OidcInteractionController } from './oidc-interaction/oidc-interaction.controller';
 import { OidcOptionsService } from './oidc-options.service';
+import { OidcPersistenceModule } from './oidc-persistence.module';
 
 import { AuthenticationModule } from 'src/authentication/authentication.module';
 import { SessionsModule } from 'src/sessions/sessions.module';
@@ -25,11 +26,14 @@ import { IdentityModule } from 'src/identity/identity.module';
     ClientsModule,
     IdentityModule,
 
+    OidcPersistenceModule,
+
     NestOidcModule.forRootAsync({
       imports: [
         ConfigModule,
         ClientsModule,
         IdentityModule,
+        OidcPersistenceModule,
       ],
 
       useClass: OidcOptionsService,

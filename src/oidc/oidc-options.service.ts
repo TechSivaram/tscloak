@@ -6,12 +6,12 @@ import {
   OidcModuleOptionsFactory,
 } from 'nest-oidc-provider';
 
-import { createMemoryAdapter } from
-  'oidc-provider/lib/adapters/memory_adapter.js';
-
 import { IdentityService } from 'src/identity/identity.service';
 import { ClientRepository } from 'src/clients/repositories/client.repository';
 
+import { OidcRepository } from './repositories/oidc.repository';
+
+import { OidcAdapter } from './adapters/oidc.adapter/oidc.adapter';
 import { OidcClientAdapter } from './adapters/oidc-client.adapter/oidc-client.adapter';
 
 @Injectable()
@@ -22,6 +22,7 @@ export class OidcOptionsService
     private readonly config: ConfigService,
     private readonly identityService: IdentityService,
     private readonly clientRepository: ClientRepository,
+    private readonly oidcRepository: OidcRepository,
   ) {}
 
   /**
@@ -162,26 +163,15 @@ export class OidcOptionsService
    * Client:
    *   SQLite via ClientRepository
    *
-   * Other OIDC models:
-   *   In-memory adapter (temporary)
+   * Other OIDC runtime models:
+   *   SQLite via OidcRepository
    */
   createAdapterFactory() {
-    /**
-     * Create ONCE.
-     *
-     * This ensures all non-client OIDC models
-     * share the same in-memory storage.
-     */
-    const memoryAdapterFactory =
-      createMemoryAdapter();
-
     return (
       modelName: string,
     ) => {
       /**
        * Dynamic client resolution.
-       *
-       * Example:
        *
        * GET /auth?client_id=abc
        *
@@ -191,7 +181,7 @@ export class OidcOptionsService
        *      ↓
        * OidcClientAdapter
        *      ↓
-       * ClientRepository.findByClientId('abc')
+       * ClientRepository
        *      ↓
        * SQLite
        */
@@ -202,6 +192,8 @@ export class OidcOptionsService
       }
 
       /**
+       * Runtime OIDC models.
+       *
        * AuthorizationCode
        * AccessToken
        * RefreshToken
@@ -209,9 +201,12 @@ export class OidcOptionsService
        * Grant
        * Interaction
        * etc.
+       *
+       * All persisted through OidcRepository.
        */
-      return memoryAdapterFactory(
+      return new OidcAdapter(
         modelName,
+        this.oidcRepository,
       );
     };
   }
