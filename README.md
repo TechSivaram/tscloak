@@ -89,6 +89,16 @@ Login UI    Check Grant
       Authorization Code
 ```
 
+<div align="center">
+
+![TSCloak Login Screen](docs/images/TSCloak-consent.png)
+
+*TSCloak consent interaction page*
+
+</div>
+
+---
+
 ### Consent Persistence
 
 When a user approves a client, TSCloak persists an OIDC `Grant` containing the approved scopes. The session is associated with that Grant so subsequent authorization requests can reuse the existing consent.
