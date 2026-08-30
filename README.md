@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ TsCloak
+# 🛡️ TSCloak
 
 ### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
 
@@ -19,7 +19,7 @@
 
 ## 📖 Overview
 
-**TsCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
+**TSCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
 
 It uses [`oidc-provider`](https://github.com/panva/node-oidc-provider) for standards-compliant OAuth 2.0 and OpenID Connect protocol handling while keeping application concerns such as identity, client management, persistence, and infrastructure cleanly separated.
 
@@ -242,6 +242,150 @@ Allows clients to obtain new access tokens without requiring the user to authent
 TsCloak supports refresh token rotation through the underlying OIDC provider.
 
 > ⚠️ A rotated refresh token should not be reused.
+
+---
+
+## 🔑 Using Access Tokens
+
+After completing the authorization flow, TsCloak returns an access token:
+
+```json
+{
+  "access_token": "ACCESS_TOKEN",
+  "expires_in": 3600,
+  "id_token": "ID_TOKEN",
+  "refresh_token": "REFRESH_TOKEN",
+  "scope": "openid profile email offline_access",
+  "token_type": "Bearer"
+}
+```
+
+Use the access token as a **Bearer token** when calling the UserInfo (`/me`) endpoint.
+
+### Get Current User Details
+
+```http
+GET /me
+Authorization: Bearer ACCESS_TOKEN
+```
+
+Using `curl`:
+
+```bash
+curl http://localhost:3000/me \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+Example response:
+
+```json
+{
+  "sub": "0804b05f-960c-46ac-b0c2-a8d6313b5143",
+  "name": "siva",
+  "preferred_username": "siva",
+  "email": "siva@example.com",
+  "email_verified": true
+}
+```
+
+The `/me` endpoint validates the access token and returns identity claims based on the scopes granted to the client.
+
+---
+
+## ♻️ Refreshing an Access Token
+
+When the access token expires, use the refresh token to obtain a new token set without requiring the user to sign in again.
+
+A refresh token is issued when the authorization request includes:
+
+```text
+scope=openid profile email offline_access
+```
+
+and the client is configured to allow the `refresh_token` grant.
+
+### Refresh Token Request
+
+```http
+POST /token
+Content-Type: application/x-www-form-urlencoded
+```
+
+Request body:
+
+```text
+grant_type=refresh_token
+&refresh_token=REFRESH_TOKEN
+&client_id=YOUR_CLIENT_ID
+```
+
+Using `curl`:
+
+```bash
+curl -X POST http://localhost:3000/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=refresh_token" \
+  -d "refresh_token=REFRESH_TOKEN" \
+  -d "client_id=YOUR_CLIENT_ID"
+```
+
+Example response:
+
+```json
+{
+  "access_token": "NEW_ACCESS_TOKEN",
+  "expires_in": 3600,
+  "id_token": "NEW_ID_TOKEN",
+  "refresh_token": "NEW_REFRESH_TOKEN",
+  "scope": "openid profile email offline_access",
+  "token_type": "Bearer"
+}
+```
+
+### Refresh Token Rotation
+
+TsCloak supports refresh token rotation through `oidc-provider`.
+
+```text
+Old Refresh Token
+       │
+       ▼
+POST /token
+grant_type=refresh_token
+       │
+       ▼
+New Access Token
++
+New Refresh Token
+       │
+       ▼
+Old Refresh Token Invalidated
+```
+
+> ⚠️ **Important:** After refresh token rotation, store the newly returned refresh token. Reusing the old refresh token should fail.
+
+### Typical Token Lifecycle
+
+```text
+User Login
+    │
+    ▼
+Authorization Code
+    │
+    ▼
+Access Token + Refresh Token
+    │
+    ├──► Call /me using Access Token
+    │
+    ▼
+Access Token Expires
+    │
+    ▼
+Use Refresh Token
+    │
+    ▼
+New Access Token + New Refresh Token
+```
 
 ---
 
