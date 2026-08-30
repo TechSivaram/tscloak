@@ -1,3 +1,4 @@
+import { Oidc } from '../../entities/oidc.entity';
 import { OidcRepository } from '../../repositories/oidc.repository';
 
 export class OidcAdapter {
@@ -50,23 +51,7 @@ export class OidcAdapter {
                 id,
             );
 
-        if (!oidc) {
-            return undefined;
-        }
-
-        if (
-            oidc.expiresAt &&
-            oidc.expiresAt.getTime() <= Date.now()
-        ) {
-            await this.repository.delete(
-                this.model,
-                id,
-            );
-
-            return undefined;
-        }
-
-        return oidc.payload;
+        return this.getValidPayload(oidc);
     }
 
     async destroy(
@@ -108,11 +93,7 @@ export class OidcAdapter {
                 uid,
             );
 
-        if (!oidc) {
-            return undefined;
-        }
-
-        return oidc.payload;
+        return this.getValidPayload(oidc);
     }
 
     async findByUserCode(
@@ -124,11 +105,7 @@ export class OidcAdapter {
                 userCode,
             );
 
-        if (!oidc) {
-            return undefined;
-        }
-
-        return oidc.payload;
+        return this.getValidPayload(oidc);
     }
 
     async revokeByGrantId(
@@ -145,5 +122,27 @@ export class OidcAdapter {
                 record.id,
             );
         }
+    }
+
+    private async getValidPayload(
+        oidc: Oidc | null,
+    ): Promise<Record<string, unknown> | undefined> {
+        if (!oidc) {
+            return undefined;
+        }
+
+        if (
+            oidc.expiresAt &&
+            oidc.expiresAt.getTime() <= Date.now()
+        ) {
+            await this.repository.delete(
+                oidc.model,
+                oidc.id,
+            );
+
+            return undefined;
+        }
+
+        return oidc.payload;
     }
 }

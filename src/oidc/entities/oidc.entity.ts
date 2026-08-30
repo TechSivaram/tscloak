@@ -12,6 +12,7 @@ import {
 @Index(['model', 'uid'])
 @Index(['model', 'userCode'])
 @Index(['grantId'])
+@Index(['expiresAt'])
 export class Oidc {
   @PrimaryColumn({
     type: 'text',
