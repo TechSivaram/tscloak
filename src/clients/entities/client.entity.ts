@@ -24,7 +24,9 @@ export class Client {
   })
   clientSecret: string | null;
 
-  @Column()
+  @Column({
+    unique: true,
+  })
   name: string;
 
   @Column('simple-json')
