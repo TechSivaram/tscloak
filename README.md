@@ -53,25 +53,197 @@ The goal is to provide a maintainable architecture for building an authorization
 ## 🧭 Navigation
 
 - [Overview](#-overview)
-- [Login Experience](#️-login-experience)
-- [Consent Experience](#-consent-experience)
-- [Interaction UI Customization](#️-interaction-ui-customization)
 - [Architecture](#️-architecture)
 - [Technology Stack](#-technology-stack)
 - [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
 - [Authentication Flow](#-authentication-flow)
+- [Login Experience](#️-login-experience)
+- [Consent Experience](#-consent-experience)
+- [Interaction UI Customization](#️-interaction-ui-customization)
+- [Supported Scopes](#-supported-scopes)
 - [Token Types](#-token-types)
+- [OIDC Token Lifetimes](#️-oidc-token-lifetimes)
+- [Using Access Tokens](#-using-access-tokens)
+- [Refreshing an Access Token](#️-refreshing-an-access-token)
 - [UserInfo Endpoint](#-userinfo-endpoint)
+- [Token Management Endpoints](#-token-management-endpoints)
 - [Dynamic Client Resolution](#-dynamic-client-resolution)
 - [Dynamic Client Registration](#-dynamic-client-registration)
-- [Persistent OIDC Storage](#-persistent-oidc-storage)
 - [Security Policy Management](#️-security-policy-management)
-- [OIDC Token Lifetimes](#️-oidc-token-lifetimes)
 - [Signing Keys and JWKS](#-signing-keys-and-jwks)
+- [Persistent OIDC Storage](#-persistent-oidc-storage)
+- [Storage Architecture](#️-storage-architecture)
+- [OIDC Storage Model](#️-oidc-storage-model)
 - [Expiration Handling](#️-expiration-handling)
-- [Getting Started](#-getting-started)
-- [Token Management Endpoints](#-token-management-endpoints)
+- [Example Authorization Request](#-example-authorization-request)
+- [Example Token Request](#-example-token-request)
+- [Design Principles](#-design-principles)
 - [Roadmap](#️-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## 🏗️ Architecture
+
+TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
+
+```mermaid
+flowchart TD
+    A["Client Applications"] -->|OAuth 2.0 / OIDC Requests| B["TSCloak - NestJS Application"]
+
+    B --> C["nest-oidc-provider"]
+    C --> D["oidc-provider"]
+
+    B --> E["Clients Module"]
+    B --> F["Identity Module"]
+    B --> G["Sessions Module"]
+    B --> H["OIDC Module"]
+    B --> P["Security Module"]
+    B --> Q["Signing Keys Module"]
+
+    H --> I["OIDC Adapter Factory"]
+    H --> P
+    H --> Q
+    D --> I
+
+    E --> J["Repository Abstractions"]
+    F --> J
+    G --> J
+    I --> J
+    P --> J
+    Q --> J
+
+    J --> K["TypeORM"]
+    K --> L[("Database")]
+```
+
+### Responsibility Layers
+
+| Layer | Responsibility |
+|---|---|
+| **TSCloak** | Application architecture, NestJS modules, account management, client management, hosted/custom interaction UI, persistence integration |
+| **nest-oidc-provider** | NestJS integration layer for configuring and hosting the OIDC provider |
+| **oidc-provider** | Core OAuth 2.0 and OpenID Connect protocol implementation |
+| **OIDC Adapters** | Connect `oidc-provider` models and persistence requirements to TSCloak repositories |
+| **Security** | Central security policy and token lifetime configuration |
+| **Signing Keys** | RSA key lifecycle and key material used to sign tokens |
+| **Repository Abstractions** | Decouple application and OIDC persistence from the underlying database |
+| **TypeORM** | Database persistence implementation |
+
+## 🧩 Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| **NestJS** | Application framework |
+| **TypeScript** | Programming language |
+| **oidc-provider** | OAuth 2.0 & OpenID Connect protocol engine |
+| **nest-oidc-provider** | NestJS integration |
+| **TypeORM** | Persistence abstraction |
+| **SQLite** | Current database implementation |
+| **better-sqlite3** | SQLite driver |
+
+---
+
+## 📁 Project Structure
+
+```mermaid
+flowchart TD
+    A["src"] --> B["clients"]
+    A --> C["identity"]
+    A --> D["sessions"]
+    A --> E["oidc"]
+    E --> F["adapters"]
+    E --> G["oidc-options.service.ts"]
+    E --> H["oidc-cleanup.service.ts"]
+    E --> I["oidc.module.ts"]
+    A --> J["security"]
+    J --> J1["security-policy.service.ts"]
+    A --> K["signing-keys"]
+    A --> L["app.module.ts"]
+    A --> K["main.ts"]
+```
+
+### Module Responsibilities
+
+| Module | Responsibility |
+|---|---|
+| **Clients** | Client registration and lookup |
+| **Identity** | User identity and account claims |
+| **Sessions** | Application session management |
+| **OIDC** | Protocol configuration, adapters, and OIDC integration |
+| **Security** | Security policy administration and runtime policy access |
+| **Signing Keys** | Signing key persistence and key management |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js
+- npm
+- Git
+
+### Installation
+
+```bash
+git clone <repository-url>
+cd TSCloak
+npm install
+```
+
+### Run in Development
+
+```bash
+npm run start:dev
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+### Run in Production
+
+```bash
+npm run start:prod
+```
+
+---
+
+## 🔐 Authentication Flow
+
+TSCloak currently supports the **Authorization Code Flow with PKCE**.
+
+```mermaid
+sequenceDiagram
+    participant C as Client App
+    participant T as TSCloak
+    participant U as User
+
+    C->>T: 1. Authorization Request + PKCE Challenge
+    T->>U: Authenticate User
+    U-->>T: Authentication Complete
+    T-->>C: 2. Redirect with Authorization Code
+    C->>T: 3. Exchange Code + PKCE Verifier
+    T-->>C: 4. Tokens
+```
+
+### Token Response
+
+```json
+{
+  "access_token": "...",
+  "id_token": "...",
+  "refresh_token": "...",
+  "expires_in": 3600,
+  "scope": "openid profile email offline_access",
+  "token_type": "Bearer"
+}
+```
 
 ---
 
@@ -371,131 +543,6 @@ This architecture allows organizations to fully customize branding and user expe
 
 ---
 
-## 🏗️ Architecture
-
-TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
-
-```mermaid
-flowchart TD
-    A["Client Applications"] -->|OAuth 2.0 / OIDC Requests| B["TSCloak - NestJS Application"]
-
-    B --> C["nest-oidc-provider"]
-    C --> D["oidc-provider"]
-
-    B --> E["Clients Module"]
-    B --> F["Identity Module"]
-    B --> G["Sessions Module"]
-    B --> H["OIDC Module"]
-    B --> P["Security Module"]
-    B --> Q["Signing Keys Module"]
-
-    H --> I["OIDC Adapter Factory"]
-    H --> P
-    H --> Q
-    D --> I
-
-    E --> J["Repository Abstractions"]
-    F --> J
-    G --> J
-    I --> J
-    P --> J
-    Q --> J
-
-    J --> K["TypeORM"]
-    K --> L[("Database")]
-```
-
-### Responsibility Layers
-
-| Layer | Responsibility |
-|---|---|
-| **TSCloak** | Application architecture, NestJS modules, account management, client management, hosted/custom interaction UI, persistence integration |
-| **nest-oidc-provider** | NestJS integration layer for configuring and hosting the OIDC provider |
-| **oidc-provider** | Core OAuth 2.0 and OpenID Connect protocol implementation |
-| **OIDC Adapters** | Connect `oidc-provider` models and persistence requirements to TSCloak repositories |
-| **Security** | Central security policy and token lifetime configuration |
-| **Signing Keys** | RSA key lifecycle and key material used to sign tokens |
-| **Repository Abstractions** | Decouple application and OIDC persistence from the underlying database |
-| **TypeORM** | Database persistence implementation |
-## 🧩 Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| **NestJS** | Application framework |
-| **TypeScript** | Programming language |
-| **oidc-provider** | OAuth 2.0 & OpenID Connect protocol engine |
-| **nest-oidc-provider** | NestJS integration |
-| **TypeORM** | Persistence abstraction |
-| **SQLite** | Current database implementation |
-| **better-sqlite3** | SQLite driver |
-
----
-
-## 📁 Project Structure
-
-```mermaid
-flowchart TD
-    A["src"] --> B["clients"]
-    A --> C["identity"]
-    A --> D["sessions"]
-    A --> E["oidc"]
-    E --> F["adapters"]
-    E --> G["oidc-options.service.ts"]
-    E --> H["oidc-cleanup.service.ts"]
-    E --> I["oidc.module.ts"]
-    A --> J["security"]
-    J --> J1["security-policy.service.ts"]
-    A --> K["signing-keys"]
-    A --> L["app.module.ts"]
-    A --> K["main.ts"]
-```
-
-### Module Responsibilities
-
-| Module | Responsibility |
-|---|---|
-| **Clients** | Client registration and lookup |
-| **Identity** | User identity and account claims |
-| **Sessions** | Application session management |
-| **OIDC** | Protocol configuration, adapters, and OIDC integration |
-| **Security** | Security policy administration and runtime policy access |
-| **Signing Keys** | Signing key persistence and key management |
-
----
-
-## 🔐 Authentication Flow
-
-TSCloak currently supports the **Authorization Code Flow with PKCE**.
-
-```mermaid
-sequenceDiagram
-    participant C as Client App
-    participant T as TSCloak
-    participant U as User
-
-    C->>T: 1. Authorization Request + PKCE Challenge
-    T->>U: Authenticate User
-    U-->>T: Authentication Complete
-    T-->>C: 2. Redirect with Authorization Code
-    C->>T: 3. Exchange Code + PKCE Verifier
-    T-->>C: 4. Tokens
-```
-
-### Token Response
-
-```json
-{
-  "access_token": "...",
-  "id_token": "...",
-  "refresh_token": "...",
-  "expires_in": 3600,
-  "scope": "openid profile email offline_access",
-  "token_type": "Bearer"
-}
-```
-
----
-
 ## 🎯 Supported Scopes
 
 | Scope | Description |
@@ -542,6 +589,34 @@ TSCloak supports refresh token rotation through the underlying OIDC provider.
 > ⚠️ A rotated refresh token should not be reused.
 
 ---
+
+## ⏱️ OIDC Token Lifetimes
+
+TSCloak keeps token lifetime policy outside of hard-coded OIDC configuration. The `OidcOptionsService` obtains the active security policy during provider configuration and supplies the configured lifetime values to `oidc-provider` through its `ttl` configuration.
+
+The policy is intended to govern lifetimes such as:
+
+- Access tokens
+- ID tokens
+- Refresh tokens
+- Authorization codes and other OIDC artifacts as policy support expands
+
+`oidc-provider` requires TTL resolution during token processing, so the values supplied to its callbacks must be immediately available. The current design therefore treats the database-backed policy as the source of truth while keeping the OIDC provider configuration compatible with its synchronous TTL contract.
+
+```mermaid
+sequenceDiagram
+    participant DB as Database
+    participant SP as SecurityPolicyService
+    participant OS as OidcOptionsService
+    participant OP as oidc-provider
+
+    OS->>SP: Get active security policy
+    SP->>DB: Load policy
+    DB-->>SP: Policy values
+    SP-->>OS: Policy values
+    OS->>OP: Configure ttl callbacks
+    OP->>OP: Resolve artifact expiration
+```
 
 ## 🔑 Using Access Tokens
 
@@ -687,6 +762,107 @@ Example response:
   "email_verified": true
 }
 ```
+
+---
+
+## 🔒 Token Management Endpoints
+
+TSCloak provides standard OAuth 2.0 token management capabilities through the underlying OIDC provider.
+
+### 🚫 Token Revocation Endpoint
+
+The Token Revocation endpoint allows a client to explicitly invalidate an issued token.
+
+```text
+POST /token/revocation
+```
+
+Typical use cases include:
+
+- User logout
+- Revoking a refresh token
+- Revoking compromised credentials
+- Preventing future access token renewal
+
+Example request:
+
+```http
+POST /token/revocation
+Content-Type: application/x-www-form-urlencoded
+```
+
+```text
+token=REFRESH_TOKEN
+&token_type_hint=refresh_token
+&client_id=YOUR_CLIENT_ID
+```
+
+A successful revocation request returns:
+
+```text
+HTTP 200 OK
+```
+
+After revocation, attempting to use the revoked refresh token to obtain new access tokens should fail.
+
+```mermaid
+flowchart TD
+    A["Refresh Token"] --> B["POST /token/revocation"]
+    B --> C["Token Invalidated"]
+    C --> D["Cannot Refresh Tokens"]
+```
+
+---
+
+### 🔍 Token Introspection Endpoint
+
+The Token Introspection endpoint allows a resource server to query TSCloak and determine whether a token is currently active.
+
+```text
+POST /token/introspection
+```
+
+A resource API can submit a token to the endpoint:
+
+```mermaid
+flowchart TD
+    A["Resource API"] --> B["Token Introspection Request"]
+    B --> C["TSCloak"]
+    C --> D["Check Token Validity"]
+    D --> E["Check Expiration"]
+    E --> F["Check Token State"]
+    F --> G["Return Token Metadata"]
+```
+
+Example response for an active token:
+
+```json
+{
+  "active": true,
+  "scope": "openid profile email",
+  "client_id": "YOUR_CLIENT_ID",
+  "token_type": "Bearer",
+  "sub": "USER_ID",
+  "iss": "http://localhost:3000"
+}
+```
+
+An inactive, expired, or invalid token returns:
+
+```json
+{
+  "active": false
+}
+```
+
+### Token Management Summary
+
+| Endpoint | Purpose | Primary Consumer |
+|---|---|---|
+| `/token` | Issue and refresh tokens | OAuth client |
+| `/token/revocation` | Explicitly invalidate a token | OAuth client |
+| `/token/introspection` | Check token status and metadata | Resource server/API |
+| `/me` | Retrieve authenticated user claims | Client application |
 
 ---
 
@@ -889,6 +1065,49 @@ flowchart LR
     F --> G["TypeORM"]
     G --> H[("Database")]
 ```
+
+## 🛡️ Security Policy Management
+
+Security-sensitive runtime settings are managed as application data rather than being scattered as constants across the OIDC configuration. The security policy is persisted in the database and exposed through an administrative API.
+
+Current policy management endpoint:
+
+- `GET /api/admin/security-policy` — retrieve the active policy
+- `PUT /api/admin/security-policy` — update the active policy
+
+This creates a single source of truth for settings that affect authorization-server behavior.
+
+```mermaid
+flowchart LR
+    A["Admin API"] --> B["SecurityPolicyController"]
+    B --> C["SecurityPolicyService"]
+    C --> D["Security Policy Repository"]
+    D --> E[("Database")]
+    C --> F["OIDC Options Service"]
+    F --> G["oidc-provider Configuration"]
+```
+
+## 🔑 Signing Keys and JWKS
+
+TSCloak manages signing keys as a dedicated application concern. RSA key material is persisted and made available to the OIDC provider for token signing. Public key information is exposed through the provider's standard JWKS discovery surface, allowing relying parties to validate issued tokens.
+
+The intended separation is:
+
+- **Signing Keys module** owns key lifecycle and persistence.
+- **OIDC configuration** consumes the active signing key material.
+- **JWKS** exposes public key information required by clients and resource servers.
+- Private key material remains an internal server concern and is never exposed by JWKS.
+
+```mermaid
+flowchart LR
+    A["Signing Key Storage"] --> B["SigningKeyService"]
+    B --> C["OidcOptionsService"]
+    C --> D["oidc-provider"]
+    D --> E["Signed ID / Access Tokens"]
+    D --> F["JWKS Endpoint"]
+    F --> G["Public JWKs Only"]
+```
+
 ## 💾 Persistent OIDC Storage
 
 OIDC runtime objects are persisted in the database rather than memory.
@@ -937,75 +1156,23 @@ This allows persistence implementations to evolve without changing OIDC protocol
 
 ---
 
-## 🛡️ Security Policy Management
+## 🗃️ OIDC Storage Model
 
-Security-sensitive runtime settings are managed as application data rather than being scattered as constants across the OIDC configuration. The security policy is persisted in the database and exposed through an administrative API.
+OIDC runtime records are stored in a common persistence model.
 
-Current policy management endpoint:
+| Column | Description |
+|---|---|
+| `id` | OIDC record identifier |
+| `model` | OIDC model type |
+| `payload` | Serialized OIDC payload |
+| `expiresAt` | Record expiration timestamp |
+| `grantId` | Associated grant identifier |
+| `uid` | OIDC UID lookup identifier |
+| `userCode` | Device flow user code |
+| `createdAt` | Record creation timestamp |
+| `updatedAt` | Record update timestamp |
 
-- `GET /api/admin/security-policy` — retrieve the active policy
-- `PUT /api/admin/security-policy` — update the active policy
-
-This creates a single source of truth for settings that affect authorization-server behavior.
-
-```mermaid
-flowchart LR
-    A["Admin API"] --> B["SecurityPolicyController"]
-    B --> C["SecurityPolicyService"]
-    C --> D["Security Policy Repository"]
-    D --> E[("Database")]
-    C --> F["OIDC Options Service"]
-    F --> G["oidc-provider Configuration"]
-```
-
-## ⏱️ OIDC Token Lifetimes
-
-TSCloak keeps token lifetime policy outside of hard-coded OIDC configuration. The `OidcOptionsService` obtains the active security policy during provider configuration and supplies the configured lifetime values to `oidc-provider` through its `ttl` configuration.
-
-The policy is intended to govern lifetimes such as:
-
-- Access tokens
-- ID tokens
-- Refresh tokens
-- Authorization codes and other OIDC artifacts as policy support expands
-
-`oidc-provider` requires TTL resolution during token processing, so the values supplied to its callbacks must be immediately available. The current design therefore treats the database-backed policy as the source of truth while keeping the OIDC provider configuration compatible with its synchronous TTL contract.
-
-```mermaid
-sequenceDiagram
-    participant DB as Database
-    participant SP as SecurityPolicyService
-    participant OS as OidcOptionsService
-    participant OP as oidc-provider
-
-    OS->>SP: Get active security policy
-    SP->>DB: Load policy
-    DB-->>SP: Policy values
-    SP-->>OS: Policy values
-    OS->>OP: Configure ttl callbacks
-    OP->>OP: Resolve artifact expiration
-```
-
-## 🔑 Signing Keys and JWKS
-
-TSCloak manages signing keys as a dedicated application concern. RSA key material is persisted and made available to the OIDC provider for token signing. Public key information is exposed through the provider's standard JWKS discovery surface, allowing relying parties to validate issued tokens.
-
-The intended separation is:
-
-- **Signing Keys module** owns key lifecycle and persistence.
-- **OIDC configuration** consumes the active signing key material.
-- **JWKS** exposes public key information required by clients and resource servers.
-- Private key material remains an internal server concern and is never exposed by JWKS.
-
-```mermaid
-flowchart LR
-    A["Signing Key Storage"] --> B["SigningKeyService"]
-    B --> C["OidcOptionsService"]
-    C --> D["oidc-provider"]
-    D --> E["Signed ID / Access Tokens"]
-    D --> F["JWKS Endpoint"]
-    F --> G["Public JWKs Only"]
-```
+---
 
 ## ⏳ Expiration Handling
 
@@ -1036,60 +1203,6 @@ flowchart TD
 ```
 
 An index on `expiresAt` improves cleanup query performance.
-
----
-
-## 🗃️ OIDC Storage Model
-
-OIDC runtime records are stored in a common persistence model.
-
-| Column | Description |
-|---|---|
-| `id` | OIDC record identifier |
-| `model` | OIDC model type |
-| `payload` | Serialized OIDC payload |
-| `expiresAt` | Record expiration timestamp |
-| `grantId` | Associated grant identifier |
-| `uid` | OIDC UID lookup identifier |
-| `userCode` | Device flow user code |
-| `createdAt` | Record creation timestamp |
-| `updatedAt` | Record update timestamp |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js
-- npm
-- Git
-
-### Installation
-
-```bash
-git clone <repository-url>
-cd TSCloak
-npm install
-```
-
-### Run in Development
-
-```bash
-npm run start:dev
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-### Run in Production
-
-```bash
-npm run start:prod
-```
 
 ---
 
@@ -1139,107 +1252,6 @@ TSCloak is designed around the following principles:
 - **Persistent state** — OIDC runtime state survives application restarts.
 - **Modular architecture** — NestJS modules represent distinct responsibilities.
 - **Protocol isolation** — OAuth/OIDC protocol implementation is delegated to a dedicated provider engine.
-
----
-
-## 🔒 Token Management Endpoints
-
-TSCloak provides standard OAuth 2.0 token management capabilities through the underlying OIDC provider.
-
-### 🚫 Token Revocation Endpoint
-
-The Token Revocation endpoint allows a client to explicitly invalidate an issued token.
-
-```text
-POST /token/revocation
-```
-
-Typical use cases include:
-
-- User logout
-- Revoking a refresh token
-- Revoking compromised credentials
-- Preventing future access token renewal
-
-Example request:
-
-```http
-POST /token/revocation
-Content-Type: application/x-www-form-urlencoded
-```
-
-```text
-token=REFRESH_TOKEN
-&token_type_hint=refresh_token
-&client_id=YOUR_CLIENT_ID
-```
-
-A successful revocation request returns:
-
-```text
-HTTP 200 OK
-```
-
-After revocation, attempting to use the revoked refresh token to obtain new access tokens should fail.
-
-```mermaid
-flowchart TD
-    A["Refresh Token"] --> B["POST /token/revocation"]
-    B --> C["Token Invalidated"]
-    C --> D["Cannot Refresh Tokens"]
-```
-
----
-
-### 🔍 Token Introspection Endpoint
-
-The Token Introspection endpoint allows a resource server to query TSCloak and determine whether a token is currently active.
-
-```text
-POST /token/introspection
-```
-
-A resource API can submit a token to the endpoint:
-
-```mermaid
-flowchart TD
-    A["Resource API"] --> B["Token Introspection Request"]
-    B --> C["TSCloak"]
-    C --> D["Check Token Validity"]
-    D --> E["Check Expiration"]
-    E --> F["Check Token State"]
-    F --> G["Return Token Metadata"]
-```
-
-Example response for an active token:
-
-```json
-{
-  "active": true,
-  "scope": "openid profile email",
-  "client_id": "YOUR_CLIENT_ID",
-  "token_type": "Bearer",
-  "sub": "USER_ID",
-  "iss": "http://localhost:3000"
-}
-```
-
-An inactive, expired, or invalid token returns:
-
-```json
-{
-  "active": false
-}
-```
-
-### Token Management Summary
-
-| Endpoint | Purpose | Primary Consumer |
-|---|---|---|
-| `/token` | Issue and refresh tokens | OAuth client |
-| `/token/revocation` | Explicitly invalidate a token | OAuth client |
-| `/token/introspection` | Check token status and metadata | Resource server/API |
-| `/me` | Retrieve authenticated user claims | Client application |
 
 ---
 
@@ -1309,3 +1321,4 @@ This project is licensed under the **MIT License**.
 Built with ❤️ using NestJS, TypeScript, and OpenID Connect
 
 </div>
+
