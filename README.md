@@ -44,6 +44,34 @@ The goal is to provide a maintainable architecture for building an authorization
 - 🚫 Token Revocation Endpoint (RFC 7009)
 - 🔍 Token Introspection Endpoint (RFC 7662)
 - 🗄️ Repository-based persistence abstraction
+- 🛡️ Database-backed security policy management
+- ⏱️ Configurable OIDC token lifetimes from security policy
+- 🔑 RSA signing key management and JWKS publication
+
+---
+
+## 🧭 Navigation
+
+- [Overview](#-overview)
+- [Login Experience](#️-login-experience)
+- [Consent Experience](#-consent-experience)
+- [Interaction UI Customization](#️-interaction-ui-customization)
+- [Architecture](#️-architecture)
+- [Technology Stack](#-technology-stack)
+- [Project Structure](#-project-structure)
+- [Authentication Flow](#-authentication-flow)
+- [Token Types](#-token-types)
+- [UserInfo Endpoint](#-userinfo-endpoint)
+- [Dynamic Client Resolution](#-dynamic-client-resolution)
+- [Dynamic Client Registration](#-dynamic-client-registration)
+- [Persistent OIDC Storage](#-persistent-oidc-storage)
+- [Security Policy Management](#️-security-policy-management)
+- [OIDC Token Lifetimes](#️-oidc-token-lifetimes)
+- [Signing Keys and JWKS](#-signing-keys-and-jwks)
+- [Expiration Handling](#️-expiration-handling)
+- [Getting Started](#-getting-started)
+- [Token Management Endpoints](#-token-management-endpoints)
+- [Roadmap](#️-roadmap)
 
 ---
 
@@ -358,14 +386,20 @@ flowchart TD
     B --> F["Identity Module"]
     B --> G["Sessions Module"]
     B --> H["OIDC Module"]
+    B --> P["Security Module"]
+    B --> Q["Signing Keys Module"]
 
     H --> I["OIDC Adapter Factory"]
+    H --> P
+    H --> Q
     D --> I
 
     E --> J["Repository Abstractions"]
     F --> J
     G --> J
     I --> J
+    P --> J
+    Q --> J
 
     J --> K["TypeORM"]
     K --> L[("Database")]
@@ -379,6 +413,8 @@ flowchart TD
 | **nest-oidc-provider** | NestJS integration layer for configuring and hosting the OIDC provider |
 | **oidc-provider** | Core OAuth 2.0 and OpenID Connect protocol implementation |
 | **OIDC Adapters** | Connect `oidc-provider` models and persistence requirements to TSCloak repositories |
+| **Security** | Central security policy and token lifetime configuration |
+| **Signing Keys** | RSA key lifecycle and key material used to sign tokens |
 | **Repository Abstractions** | Decouple application and OIDC persistence from the underlying database |
 | **TypeORM** | Database persistence implementation |
 ## 🧩 Technology Stack
@@ -407,7 +443,10 @@ flowchart TD
     E --> G["oidc-options.service.ts"]
     E --> H["oidc-cleanup.service.ts"]
     E --> I["oidc.module.ts"]
-    A --> J["app.module.ts"]
+    A --> J["security"]
+    J --> J1["security-policy.service.ts"]
+    A --> K["signing-keys"]
+    A --> L["app.module.ts"]
     A --> K["main.ts"]
 ```
 
@@ -418,7 +457,9 @@ flowchart TD
 | **Clients** | Client registration and lookup |
 | **Identity** | User identity and account claims |
 | **Sessions** | Application session management |
-| **OIDC** | Protocol configuration and OIDC integration |
+| **OIDC** | Protocol configuration, adapters, and OIDC integration |
+| **Security** | Security policy administration and runtime policy access |
+| **Signing Keys** | Signing key persistence and key management |
 
 ---
 
@@ -896,9 +937,79 @@ This allows persistence implementations to evolve without changing OIDC protocol
 
 ---
 
+## 🛡️ Security Policy Management
+
+Security-sensitive runtime settings are managed as application data rather than being scattered as constants across the OIDC configuration. The security policy is persisted in the database and exposed through an administrative API.
+
+Current policy management endpoint:
+
+- `GET /api/admin/security-policy` — retrieve the active policy
+- `PUT /api/admin/security-policy` — update the active policy
+
+This creates a single source of truth for settings that affect authorization-server behavior.
+
+```mermaid
+flowchart LR
+    A["Admin API"] --> B["SecurityPolicyController"]
+    B --> C["SecurityPolicyService"]
+    C --> D["Security Policy Repository"]
+    D --> E[("Database")]
+    C --> F["OIDC Options Service"]
+    F --> G["oidc-provider Configuration"]
+```
+
+## ⏱️ OIDC Token Lifetimes
+
+TSCloak keeps token lifetime policy outside of hard-coded OIDC configuration. The `OidcOptionsService` obtains the active security policy during provider configuration and supplies the configured lifetime values to `oidc-provider` through its `ttl` configuration.
+
+The policy is intended to govern lifetimes such as:
+
+- Access tokens
+- ID tokens
+- Refresh tokens
+- Authorization codes and other OIDC artifacts as policy support expands
+
+`oidc-provider` requires TTL resolution during token processing, so the values supplied to its callbacks must be immediately available. The current design therefore treats the database-backed policy as the source of truth while keeping the OIDC provider configuration compatible with its synchronous TTL contract.
+
+```mermaid
+sequenceDiagram
+    participant DB as Database
+    participant SP as SecurityPolicyService
+    participant OS as OidcOptionsService
+    participant OP as oidc-provider
+
+    OS->>SP: Get active security policy
+    SP->>DB: Load policy
+    DB-->>SP: Policy values
+    SP-->>OS: Policy values
+    OS->>OP: Configure ttl callbacks
+    OP->>OP: Resolve artifact expiration
+```
+
+## 🔑 Signing Keys and JWKS
+
+TSCloak manages signing keys as a dedicated application concern. RSA key material is persisted and made available to the OIDC provider for token signing. Public key information is exposed through the provider's standard JWKS discovery surface, allowing relying parties to validate issued tokens.
+
+The intended separation is:
+
+- **Signing Keys module** owns key lifecycle and persistence.
+- **OIDC configuration** consumes the active signing key material.
+- **JWKS** exposes public key information required by clients and resource servers.
+- Private key material remains an internal server concern and is never exposed by JWKS.
+
+```mermaid
+flowchart LR
+    A["Signing Key Storage"] --> B["SigningKeyService"]
+    B --> C["OidcOptionsService"]
+    C --> D["oidc-provider"]
+    D --> E["Signed ID / Access Tokens"]
+    D --> F["JWKS Endpoint"]
+    F --> G["Public JWKs Only"]
+```
+
 ## ⏳ Expiration Handling
 
-OIDC runtime objects have different lifetimes. TSCloak handles expired records using two complementary strategies.
+OIDC runtime objects have different lifetimes. Lifetime values are governed by the active security policy, while persistence cleanup handles records whose configured expiration has passed. TSCloak uses two complementary cleanup strategies.
 
 ### 1. Lazy Cleanup
 
@@ -1163,13 +1274,16 @@ An inactive, expired, or invalid token returns:
 - [x] Token Revocation Endpoint (RFC 7009)
 - [x] Token Introspection Endpoint (RFC 7662)
 - [x] Dynamic Client Registration (`POST /reg`)
+- [x] Database-backed security policy management
+- [x] OIDC token lifetime configuration
+- [x] RSA signing key management and JWKS support
 
 ### Planned
 
 - [ ] Client Credentials Flow
 - [ ] Dynamic Client Registration Management (`GET` / `PUT` / `DELETE`)
 - [ ] PostgreSQL support
-- [ ] Redis caching
+- [ ] Distributed cache for policy and configuration reads
 - [ ] Horizontal scaling
 - [ ] Admin API
 - [ ] Audit logging
