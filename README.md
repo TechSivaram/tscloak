@@ -1354,6 +1354,206 @@ flowchart LR
 <a id="security-policy-management"></a>
 ## 🛡️ Security Policy Management
 
+Security policies centralize authorization-server behavior that would otherwise be scattered across application configuration or hardcoded into OIDC callbacks.
+
+TSCloak manages these settings as domain configuration so that security-sensitive behavior can be controlled consistently and persisted independently of application code.
+
+### Why Security Policies Are Needed
+
+An OpenID Connect provider makes several security decisions while processing authorization and token requests. Examples include token validity periods, refresh-token behavior, and other provider-level controls.
+
+Keeping these values in a dedicated security policy provides:
+
+- A single source of truth for security configuration.
+- Consistent behavior across OIDC flows.
+- Separation between security rules and application code.
+- The ability to manage policies independently from clients and identities.
+- A foundation for future administrative APIs and auditing.
+
+### Security Policy as a Domain Concept
+
+At a high level, the configuration relationship is:
+
+```text
+                     ┌─────────────────────┐
+                     │   Security Policy   │
+                     │─────────────────────│
+                     │ Token lifetimes     │
+                     │ Refresh behavior    │
+                     │ Provider controls   │
+                     └──────────┬──────────┘
+                                │
+                                │ applied during
+                                ▼
+┌──────────────┐        ┌───────────────────┐
+│ Authorization│───────►│   OIDC Provider   │
+│    Request   │        │                   │
+└──────────────┘        └─────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌───────────────────┐
+                         │ Token / Session   │
+                         │ Security Behavior │
+                         └───────────────────┘
+```
+
+The policy is therefore part of the authorization-server configuration model rather than client application configuration.
+
+### Policy Persistence
+
+Security policies are persisted in the TSCloak database rather than being treated as fixed constants in the application.
+
+This is important because the provider can evolve from a locally configured server into a manageable identity platform where configuration changes are stored as domain data.
+
+The conceptual flow is:
+
+```text
+Administrator / Management API
+            │
+            ▼
+ SecurityPolicyController
+            │
+            ▼
+   SecurityPolicyService
+            │
+            ▼
+ SecurityPolicyRepository
+            │
+            ▼
+          Database
+            │
+            │
+            └──────────────► OIDC Configuration
+                              reads policy values
+```
+
+This separation allows management operations to follow the normal application architecture:
+
+```text
+Controller
+    │
+    ▼
+Service
+    │
+    ▼
+Repository
+    │
+    ▼
+Database
+```
+
+### Policy Retrieval by the OIDC Layer
+
+The OIDC provider needs security configuration while constructing and operating the provider.
+
+TSCloak therefore separates two concerns:
+
+1. **Policy management** — creating, reading, and updating persisted security policy data.
+2. **Policy consumption** — using the configured values when constructing OIDC behavior.
+
+Conceptually:
+
+```text
+┌──────────────────────────┐
+│ SecurityPolicyService    │
+│                          │
+│ Read persisted policy    │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ OidcOptionsService       │
+│                          │
+│ Build OIDC configuration │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ nest-oidc-provider       │
+│                          │
+│ oidc-provider config     │
+└──────────────────────────┘
+```
+
+This keeps database concerns out of the low-level OIDC provider library while allowing TSCloak to own the source of configuration.
+
+### Security Policy and Token Lifetimes
+
+One of the primary policy-driven concerns is artifact lifetime.
+
+OIDC artifacts such as Access Tokens, Refresh Tokens, ID Tokens, authorization codes, and sessions do not all have the same security characteristics. Their lifetime must therefore be configurable independently.
+
+Conceptually:
+
+```text
+Security Policy
+      │
+      ├── Access Token TTL
+      ├── Refresh Token TTL
+      ├── ID Token TTL
+      ├── Authorization Code TTL
+      └── Session / Interaction TTL
+              │
+              ▼
+        OIDC Provider TTL
+        Configuration
+```
+
+The OIDC provider ultimately uses TTL values when creating artifacts. TSCloak's security policy provides the domain-level source for those values.
+
+### Policy Update Lifecycle
+
+A security policy change follows a normal configuration lifecycle:
+
+```text
+Update Security Policy
+        │
+        ▼
+Validate Input
+        │
+        ▼
+Update Domain Entity
+        │
+        ▼
+Persist to Database
+        │
+        ▼
+Policy Available to
+Provider Configuration
+```
+
+The important architectural distinction is that a policy update and an already-issued token are separate concerns. Updating a lifetime policy controls future provider behavior according to the configuration lifecycle; it does not retroactively change the expiry embedded in a token that has already been issued.
+
+### Security Considerations
+
+Security policies should be treated as privileged configuration.
+
+Recommended operational practices include:
+
+- Restrict policy management endpoints to administrative users.
+- Validate lifetime values and prevent unsafe ranges.
+- Audit changes to security-sensitive configuration.
+- Avoid exposing internal security configuration unnecessarily.
+- Keep production policies distinct from development defaults.
+- Rotate signing keys independently from token-lifetime configuration.
+
+### Relationship to Other TSCloak Components
+
+| Component | Relationship |
+|---|---|
+| Security Policy Management | Owns persisted security configuration |
+| OidcOptionsService | Consumes configuration when building provider options |
+| OIDC Provider | Applies configuration while issuing and validating artifacts |
+| Token Management | Operates on artifacts governed by security settings |
+| Signing Keys | Independently control token signing and verification |
+
+Security Policy Management answers **how long and under what provider-level rules artifacts are valid**. Signing Keys answer **how those artifacts are cryptographically signed and verified**.
+
+These are related security concerns, but they should remain separate domain concepts.
+
+<a id="security-policy-management"></a>
+## 🛡️ Security Policy Management
+
 Security-sensitive runtime settings are managed as application data rather than being scattered as constants across the OIDC configuration. The security policy is persisted in the database and exposed through an administrative API.
 
 Current policy management endpoint:
@@ -1372,6 +1572,305 @@ flowchart LR
     C --> F["OIDC Options Service"]
     F --> G["oidc-provider Configuration"]
 ```
+
+<a id="signing-keys-and-jwks"></a>
+## 🔑 Signing Keys and JWKS
+
+OpenID Connect relies on cryptographic signatures to allow clients and resource servers to verify tokens issued by the authorization server.
+
+TSCloak manages signing keys as part of the identity-provider infrastructure and exposes public key material through a JSON Web Key Set (JWKS).
+
+### Why Signing Keys Are Required
+
+When TSCloak issues a signed token, the token must be protected against modification.
+
+The authorization server signs the token using a private key. A relying party can then verify the signature using the corresponding public key.
+
+The cryptographic trust model is:
+
+```text
+                    Private Key
+                         │
+                         │ signs
+                         ▼
+                  ┌─────────────┐
+                  │ ID / Access │
+                  │    Token    │
+                  └──────┬──────┘
+                         │
+                         │ sent to
+                         ▼
+                     Client
+                         │
+                         │ obtains public key
+                         ▼
+                      JWKS
+                         │
+                         │ verifies
+                         ▼
+                  Trusted Token
+```
+
+The private signing key must remain under TSCloak's control. Only public key information is exposed through JWKS.
+
+### Signing Key Management
+
+Signing keys are managed as a dedicated concern rather than being embedded directly into OIDC configuration.
+
+Conceptually:
+
+```text
+┌──────────────────────┐
+│ SigningKeyService    │
+│                      │
+│ Manage active keys   │
+└──────────┬───────────┘
+           │
+           ├──────────────► Private key material
+           │
+           └──────────────► Public JWK representation
+                            │
+                            ▼
+                          JWKS
+```
+
+This separation allows TSCloak to distinguish between:
+
+- Key generation and storage.
+- Selecting a key for signing.
+- Publishing public keys.
+- Future key rotation.
+- OIDC provider signing configuration.
+
+### How Keys Are Used During Token Issuance
+
+When the OIDC provider needs to issue a signed token, the signing configuration selects an appropriate active signing key.
+
+The high-level flow is:
+
+```text
+Token Issuance Request
+        │
+        ▼
+OIDC Provider
+        │
+        ▼
+Resolve Signing Configuration
+        │
+        ▼
+SigningKeyService
+        │
+        ▼
+Select Active Signing Key
+        │
+        ▼
+Sign Token with Private Key
+        │
+        ▼
+Return Signed JWT
+```
+
+The resulting JWT contains a header identifying the cryptographic algorithm and, when applicable, the key identifier (`kid`) used for verification.
+
+### JWKS Endpoint
+
+TSCloak publishes public signing key information through a JWKS endpoint.
+
+The endpoint URL should be obtained from the OpenID Connect Discovery document through the `jwks_uri` property.
+
+For example:
+
+```json
+{
+  "jwks_uri": "http://localhost:3000/jwks"
+}
+```
+
+A local client can therefore obtain the provider's public keys from:
+
+```text
+GET http://localhost:3000/jwks
+```
+
+As with other OIDC endpoints, clients should prefer the Discovery metadata rather than hardcoding the JWKS URL.
+
+### JWKS Response
+
+A JWKS response contains a collection of JSON Web Keys:
+
+```json
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "use": "sig",
+      "kid": "key-identifier",
+      "alg": "RS256",
+      "n": "...",
+      "e": "AQAB"
+    }
+  ]
+}
+```
+
+The exact fields depend on the key type and algorithm.
+
+Important fields include:
+
+| Field | Meaning |
+|---|---|
+| `kty` | Key type |
+| `use` | Intended key usage, such as signature verification |
+| `kid` | Key identifier |
+| `alg` | Intended signing algorithm |
+| Public key parameters | Cryptographic material required for verification |
+
+Private key parameters must never be included in the JWKS response.
+
+### Token Verification Flow
+
+A client validating a JWT issued by TSCloak follows this conceptual flow:
+
+```text
+Receive JWT
+    │
+    ▼
+Read JWT Header
+    │
+    ├── alg
+    └── kid
+    │
+    ▼
+Obtain Provider Metadata
+    │
+    ▼
+Read jwks_uri
+    │
+    ▼
+Retrieve / Use Cached JWKS
+    │
+    ▼
+Find Matching Public Key by kid
+    │
+    ▼
+Verify JWT Signature
+    │
+    ├── Invalid ──► Reject Token
+    │
+    ▼
+Validate Token Claims
+    │
+    └── iss, aud, exp, etc.
+```
+
+Signature validation proves that the token was signed by a trusted key. Clients must also validate relevant JWT claims such as issuer, audience, and expiration.
+
+### Discovery Integration
+
+OIDC clients should begin with the provider's Discovery document:
+
+```text
+http://localhost:3000/.well-known/openid-configuration
+```
+
+The metadata connects the provider identity to its verification keys:
+
+```json
+{
+  "issuer": "http://localhost:3000",
+  "jwks_uri": "http://localhost:3000/jwks"
+}
+```
+
+This enables automatic client configuration and supports future changes to key infrastructure without requiring clients to embed public keys directly in their applications.
+
+### Key Identifiers (`kid`)
+
+A key identifier allows a token verifier to select the correct public key when multiple keys are published.
+
+This is especially important during key rotation.
+
+```text
+                 JWKS
+                   │
+        ┌──────────┴──────────┐
+        ▼                     ▼
+   key-2026-a            key-2026-b
+   (previous)            (active)
+        │                     │
+        └──────────┬──────────┘
+                   │
+            Match JWT `kid`
+```
+
+A verifier reads the JWT header, identifies its `kid`, and selects the corresponding public key from the JWKS.
+
+### Key Rotation
+
+Signing keys should eventually support rotation because long-lived key material should not remain active indefinitely.
+
+A safe conceptual rotation process is:
+
+```text
+1. Generate New Key Pair
+          │
+          ▼
+2. Publish New Public Key in JWKS
+          │
+          ▼
+3. Begin Signing New Tokens with New Key
+          │
+          ▼
+4. Continue Publishing Previous Public Key
+   while previously issued tokens remain valid
+          │
+          ▼
+5. Retire Previous Key
+```
+
+The overlap period is important. Removing an old public key immediately can cause clients to fail validation of tokens that were legitimately issued with the previous key.
+
+### Private Key Protection
+
+Private signing keys are highly sensitive security assets.
+
+TSCloak's key-management architecture should ensure that:
+
+- Private keys are never returned by public APIs.
+- JWKS contains public key material only.
+- Key-management operations are restricted.
+- Key material is protected at rest.
+- Production deployments use an appropriate secret-management strategy.
+- Signing key rotation is auditable.
+
+### Relationship to Token Management
+
+Signing keys establish **cryptographic trust**, while token management controls the lifecycle and operational handling of tokens.
+
+```text
+Signing Keys
+    │
+    ├── Sign Tokens
+    └── Publish Public Keys
+              │
+              ▼
+         Token Trust
+
+Token Management
+    │
+    ├── Issue Tokens
+    ├── Refresh Tokens
+    ├── Revoke Tokens
+    └── Control Lifetimes
+              │
+              ▼
+        Token Lifecycle
+```
+
+Together, these components provide two essential parts of an identity provider:
+
+- **Can the token be trusted?** → Signing Keys and JWKS.
+- **Is the token currently valid and permitted?** → Token lifecycle and authorization rules.
 
 <a id="signing-keys-and-jwks"></a>
 ## 🔑 Signing Keys and JWKS
