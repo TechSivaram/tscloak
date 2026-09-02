@@ -55,12 +55,8 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ## 🧭 Navigation
 
-Use the links below to navigate the README. Main sections and subsections follow the same order as the document.
+Use the links below to navigate the README. Every link uses an explicit anchor defined in this document.
 
-  - [A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS](#a-modular-openid-connect-oauth-20-authorization-server-built-with-nestjs)
-- [📖 Overview](#overview)
-  - [✨ Highlights](#highlights)
-- [🏗️ Architecture](#architecture)
   - [Responsibility Layers](#responsibility-layers)
 - [🧩 Technology Stack](#technology-stack)
 - [📁 Project Structure](#project-structure)
@@ -119,7 +115,7 @@ Use the links below to navigate the README. Main sections and subsections follow
 - [📝 Dynamic Client Registration](#dynamic-client-registration)
   - [Current Support](#current-support)
   - [Register a Client](#register-a-client)
-  - [Example Response](#example-response)
+  - [Example Response](#example-response-1)
   - [Registration Metadata Mapping](#registration-metadata-mapping)
   - [Interaction UI Registration Metadata](#interaction-ui-registration-metadata)
   - [Using a Dynamically Registered Client](#using-a-dynamically-registered-client)
@@ -153,7 +149,7 @@ Use the links below to navigate the README. Main sections and subsections follow
   - [Key Rotation](#key-rotation)
   - [Private Key Protection](#private-key-protection)
   - [Relationship to Token Management](#relationship-to-token-management)
-- [🔑 Signing Keys and JWKS](#signing-keys-and-jwks)
+- [🔑 Signing Keys and JWKS](#signing-keys-and-jwks-1)
 - [💾 Persistent OIDC Storage](#persistent-oidc-storage)
   - [Persisted Runtime Objects](#persisted-runtime-objects)
 - [🗄️ Storage Architecture](#storage-architecture)
@@ -879,6 +875,7 @@ The **UserInfo Endpoint** is a standard OpenID Connect endpoint that allows a cl
 
 After a client completes authentication and receives an Access Token, it can call the UserInfo Endpoint to obtain identity and profile information for the user represented by that token. This keeps authentication separate from profile retrieval and allows claims to be returned according to the scopes granted during authorization.
 
+<a id="endpoint"></a>
 ### Endpoint
 
 TSCloak currently exposes the UserInfo Endpoint at:
@@ -897,6 +894,7 @@ The endpoint is advertised through the OpenID Connect Discovery document:
 
 Clients should preferably obtain this URL from the provider's Discovery metadata instead of hardcoding `/me`.
 
+<a id="how-it-fits-into-the-oidc-flow"></a>
 ### How It Fits Into the OIDC Flow
 
 The UserInfo Endpoint is typically called after the client exchanges an Authorization Code for tokens.
@@ -927,6 +925,7 @@ The UserInfo Endpoint is typically called after the client exchanges an Authoriz
      │                                             │
 ```
 
+<a id="calling-the-endpoint"></a>
 ### Calling the Endpoint
 
 The endpoint requires a valid OAuth 2.0 Bearer Access Token.
@@ -950,6 +949,7 @@ The Access Token is sent using the standard HTTP Authorization header:
 Authorization: Bearer <access_token>
 ```
 
+<a id="how-tscloak-resolves-userinfo-claims"></a>
 ### How TSCloak Resolves UserInfo Claims
 
 At a high level, a UserInfo request follows this processing flow:
@@ -980,6 +980,7 @@ Return UserInfo Response
 
 The subject returned by the endpoint is associated with the user represented by the Access Token.
 
+<a id="scopes-and-claims"></a>
 ### Scopes and Claims
 
 OpenID Connect scopes determine which categories of claims a client is permitted to request.
@@ -1001,6 +1002,7 @@ The exact claims returned depend on:
 3. The claims available for the authenticated user.
 4. TSCloak's claim resolution configuration.
 
+<a id="example-response"></a>
 ### Example Response
 
 A successful UserInfo response may look like:
@@ -1016,6 +1018,7 @@ A successful UserInfo response may look like:
 
 The `sub` claim identifies the authenticated end user and is the primary subject identifier used by OpenID Connect.
 
+<a id="id-token-vs-userinfo-endpoint"></a>
 ### ID Token vs UserInfo Endpoint
 
 Both the ID Token and the UserInfo Endpoint provide identity information, but they serve different purposes.
@@ -1030,6 +1033,7 @@ Both the ID Token and the UserInfo Endpoint provide identity information, but th
 
 A client should not assume that all available user profile information will always be included in the ID Token. When additional user claims are needed, the client can use the UserInfo Endpoint.
 
+<a id="endpoint-discovery"></a>
 ### Endpoint Discovery
 
 OIDC clients should use the Discovery document as the authoritative source for provider endpoint URLs.
@@ -1056,6 +1060,7 @@ This allows client applications to discover TSCloak endpoints dynamically rather
 
 > **Important:** Although TSCloak currently exposes UserInfo at `/me`, client applications should use the `userinfo_endpoint` value advertised by the Discovery document.
 
+<a id="error-handling"></a>
 ### Error Handling
 
 A UserInfo request is rejected when the supplied Access Token cannot be accepted.
@@ -1271,7 +1276,7 @@ curl -X POST http://localhost:3000/reg \
   }'
 ```
 
-<a id="example-response"></a>
+<a id="example-response-1"></a>
 ### Example Response
 
 A successful registration returns dynamically generated client metadata:
@@ -1396,6 +1401,7 @@ Instead of scattering token lifetimes and related security settings across envir
 
 This makes security configuration a first-class part of the TSCloak domain model.
 
+<a id="what-the-security-policy-controls"></a>
 ### What the Security Policy Controls
 
 The current `SecurityPolicy` model contains three groups of settings.
@@ -1425,6 +1431,7 @@ The current `SecurityPolicy` model contains three groups of settings.
 
 All lifetime values are stored in **seconds**.
 
+<a id="security-policy-data-model"></a>
 ### Security Policy Data Model
 
 The policy is represented by a TypeORM entity and persisted as application data.
@@ -1455,6 +1462,7 @@ security_policies
 
 The policy is intentionally modeled as a **server-level policy** rather than a client-level policy. TSCloak currently manages one effective security policy for the authorization server.
 
+<a id="default-policy-creation"></a>
 ### Default Policy Creation
 
 TSCloak does not require a security policy row to be manually seeded before the application can use the policy service.
@@ -1493,6 +1501,7 @@ Interaction TTL          = 10 minutes
 
 Once created, the database becomes the persisted source of the policy rather than requiring the defaults to be recreated for every request.
 
+<a id="administrative-api"></a>
 ### Administrative API
 
 The current Security Policy Management API exposes a single server-level policy.
@@ -1568,6 +1577,7 @@ curl -X PUT http://localhost:3000/api/admin/security-policy \
 
 The update operation first obtains the server-level policy, applies the supplied DTO values, and persists the resulting entity.
 
+<a id="management-architecture"></a>
 ### Management Architecture
 
 Security Policy Management follows the standard NestJS application layering used by TSCloak.
@@ -1590,6 +1600,7 @@ Responsibilities are separated as follows:
 | TypeORM repository | Reads and writes policy data |
 | Database | Stores the active server-level configuration |
 
+<a id="reading-the-policy"></a>
 ### Reading the Policy
 
 The retrieval path is intentionally simple.
@@ -1617,6 +1628,7 @@ sequenceDiagram
     C-->>A: 200 OK + policy
 ```
 
+<a id="updating-the-policy"></a>
 ### Updating the Policy
 
 Updating a policy uses the same server-level record.
@@ -1644,6 +1656,7 @@ sequenceDiagram
 
 This design means callers do not create arbitrary policy records. They manage the effective server-level policy.
 
+<a id="relationship-with-oidc-configuration"></a>
 ### Relationship with OIDC Configuration
 
 Security Policy Management is not merely an administrative CRUD feature. Its purpose is to provide configuration that can be consumed by the OIDC layer.
@@ -1680,6 +1693,7 @@ Issued OIDC artifacts
 
 This is the key architectural reason for storing the values in the database: **the security policy is the TSCloak-owned source of configuration, while `oidc-provider` remains the protocol engine that applies the resulting settings.**
 
+<a id="oidc-token-lifetime-mapping"></a>
 ### OIDC Token Lifetime Mapping
 
 The underlying `oidc-provider` configuration supports separate TTL configuration for OIDC artifacts.
@@ -1710,6 +1724,7 @@ flowchart LR
     B --> H["Interaction"]
 ```
 
+<a id="why-the-values-are-not-hardcoded"></a>
 ### Why the Values Are Not Hardcoded
 
 TSCloak deliberately separates policy values from the protocol configuration code.
@@ -1739,6 +1754,7 @@ Protocol Behavior
 
 This makes the values part of the authorization-server configuration model rather than implementation constants.
 
+<a id="runtime-configuration-considerations"></a>
 ### Runtime Configuration Considerations
 
 The current architecture distinguishes between **persisting a policy** and **when a provider consumes a policy value**.
@@ -1762,6 +1778,7 @@ OIDC artifact expiration
 
 TSCloak's policy remains database-backed as the source of truth. How policy values are made available to synchronous runtime callbacks is a separate runtime integration concern and should not be confused with the persistence model.
 
+<a id="policy-changes-and-existing-tokens"></a>
 ### Policy Changes and Existing Tokens
 
 Changing a policy does not retroactively alter the expiration already assigned to an existing token or authorization artifact.
@@ -1779,6 +1796,7 @@ New Access Token TTL = 30 minutes
 
 The already-issued token retains its existing expiry. The changed policy affects provider behavior when the new configuration value is applied to future artifact creation.
 
+<a id="refresh-token-controls"></a>
 ### Refresh Token Controls
 
 The policy model already includes two refresh-token security settings:
@@ -1805,6 +1823,7 @@ Refresh Token Policy
 
 This separation provides room for the refresh-token implementation to evolve without changing the persisted policy model.
 
+<a id="persistence-and-scaling"></a>
 ### Persistence and Scaling
 
 The policy is stored in the database, not in process-local memory.
@@ -1828,12 +1847,14 @@ This is important for deployments with multiple application instances:
 
 The database provides a shared source of truth across instances. This avoids treating a single application's in-memory state as the authoritative security configuration.
 
+<a id="security-considerations"></a>
 ### Security Considerations
 
 Security Policy Management endpoints modify authorization-server behavior and should therefore be treated as administrative operations.
 
 In a production deployment, these endpoints should be protected with appropriate administrative authorization controls. Changes to token lifetimes or refresh-token security behavior can directly affect the security posture of the identity provider.
 
+<a id="current-scope"></a>
 ### Current Scope
 
 The currently implemented Security Policy Management feature provides:
@@ -1856,6 +1877,7 @@ OpenID Connect relies on cryptographic signatures to allow clients and resource 
 
 TSCloak manages signing keys as part of the identity-provider infrastructure and exposes public key material through a JSON Web Key Set (JWKS).
 
+<a id="why-signing-keys-are-required"></a>
 ### Why Signing Keys Are Required
 
 When TSCloak issues a signed token, the token must be protected against modification.
@@ -1889,6 +1911,7 @@ The cryptographic trust model is:
 
 The private signing key must remain under TSCloak's control. Only public key information is exposed through JWKS.
 
+<a id="signing-key-management"></a>
 ### Signing Key Management
 
 Signing keys are managed as a dedicated concern rather than being embedded directly into OIDC configuration.
@@ -1918,6 +1941,7 @@ This separation allows TSCloak to distinguish between:
 - Future key rotation.
 - OIDC provider signing configuration.
 
+<a id="how-keys-are-used-during-token-issuance"></a>
 ### How Keys Are Used During Token Issuance
 
 When the OIDC provider needs to issue a signed token, the signing configuration selects an appropriate active signing key.
@@ -1948,6 +1972,7 @@ Return Signed JWT
 
 The resulting JWT contains a header identifying the cryptographic algorithm and, when applicable, the key identifier (`kid`) used for verification.
 
+<a id="jwks-endpoint"></a>
 ### JWKS Endpoint
 
 TSCloak publishes public signing key information through a JWKS endpoint.
@@ -1970,6 +1995,7 @@ GET http://localhost:3000/jwks
 
 As with other OIDC endpoints, clients should prefer the Discovery metadata rather than hardcoding the JWKS URL.
 
+<a id="jwks-response"></a>
 ### JWKS Response
 
 A JWKS response contains a collection of JSON Web Keys:
@@ -2003,6 +2029,7 @@ Important fields include:
 
 Private key parameters must never be included in the JWKS response.
 
+<a id="token-verification-flow"></a>
 ### Token Verification Flow
 
 A client validating a JWT issued by TSCloak follows this conceptual flow:
@@ -2041,6 +2068,7 @@ Validate Token Claims
 
 Signature validation proves that the token was signed by a trusted key. Clients must also validate relevant JWT claims such as issuer, audience, and expiration.
 
+<a id="discovery-integration"></a>
 ### Discovery Integration
 
 OIDC clients should begin with the provider's Discovery document:
@@ -2060,6 +2088,7 @@ The metadata connects the provider identity to its verification keys:
 
 This enables automatic client configuration and supports future changes to key infrastructure without requiring clients to embed public keys directly in their applications.
 
+<a id="key-identifiers-kid"></a>
 ### Key Identifiers (`kid`)
 
 A key identifier allows a token verifier to select the correct public key when multiple keys are published.
@@ -2081,6 +2110,7 @@ This is especially important during key rotation.
 
 A verifier reads the JWT header, identifies its `kid`, and selects the corresponding public key from the JWKS.
 
+<a id="key-rotation"></a>
 ### Key Rotation
 
 Signing keys should eventually support rotation because long-lived key material should not remain active indefinitely.
@@ -2106,6 +2136,7 @@ A safe conceptual rotation process is:
 
 The overlap period is important. Removing an old public key immediately can cause clients to fail validation of tokens that were legitimately issued with the previous key.
 
+<a id="private-key-protection"></a>
 ### Private Key Protection
 
 Private signing keys are highly sensitive security assets.
@@ -2119,6 +2150,7 @@ TSCloak's key-management architecture should ensure that:
 - Production deployments use an appropriate secret-management strategy.
 - Signing key rotation is auditable.
 
+<a id="relationship-to-token-management"></a>
 ### Relationship to Token Management
 
 Signing keys establish **cryptographic trust**, while token management controls the lifecycle and operational handling of tokens.
@@ -2148,7 +2180,7 @@ Together, these components provide two essential parts of an identity provider:
 - **Can the token be trusted?** → Signing Keys and JWKS.
 - **Is the token currently valid and permitted?** → Token lifecycle and authorization rules.
 
-<a id="signing-keys-and-jwks"></a>
+<a id="signing-keys-and-jwks-1"></a>
 ## 🔑 Signing Keys and JWKS
 
 TSCloak manages signing keys as a dedicated application concern. RSA key material is persisted and made available to the OIDC provider for token signing. Public key information is exposed through the provider's standard JWKS discovery surface, allowing relying parties to validate issued tokens.
