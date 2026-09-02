@@ -4,6 +4,7 @@
 
 # 🛡️ TSCloak
 
+<a id="a-modular-openid-connect-oauth-20-authorization-server-built-with-nestjs"></a>
 ### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
 
 [![NestJS](https://img.shields.io/badge/NestJS-10+-E0234E?logo=nestjs)](https://nestjs.com/)
@@ -19,6 +20,7 @@
 
 ---
 
+<a id="overview"></a>
 ## 📖 Overview
 
 **TSCloak** is a modular OpenID Connect (OIDC) and OAuth 2.0 Authorization Server built with **NestJS** and **TypeScript**.
@@ -27,6 +29,7 @@ It uses [`oidc-provider`](https://github.com/panva/node-oidc-provider) for stand
 
 The goal is to provide a maintainable architecture for building an authorization server without tightly coupling business logic to protocol or database implementations.
 
+<a id="highlights"></a>
 ### ✨ Highlights
 
 - 🔐 OAuth 2.0 Authorization Code Flow
@@ -130,6 +133,7 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ---
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
 TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
@@ -164,6 +168,7 @@ flowchart TD
     K --> L[("Database")]
 ```
 
+<a id="responsibility-layers"></a>
 ### Responsibility Layers
 
 | Layer | Responsibility |
@@ -177,6 +182,7 @@ flowchart TD
 | **Repository Abstractions** | Decouple application and OIDC persistence from the underlying database |
 | **TypeORM** | Database persistence implementation |
 
+<a id="technology-stack"></a>
 ## 🧩 Technology Stack
 
 | Technology | Purpose |
@@ -191,6 +197,7 @@ flowchart TD
 
 ---
 
+<a id="project-structure"></a>
 ## 📁 Project Structure
 
 ```mermaid
@@ -210,6 +217,7 @@ flowchart TD
     A --> K["main.ts"]
 ```
 
+<a id="module-responsibilities"></a>
 ### Module Responsibilities
 
 | Module | Responsibility |
@@ -223,14 +231,17 @@ flowchart TD
 
 ---
 
+<a id="getting-started"></a>
 ## 🚀 Getting Started
 
+<a id="prerequisites"></a>
 ### Prerequisites
 
 - Node.js
 - npm
 - Git
 
+<a id="installation"></a>
 ### Installation
 
 ```bash
@@ -239,18 +250,21 @@ cd TSCloak
 npm install
 ```
 
+<a id="run-in-development"></a>
 ### Run in Development
 
 ```bash
 npm run start:dev
 ```
 
+<a id="build"></a>
 ### Build
 
 ```bash
 npm run build
 ```
 
+<a id="run-in-production"></a>
 ### Run in Production
 
 ```bash
@@ -259,6 +273,7 @@ npm run start:prod
 
 ---
 
+<a id="authentication-flow"></a>
 ## 🔐 Authentication Flow
 
 TSCloak currently supports the **Authorization Code Flow with PKCE**.
@@ -277,6 +292,7 @@ sequenceDiagram
     T-->>C: 4. Tokens
 ```
 
+<a id="token-response"></a>
 ### Token Response
 
 ```json
@@ -292,6 +308,7 @@ sequenceDiagram
 
 ---
 
+<a id="login-experience"></a>
 ## 🖥️ Login Experience
 
 TSCloak provides an authentication interaction page for users to securely sign in before authorization is completed.
@@ -306,6 +323,7 @@ TSCloak provides an authentication interaction page for users to securely sign i
 
 ---
 
+<a id="consent-experience"></a>
 ## 🤝 Consent Experience
 
 TSCloak supports a hosted consent page and can also be integrated with a client-provided custom interaction UI.
@@ -333,6 +351,7 @@ flowchart TD
 
 </div>
 
+<a id="hosted-consent-endpoint"></a>
 ### Hosted Consent Endpoint
 
 The hosted consent UI submits the user's decision to:
@@ -359,6 +378,7 @@ Example hosted form:
 
 > `accept` and `reject` are the values expected by the interaction controller.
 
+<a id="standard-scope-descriptions"></a>
 ### Standard Scope Descriptions
 
 The hosted consent UI displays human-readable descriptions for standard scopes.
@@ -370,6 +390,7 @@ The hosted consent UI displays human-readable descriptions for standard scopes.
 | `email` | Access your email address and email verification status |
 | `offline_access` | Maintain access when you are not actively using the application and allow refresh token usage |
 
+<a id="consent-persistence"></a>
 ### Consent Persistence
 
 When a user approves a client, TSCloak persists an OIDC `Grant` containing the approved scopes. The session is associated with that Grant so subsequent authorization requests can reuse the existing consent.
@@ -386,6 +407,7 @@ Example Grant:
 }
 ```
 
+<a id="promptconsent"></a>
 ### `prompt=consent`
 
 Clients can explicitly force the consent screen by including:
@@ -396,6 +418,7 @@ prompt=consent
 
 Even when a valid session and existing Grant are present, this requests a new consent interaction.
 
+<a id="incremental-consent"></a>
 ### Incremental Consent
 
 For normal scopes, when a client requests permissions that have not yet been approved, TSCloak can present the consent interaction again so the user can approve the additional permissions.
@@ -409,6 +432,7 @@ flowchart LR
     B -->|Yes: api.read| D["Show Consent UI"]
 ```
 
+<a id="offlineaccess-and-refresh-tokens"></a>
 ### `offline_access` and Refresh Tokens
 
 `offline_access` is a special OpenID Connect scope used to request refresh-token capability.
@@ -426,6 +450,7 @@ After consent is granted, the authorization request can proceed with `offline_ac
 
 ---
 
+<a id="interaction-ui-customization"></a>
 ## 🖥️ Interaction UI Customization
 
 TSCloak supports two approaches for handling OIDC interactions:
@@ -435,6 +460,7 @@ TSCloak supports two approaches for handling OIDC interactions:
 
 This allows TSCloak to work both as a standalone Identity Provider with built-in screens and as a backend authorization server integrated with an organization's existing UI.
 
+<a id="interaction-endpoints"></a>
 ### Interaction Endpoints
 
 TSCloak separates displaying an interaction from completing it.
@@ -447,6 +473,7 @@ TSCloak separates displaying an interaction from completing it.
 
 The current interaction type is determined by the OIDC provider and can include `login` or `consent`.
 
+<a id="hosted-ui-flow"></a>
 ### Hosted UI Flow
 
 Hosted UI is the default behavior.
@@ -490,6 +517,7 @@ The consent page submits to:
 POST /interaction/:uid/consent
 ```
 
+<a id="custom-interaction-ui-flow"></a>
 ### Custom Interaction UI Flow
 
 Organizations may already have their own Login UI, branding, or consent experience. TSCloak allows Login and Consent interactions to be delegated independently to an external application.
@@ -513,6 +541,7 @@ flowchart TD
     L --> M["Client Callback"]
 ```
 
+<a id="interaction-url-configuration"></a>
 ### Interaction URL Configuration
 
 Each client can configure interaction mode and separate URLs for Login and Consent.
@@ -532,6 +561,7 @@ interactionConsentUrl?: string;
 
 This allows Login and Consent to be customized independently while preserving a hosted fallback.
 
+<a id="external-interaction-redirect"></a>
 ### External Interaction Redirect
 
 When TSCloak delegates an interaction to an external UI, it redirects the browser with interaction information.
@@ -548,6 +578,7 @@ Example consent redirect:
 http://localhost:4200/consent?interaction_uid=<uid>&prompt=consent&client_id=<client_id>
 ```
 
+<a id="interactionuid"></a>
 ### `interaction_uid`
 
 The `interaction_uid` identifies the current OIDC interaction.
@@ -568,6 +599,7 @@ sequenceDiagram
 
 The Custom UI must preserve this value throughout the Login or Consent flow so that the interaction can be completed against the correct authorization request.
 
+<a id="prompt-aware-custom-ui"></a>
 ### Prompt-Aware Custom UI
 
 The `prompt` parameter allows a Custom UI application to determine which interaction experience should be rendered.
@@ -588,6 +620,7 @@ This architecture allows organizations to fully customize branding and user expe
 
 ---
 
+<a id="supported-scopes"></a>
 ## 🎯 Supported Scopes
 
 | Scope | Description |
@@ -605,12 +638,15 @@ scope=openid profile email offline_access
 
 ---
 
+<a id="token-types"></a>
 ## 🎫 Token Types
 
+<a id="access-token"></a>
 ### Access Token
 
 Used to access protected resources.
 
+<a id="id-token"></a>
 ### ID Token
 
 Represents the authenticated user and contains OpenID Connect claims.
@@ -625,6 +661,7 @@ Example:
 }
 ```
 
+<a id="refresh-token"></a>
 ### Refresh Token
 
 Allows clients to obtain new access tokens without requiring the user to authenticate again.
@@ -635,6 +672,7 @@ TSCloak supports refresh token rotation through the underlying OIDC provider.
 
 ---
 
+<a id="oidc-token-lifetimes"></a>
 ## ⏱️ OIDC Token Lifetimes
 
 TSCloak keeps token lifetime policy outside of hard-coded OIDC configuration. The `OidcOptionsService` obtains the active security policy during provider configuration and supplies the configured lifetime values to `oidc-provider` through its `ttl` configuration.
@@ -663,6 +701,7 @@ sequenceDiagram
     OP->>OP: Resolve artifact expiration
 ```
 
+<a id="using-access-tokens"></a>
 ## 🔑 Using Access Tokens
 
 After completing the authorization flow, TSCloak returns an access token:
@@ -680,6 +719,7 @@ After completing the authorization flow, TSCloak returns an access token:
 
 Use the access token as a **Bearer token** when calling the UserInfo (`/me`) endpoint.
 
+<a id="get-current-user-details"></a>
 ### Get Current User Details
 
 ```http
@@ -710,6 +750,7 @@ The `/me` endpoint validates the access token and returns identity claims based 
 
 ---
 
+<a id="refreshing-an-access-token"></a>
 ## ♻️ Refreshing an Access Token
 
 When the access token expires, use the refresh token to obtain a new token set without requiring the user to sign in again.
@@ -725,6 +766,7 @@ scope=openid profile email offline_access
 
 `offline_access` is a special OIDC scope. Without explicit consent, the underlying OIDC provider may exclude it from the effective authorization scope, resulting in no refresh token being issued.
 
+<a id="refresh-token-request"></a>
 ### Refresh Token Request
 
 ```http
@@ -763,6 +805,7 @@ Example response:
 }
 ```
 
+<a id="refresh-token-rotation"></a>
 ### Refresh Token Rotation
 
 TSCloak supports refresh token rotation through `oidc-provider`.
@@ -778,6 +821,7 @@ flowchart TD
 
 > ⚠️ **Important:** After refresh token rotation, store the newly returned refresh token. Reusing the old refresh token should fail.
 
+<a id="typical-token-lifecycle"></a>
 ### Typical Token Lifecycle
 
 ```mermaid
@@ -792,6 +836,7 @@ flowchart TD
 
 ---
 
+<a id="userinfo-endpoint"></a>
 ## 👤 UserInfo Endpoint
 
 User identity claims can be retrieved using the UserInfo endpoint with a valid access token.
@@ -810,10 +855,12 @@ Example response:
 
 ---
 
+<a id="token-management-endpoints"></a>
 ## 🔒 Token Management Endpoints
 
 TSCloak provides standard OAuth 2.0 token management capabilities through the underlying OIDC provider.
 
+<a id="token-revocation-endpoint"></a>
 ### 🚫 Token Revocation Endpoint
 
 The Token Revocation endpoint allows a client to explicitly invalidate an issued token.
@@ -859,6 +906,7 @@ flowchart TD
 
 ---
 
+<a id="token-introspection-endpoint"></a>
 ### 🔍 Token Introspection Endpoint
 
 The Token Introspection endpoint allows a resource server to query TSCloak and determine whether a token is currently active.
@@ -900,6 +948,7 @@ An inactive, expired, or invalid token returns:
 }
 ```
 
+<a id="token-management-summary"></a>
 ### Token Management Summary
 
 | Endpoint | Purpose | Primary Consumer |
@@ -911,6 +960,7 @@ An inactive, expired, or invalid token returns:
 
 ---
 
+<a id="dynamic-client-resolution"></a>
 ## ⚡ Dynamic Client Resolution
 
 Clients are resolved dynamically when an authorization request is processed.
@@ -932,6 +982,7 @@ This approach allows client configuration to be managed independently of the OID
 
 ---
 
+<a id="dynamic-client-registration"></a>
 ## 📝 Dynamic Client Registration
 
 TSCloak supports **OpenID Connect Dynamic Client Registration**, allowing OAuth/OIDC clients to register at runtime instead of requiring every client to be created manually.
@@ -950,6 +1001,7 @@ Example discovery metadata:
 }
 ```
 
+<a id="current-support"></a>
 ### Current Support
 
 | Method | Endpoint | Status |
@@ -959,6 +1011,7 @@ Example discovery metadata:
 | `PUT` | `/reg/:client_id` | ⏳ Planned |
 | `DELETE` | `/reg/:client_id` | ⏳ Planned |
 
+<a id="register-a-client"></a>
 ### Register a Client
 
 ```http
@@ -1000,6 +1053,7 @@ curl -X POST http://localhost:3000/reg \
   }'
 ```
 
+<a id="example-response"></a>
 ### Example Response
 
 A successful registration returns dynamically generated client metadata:
@@ -1025,6 +1079,7 @@ A successful registration returns dynamically generated client metadata:
 }
 ```
 
+<a id="registration-metadata-mapping"></a>
 ### Registration Metadata Mapping
 
 TSCloak maps standard Dynamic Client Registration metadata to its internal client model:
@@ -1043,6 +1098,7 @@ TSCloak maps standard Dynamic Client Registration metadata to its internal clien
 | `interaction_login_url` | `interactionLoginUrl` |
 | `interaction_consent_url` | `interactionConsentUrl` |
 
+<a id="interaction-ui-registration-metadata"></a>
 ### Interaction UI Registration Metadata
 
 Dynamic clients can choose the built-in hosted UI or configure external interaction URLs.
@@ -1072,6 +1128,7 @@ allowedScopes = [
 ]
 ```
 
+<a id="using-a-dynamically-registered-client"></a>
 ### Using a Dynamically Registered Client
 
 After registration, the returned `client_id` can be used like any other configured OAuth/OIDC client.
@@ -1096,6 +1153,7 @@ For public clients using:
 
 PKCE should be used with the Authorization Code Flow.
 
+<a id="persistence-architecture"></a>
 ### Persistence Architecture
 
 Dynamically registered clients are persisted through TSCloak's client repository infrastructure. The registration protocol is handled by `oidc-provider`, hosted through `nest-oidc-provider`, while the custom OIDC Client Adapter connects provider persistence to the application database.
@@ -1111,6 +1169,7 @@ flowchart LR
     G --> H[("Database")]
 ```
 
+<a id="security-policy-management"></a>
 ## 🛡️ Security Policy Management
 
 Security-sensitive runtime settings are managed as application data rather than being scattered as constants across the OIDC configuration. The security policy is persisted in the database and exposed through an administrative API.
@@ -1132,6 +1191,7 @@ flowchart LR
     F --> G["oidc-provider Configuration"]
 ```
 
+<a id="signing-keys-and-jwks"></a>
 ## 🔑 Signing Keys and JWKS
 
 TSCloak manages signing keys as a dedicated application concern. RSA key material is persisted and made available to the OIDC provider for token signing. Public key information is exposed through the provider's standard JWKS discovery surface, allowing relying parties to validate issued tokens.
@@ -1153,6 +1213,7 @@ flowchart LR
     F --> G["Public JWKs Only"]
 ```
 
+<a id="persistent-oidc-storage"></a>
 ## 💾 Persistent OIDC Storage
 
 OIDC runtime objects are persisted in the database rather than memory.
@@ -1169,6 +1230,7 @@ flowchart TD
 
 This enables OIDC state to survive application restarts.
 
+<a id="persisted-runtime-objects"></a>
 ### Persisted Runtime Objects
 
 The persistence layer supports OIDC models such as:
@@ -1183,6 +1245,7 @@ The persistence layer supports OIDC models such as:
 
 ---
 
+<a id="storage-architecture"></a>
 ## 🗄️ Storage Architecture
 
 The OIDC adapter is isolated from database-specific implementations.
@@ -1201,6 +1264,7 @@ This allows persistence implementations to evolve without changing OIDC protocol
 
 ---
 
+<a id="oidc-storage-model"></a>
 ## 🗃️ OIDC Storage Model
 
 OIDC runtime records are stored in a common persistence model.
@@ -1219,10 +1283,12 @@ OIDC runtime records are stored in a common persistence model.
 
 ---
 
+<a id="expiration-handling"></a>
 ## ⏳ Expiration Handling
 
 OIDC runtime objects have different lifetimes. Lifetime values are governed by the active security policy, while persistence cleanup handles records whose configured expiration has passed. TSCloak uses two complementary cleanup strategies.
 
+<a id="1-lazy-cleanup"></a>
 ### 1. Lazy Cleanup
 
 When a record is read:
@@ -1236,6 +1302,7 @@ flowchart TD
 
 Expired records are removed when encountered.
 
+<a id="2-background-cleanup"></a>
 ### 2. Background Cleanup
 
 A scheduled background job periodically removes expired records.
@@ -1251,6 +1318,7 @@ An index on `expiresAt` improves cleanup query performance.
 
 ---
 
+<a id="example-authorization-request"></a>
 ## 🧪 Example Authorization Request
 
 ```text
@@ -1267,6 +1335,7 @@ client_id=YOUR_CLIENT_ID
 
 ---
 
+<a id="example-token-request"></a>
 ## 🔄 Example Token Request
 
 ```http
@@ -1286,6 +1355,7 @@ grant_type=authorization_code
 
 ---
 
+<a id="design-principles"></a>
 ## 🎯 Design Principles
 
 TSCloak is designed around the following principles:
@@ -1300,8 +1370,10 @@ TSCloak is designed around the following principles:
 
 ---
 
+<a id="roadmap"></a>
 ## 🗺️ Roadmap
 
+<a id="implemented"></a>
 ### Implemented
 
 - [x] NestJS application structure
@@ -1335,6 +1407,7 @@ TSCloak is designed around the following principles:
 - [x] OIDC token lifetime configuration
 - [x] RSA signing key management and JWKS support
 
+<a id="planned"></a>
 ### Planned
 
 - [ ] Client Credentials Flow
@@ -1347,6 +1420,7 @@ TSCloak is designed around the following principles:
 
 ---
 
+<a id="contributing"></a>
 ## 🤝 Contributing
 
 Contributions, ideas, and architectural discussions are welcome.
@@ -1355,6 +1429,7 @@ Please open an issue or submit a pull request.
 
 ---
 
+<a id="license"></a>
 ## 📄 License
 
 This project is licensed under the **MIT License**.
