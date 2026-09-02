@@ -55,7 +55,7 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ## 🧭 Navigation
 
-Use the links below to navigate the README. Every link uses an explicit anchor defined in this document.
+This README is organized from project fundamentals through OIDC capabilities, management features, persistence, examples, and project information.
 
   - [Responsibility Layers](#responsibility-layers)
 - [🧩 Technology Stack](#technology-stack)
@@ -149,7 +149,6 @@ Use the links below to navigate the README. Every link uses an explicit anchor d
   - [Key Rotation](#key-rotation)
   - [Private Key Protection](#private-key-protection)
   - [Relationship to Token Management](#relationship-to-token-management)
-- [🔑 Signing Keys and JWKS](#signing-keys-and-jwks-1)
 - [💾 Persistent OIDC Storage](#persistent-oidc-storage)
   - [Persisted Runtime Objects](#persisted-runtime-objects)
 - [🗄️ Storage Architecture](#storage-architecture)
@@ -1076,7 +1075,6 @@ Common failure scenarios include:
 | Token cannot identify a valid subject | Request is rejected |
 
 The client should treat the Access Token as the authorization credential for this endpoint and must not send ID Tokens in place of Access Tokens.
-
 
 <a id="token-management-endpoints"></a>
 ## 🔒 Token Management Endpoints
@@ -2179,28 +2177,6 @@ Together, these components provide two essential parts of an identity provider:
 
 - **Can the token be trusted?** → Signing Keys and JWKS.
 - **Is the token currently valid and permitted?** → Token lifecycle and authorization rules.
-
-<a id="signing-keys-and-jwks-1"></a>
-## 🔑 Signing Keys and JWKS
-
-TSCloak manages signing keys as a dedicated application concern. RSA key material is persisted and made available to the OIDC provider for token signing. Public key information is exposed through the provider's standard JWKS discovery surface, allowing relying parties to validate issued tokens.
-
-The intended separation is:
-
-- **Signing Keys module** owns key lifecycle and persistence.
-- **OIDC configuration** consumes the active signing key material.
-- **JWKS** exposes public key information required by clients and resource servers.
-- Private key material remains an internal server concern and is never exposed by JWKS.
-
-```mermaid
-flowchart LR
-    A["Signing Key Storage"] --> B["SigningKeyService"]
-    B --> C["OidcOptionsService"]
-    C --> D["oidc-provider"]
-    D --> E["Signed ID / Access Tokens"]
-    D --> F["JWKS Endpoint"]
-    F --> G["Public JWKs Only"]
-```
 
 <a id="persistent-oidc-storage"></a>
 ## 💾 Persistent OIDC Storage
