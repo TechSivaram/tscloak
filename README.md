@@ -839,21 +839,203 @@ flowchart TD
 <a id="userinfo-endpoint"></a>
 ## 👤 UserInfo Endpoint
 
-User identity claims can be retrieved using the UserInfo endpoint with a valid access token.
+The **UserInfo Endpoint** is a standard OpenID Connect endpoint that allows a client application to retrieve claims about the authenticated end user.
 
-Example response:
+After a client completes authentication and receives an Access Token, it can call the UserInfo Endpoint to obtain identity and profile information for the user represented by that token. This keeps authentication separate from profile retrieval and allows claims to be returned according to the scopes granted during authorization.
+
+### Endpoint
+
+TSCloak currently exposes the UserInfo Endpoint at:
+
+```text
+GET http://localhost:3000/me
+```
+
+The endpoint is advertised through the OpenID Connect Discovery document:
 
 ```json
 {
-  "sub": "user-id",
-  "name": "username",
-  "preferred_username": "username",
-  "email": "user@example.com",
+  "userinfo_endpoint": "http://localhost:3000/me"
+}
+```
+
+Clients should preferably obtain this URL from the provider's Discovery metadata instead of hardcoding `/me`.
+
+### How It Fits Into the OIDC Flow
+
+The UserInfo Endpoint is typically called after the client exchanges an Authorization Code for tokens.
+
+```text
+┌──────────┐                                  ┌──────────┐
+│  Client  │                                  │ TSCloak  │
+└────┬─────┘                                  └────┬─────┘
+     │                                             │
+     │ 1. Authorization Request                     │
+     │────────────────────────────────────────────>│
+     │                                             │
+     │ 2. Authorization Code                        │
+     │<────────────────────────────────────────────│
+     │                                             │
+     │ 3. Exchange Code for Tokens                  │
+     │────────────────────────────────────────────>│
+     │                                             │
+     │ 4. Access Token + ID Token                   │
+     │<────────────────────────────────────────────│
+     │                                             │
+     │ 5. GET /me                                  │
+     │    Authorization: Bearer <access_token>      │
+     │────────────────────────────────────────────>│
+     │                                             │
+     │ 6. User Claims                               │
+     │<────────────────────────────────────────────│
+     │                                             │
+```
+
+### Calling the Endpoint
+
+The endpoint requires a valid OAuth 2.0 Bearer Access Token.
+
+```http
+GET /me HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <access_token>
+```
+
+Example using `curl`:
+
+```bash
+curl http://localhost:3000/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+The Access Token is sent using the standard HTTP Authorization header:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+### How TSCloak Resolves UserInfo Claims
+
+At a high level, a UserInfo request follows this processing flow:
+
+```text
+UserInfo Request
+       │
+       ▼
+Extract Bearer Access Token
+       │
+       ▼
+Validate Access Token
+       │
+       ├── Invalid / Expired ──► Reject Request
+       │
+       ▼
+Resolve Authenticated Subject
+       │
+       ▼
+Determine Granted Scopes
+       │
+       ▼
+Resolve Claims Allowed by Scopes
+       │
+       ▼
+Return UserInfo Response
+```
+
+The subject returned by the endpoint is associated with the user represented by the Access Token.
+
+### Scopes and Claims
+
+OpenID Connect scopes determine which categories of claims a client is permitted to request.
+
+Typical scope-to-claim relationships are:
+
+| Scope | Typical Claims |
+|---|---|
+| `openid` | `sub` |
+| `profile` | Name and profile-related claims |
+| `email` | `email`, `email_verified` |
+| `phone` | Phone-related claims |
+| `address` | Address-related claims |
+
+The exact claims returned depend on:
+
+1. The scopes requested by the client.
+2. The scopes granted during authorization.
+3. The claims available for the authenticated user.
+4. TSCloak's claim resolution configuration.
+
+### Example Response
+
+A successful UserInfo response may look like:
+
+```json
+{
+  "sub": "user-123",
+  "name": "John Doe",
+  "email": "john@example.com",
   "email_verified": true
 }
 ```
 
----
+The `sub` claim identifies the authenticated end user and is the primary subject identifier used by OpenID Connect.
+
+### ID Token vs UserInfo Endpoint
+
+Both the ID Token and the UserInfo Endpoint provide identity information, but they serve different purposes.
+
+| ID Token | UserInfo Endpoint |
+|---|---|
+| Issued as part of the authentication/token flow | Called separately after authentication |
+| Contains identity assertions | Returns user claims |
+| Delivered as a token | Returned as an HTTPS response |
+| Claims may be limited | Claims can be resolved based on granted scopes |
+| Can be validated locally by the client | Requires a request with an Access Token |
+
+A client should not assume that all available user profile information will always be included in the ID Token. When additional user claims are needed, the client can use the UserInfo Endpoint.
+
+### Endpoint Discovery
+
+OIDC clients should use the Discovery document as the authoritative source for provider endpoint URLs.
+
+For a local TSCloak instance:
+
+```text
+http://localhost:3000/.well-known/openid-configuration
+```
+
+The provider metadata advertises endpoints including:
+
+```json
+{
+  "issuer": "http://localhost:3000",
+  "authorization_endpoint": "http://localhost:3000/auth",
+  "token_endpoint": "http://localhost:3000/token",
+  "userinfo_endpoint": "http://localhost:3000/me",
+  "jwks_uri": "http://localhost:3000/jwks"
+}
+```
+
+This allows client applications to discover TSCloak endpoints dynamically rather than maintaining hardcoded endpoint URLs.
+
+> **Important:** Although TSCloak currently exposes UserInfo at `/me`, client applications should use the `userinfo_endpoint` value advertised by the Discovery document.
+
+### Error Handling
+
+A UserInfo request is rejected when the supplied Access Token cannot be accepted.
+
+Common failure scenarios include:
+
+| Scenario | Expected Behavior |
+|---|---|
+| Missing `Authorization` header | Request is rejected |
+| Malformed Bearer token | Request is rejected |
+| Invalid token | Request is rejected |
+| Expired token | Request is rejected |
+| Token cannot identify a valid subject | Request is rejected |
+
+The client should treat the Access Token as the authorization credential for this endpoint and must not send ID Tokens in place of Access Tokens.
+
 
 <a id="token-management-endpoints"></a>
 ## 🔒 Token Management Endpoints
