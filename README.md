@@ -1354,224 +1354,464 @@ flowchart LR
 <a id="security-policy-management"></a>
 ## 🛡️ Security Policy Management
 
-Security policies centralize authorization-server behavior that would otherwise be scattered across application configuration or hardcoded into OIDC callbacks.
+TSCloak manages authorization-server security settings through a **database-backed server-level Security Policy**.
 
-TSCloak manages these settings as domain configuration so that security-sensitive behavior can be controlled consistently and persisted independently of application code.
+Instead of scattering token lifetimes and related security settings across environment variables or hardcoded OIDC configuration, TSCloak stores the active policy in the `security_policies` table and exposes it through an administrative API.
 
-### Why Security Policies Are Needed
+This makes security configuration a first-class part of the TSCloak domain model.
 
-An OpenID Connect provider makes several security decisions while processing authorization and token requests. Examples include token validity periods, refresh-token behavior, and other provider-level controls.
+### What the Security Policy Controls
 
-Keeping these values in a dedicated security policy provides:
+The current `SecurityPolicy` model contains three groups of settings.
 
-- A single source of truth for security configuration.
-- Consistent behavior across OIDC flows.
-- Separation between security rules and application code.
-- The ability to manage policies independently from clients and identities.
-- A foundation for future administrative APIs and auditing.
+#### Token Policy
 
-### Security Policy as a Domain Concept
+| Setting | Default | Purpose |
+|---|---:|---|
+| `accessTokenTtl` | 900 seconds | Access Token lifetime |
+| `idTokenTtl` | 900 seconds | ID Token lifetime |
+| `authorizationCodeTtl` | 300 seconds | Authorization Code lifetime |
+| `refreshTokenTtl` | 30 days | Refresh Token lifetime |
 
-At a high level, the configuration relationship is:
+#### Refresh Token Policy
 
-```text
-                     ┌─────────────────────┐
-                     │   Security Policy   │
-                     │─────────────────────│
-                     │ Token lifetimes     │
-                     │ Refresh behavior    │
-                     │ Provider controls   │
-                     └──────────┬──────────┘
-                                │
-                                │ applied during
-                                ▼
-┌──────────────┐        ┌───────────────────┐
-│ Authorization│───────►│   OIDC Provider   │
-│    Request   │        │                   │
-└──────────────┘        └─────────┬─────────┘
-                                  │
-                                  ▼
-                         ┌───────────────────┐
-                         │ Token / Session   │
-                         │ Security Behavior │
-                         └───────────────────┘
-```
+| Setting | Default | Purpose |
+|---|---:|---|
+| `refreshTokenRotationEnabled` | `true` | Controls refresh token rotation policy |
+| `refreshTokenReuseDetectionEnabled` | `true` | Controls refresh token reuse detection policy |
 
-The policy is therefore part of the authorization-server configuration model rather than client application configuration.
+#### Session Policy
 
-### Policy Persistence
+| Setting | Default | Purpose |
+|---|---:|---|
+| `sessionTtl` | 7 days | OIDC session lifetime |
+| `interactionTtl` | 600 seconds | Login/consent interaction lifetime |
 
-Security policies are persisted in the TSCloak database rather than being treated as fixed constants in the application.
+All lifetime values are stored in **seconds**.
 
-This is important because the provider can evolve from a locally configured server into a manageable identity platform where configuration changes are stored as domain data.
+### Security Policy Data Model
 
-The conceptual flow is:
+The policy is represented by a TypeORM entity and persisted as application data.
 
 ```text
-Administrator / Management API
-            │
-            ▼
- SecurityPolicyController
-            │
-            ▼
-   SecurityPolicyService
-            │
-            ▼
- SecurityPolicyRepository
-            │
-            ▼
-          Database
-            │
-            │
-            └──────────────► OIDC Configuration
-                              reads policy values
+security_policies
+│
+├── id
+│
+├── Token Policy
+│   ├── accessTokenTtl
+│   ├── idTokenTtl
+│   ├── authorizationCodeTtl
+│   └── refreshTokenTtl
+│
+├── Refresh Token Policy
+│   ├── refreshTokenRotationEnabled
+│   └── refreshTokenReuseDetectionEnabled
+│
+├── Session Policy
+│   ├── sessionTtl
+│   └── interactionTtl
+│
+└── Audit
+    ├── createdAt
+    └── updatedAt
 ```
 
-This separation allows management operations to follow the normal application architecture:
+The policy is intentionally modeled as a **server-level policy** rather than a client-level policy. TSCloak currently manages one effective security policy for the authorization server.
+
+### Default Policy Creation
+
+TSCloak does not require a security policy row to be manually seeded before the application can use the policy service.
+
+When `SecurityPolicyService.getPolicy()` is called:
+
+1. TSCloak attempts to load the existing policy.
+2. If no policy exists, the service creates one using the built-in defaults.
+3. The default policy is persisted.
+4. The persisted policy is returned.
+
+```mermaid
+flowchart TD
+    A["SecurityPolicyService.getPolicy()"] --> B["Query security_policies"]
+    B --> C{"Policy exists?"}
+    C -->|Yes| D["Return persisted policy"]
+    C -->|No| E["Create default policy"]
+    E --> F["Persist to database"]
+    F --> G["Return persisted policy"]
+```
+
+The defaults currently created by the service are:
 
 ```text
-Controller
-    │
-    ▼
-Service
-    │
-    ▼
-Repository
-    │
-    ▼
-Database
+Access Token TTL         = 15 minutes
+ID Token TTL             = 15 minutes
+Authorization Code TTL   = 5 minutes
+Refresh Token TTL        = 30 days
+
+Refresh Token Rotation   = enabled
+Reuse Detection          = enabled
+
+Session TTL              = 7 days
+Interaction TTL          = 10 minutes
 ```
 
-### Policy Retrieval by the OIDC Layer
+Once created, the database becomes the persisted source of the policy rather than requiring the defaults to be recreated for every request.
 
-The OIDC provider needs security configuration while constructing and operating the provider.
+### Administrative API
 
-TSCloak therefore separates two concerns:
+The current Security Policy Management API exposes a single server-level policy.
 
-1. **Policy management** — creating, reading, and updating persisted security policy data.
-2. **Policy consumption** — using the configured values when constructing OIDC behavior.
+#### Get Active Policy
 
-Conceptually:
-
-```text
-┌──────────────────────────┐
-│ SecurityPolicyService    │
-│                          │
-│ Read persisted policy    │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│ OidcOptionsService       │
-│                          │
-│ Build OIDC configuration │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│ nest-oidc-provider       │
-│                          │
-│ oidc-provider config     │
-└──────────────────────────┘
+```http
+GET /api/admin/security-policy
 ```
 
-This keeps database concerns out of the low-level OIDC provider library while allowing TSCloak to own the source of configuration.
+Example:
 
-### Security Policy and Token Lifetimes
-
-One of the primary policy-driven concerns is artifact lifetime.
-
-OIDC artifacts such as Access Tokens, Refresh Tokens, ID Tokens, authorization codes, and sessions do not all have the same security characteristics. Their lifetime must therefore be configurable independently.
-
-Conceptually:
-
-```text
-Security Policy
-      │
-      ├── Access Token TTL
-      ├── Refresh Token TTL
-      ├── ID Token TTL
-      ├── Authorization Code TTL
-      └── Session / Interaction TTL
-              │
-              ▼
-        OIDC Provider TTL
-        Configuration
+```bash
+curl http://localhost:3000/api/admin/security-policy
 ```
 
-The OIDC provider ultimately uses TTL values when creating artifacts. TSCloak's security policy provides the domain-level source for those values.
+A policy response contains the currently persisted configuration:
 
-### Policy Update Lifecycle
-
-A security policy change follows a normal configuration lifecycle:
-
-```text
-Update Security Policy
-        │
-        ▼
-Validate Input
-        │
-        ▼
-Update Domain Entity
-        │
-        ▼
-Persist to Database
-        │
-        ▼
-Policy Available to
-Provider Configuration
+```json
+{
+  "id": "policy-id",
+  "accessTokenTtl": 900,
+  "idTokenTtl": 900,
+  "authorizationCodeTtl": 300,
+  "refreshTokenTtl": 2592000,
+  "refreshTokenRotationEnabled": true,
+  "refreshTokenReuseDetectionEnabled": true,
+  "sessionTtl": 604800,
+  "interactionTtl": 600,
+  "createdAt": "2026-09-01T10:00:00.000Z",
+  "updatedAt": "2026-09-01T10:00:00.000Z"
+}
 ```
 
-The important architectural distinction is that a policy update and an already-issued token are separate concerns. Updating a lifetime policy controls future provider behavior according to the configuration lifecycle; it does not retroactively change the expiry embedded in a token that has already been issued.
+#### Update Active Policy
 
-### Security Considerations
+```http
+PUT /api/admin/security-policy
+Content-Type: application/json
+```
 
-Security policies should be treated as privileged configuration.
+Example request:
 
-Recommended operational practices include:
+```json
+{
+  "accessTokenTtl": 1800,
+  "idTokenTtl": 1800,
+  "authorizationCodeTtl": 300,
+  "refreshTokenTtl": 1209600,
+  "refreshTokenRotationEnabled": true,
+  "refreshTokenReuseDetectionEnabled": true,
+  "sessionTtl": 604800,
+  "interactionTtl": 600
+}
+```
 
-- Restrict policy management endpoints to administrative users.
-- Validate lifetime values and prevent unsafe ranges.
-- Audit changes to security-sensitive configuration.
-- Avoid exposing internal security configuration unnecessarily.
-- Keep production policies distinct from development defaults.
-- Rotate signing keys independently from token-lifetime configuration.
+Example using `curl`:
 
-### Relationship to Other TSCloak Components
+```bash
+curl -X PUT http://localhost:3000/api/admin/security-policy \
+  -H "Content-Type: application/json" \
+  -d '{
+    "accessTokenTtl": 1800,
+    "idTokenTtl": 1800,
+    "authorizationCodeTtl": 300,
+    "refreshTokenTtl": 1209600,
+    "refreshTokenRotationEnabled": true,
+    "refreshTokenReuseDetectionEnabled": true,
+    "sessionTtl": 604800,
+    "interactionTtl": 600
+  }'
+```
 
-| Component | Relationship |
-|---|---|
-| Security Policy Management | Owns persisted security configuration |
-| OidcOptionsService | Consumes configuration when building provider options |
-| OIDC Provider | Applies configuration while issuing and validating artifacts |
-| Token Management | Operates on artifacts governed by security settings |
-| Signing Keys | Independently control token signing and verification |
+The update operation first obtains the server-level policy, applies the supplied DTO values, and persists the resulting entity.
 
-Security Policy Management answers **how long and under what provider-level rules artifacts are valid**. Signing Keys answer **how those artifacts are cryptographically signed and verified**.
+### Management Architecture
 
-These are related security concerns, but they should remain separate domain concepts.
-
-<a id="security-policy-management"></a>
-## 🛡️ Security Policy Management
-
-Security-sensitive runtime settings are managed as application data rather than being scattered as constants across the OIDC configuration. The security policy is persisted in the database and exposed through an administrative API.
-
-Current policy management endpoint:
-
-- `GET /api/admin/security-policy` — retrieve the active policy
-- `PUT /api/admin/security-policy` — update the active policy
-
-This creates a single source of truth for settings that affect authorization-server behavior.
+Security Policy Management follows the standard NestJS application layering used by TSCloak.
 
 ```mermaid
 flowchart LR
-    A["Admin API"] --> B["SecurityPolicyController"]
+    A["Admin Client"] --> B["SecurityPolicyController"]
     B --> C["SecurityPolicyService"]
-    C --> D["Security Policy Repository"]
-    D --> E[("Database")]
-    C --> F["OIDC Options Service"]
-    F --> G["oidc-provider Configuration"]
+    C --> D["TypeORM Repository"]
+    D --> E[("security_policies")]
 ```
+
+Responsibilities are separated as follows:
+
+| Component | Responsibility |
+|---|---|
+| `SecurityPolicyController` | Exposes administrative HTTP endpoints |
+| `SecurityPolicyService` | Owns default creation, retrieval, and update behavior |
+| `SecurityPolicy` entity | Defines the persisted policy model |
+| TypeORM repository | Reads and writes policy data |
+| Database | Stores the active server-level configuration |
+
+### Reading the Policy
+
+The retrieval path is intentionally simple.
+
+```mermaid
+sequenceDiagram
+    participant A as Admin Client
+    participant C as SecurityPolicyController
+    participant S as SecurityPolicyService
+    participant R as TypeORM Repository
+    participant DB as Database
+
+    A->>C: GET /api/admin/security-policy
+    C->>S: getPolicy()
+    S->>R: findOne()
+    R->>DB: SELECT policy
+    DB-->>R: Policy / no policy
+    alt Policy exists
+        R-->>S: Existing policy
+    else Policy missing
+        S->>R: create(defaultPolicy)
+        S->>R: save(policy)
+    end
+    S-->>C: Active policy
+    C-->>A: 200 OK + policy
+```
+
+### Updating the Policy
+
+Updating a policy uses the same server-level record.
+
+```mermaid
+sequenceDiagram
+    participant A as Admin Client
+    participant C as SecurityPolicyController
+    participant S as SecurityPolicyService
+    participant R as TypeORM Repository
+    participant DB as Database
+
+    A->>C: PUT /api/admin/security-policy
+    C->>S: updatePolicy(dto)
+    S->>S: getPolicy()
+    S->>R: Load active policy
+    S->>S: Object.assign(policy, dto)
+    S->>R: save(policy)
+    R->>DB: UPDATE security_policies
+    DB-->>R: Updated policy
+    R-->>S: Persisted entity
+    S-->>C: Updated policy
+    C-->>A: 200 OK
+```
+
+This design means callers do not create arbitrary policy records. They manage the effective server-level policy.
+
+### Relationship with OIDC Configuration
+
+Security Policy Management is not merely an administrative CRUD feature. Its purpose is to provide configuration that can be consumed by the OIDC layer.
+
+`OidcOptionsService` is responsible for building the configuration passed through `nest-oidc-provider` to `oidc-provider`.
+
+The dependency relationship is:
+
+```mermaid
+flowchart TD
+    A[("security_policies")] --> B["SecurityPolicyService"]
+    B --> C["OidcOptionsService"]
+    C --> D["nest-oidc-provider"]
+    D --> E["oidc-provider"]
+```
+
+Conceptually, the flow is:
+
+```text
+Database
+   │
+   ▼
+SecurityPolicyService
+   │
+   ▼
+OIDC configuration
+   │
+   ▼
+oidc-provider TTL / security options
+   │
+   ▼
+Issued OIDC artifacts
+```
+
+This is the key architectural reason for storing the values in the database: **the security policy is the TSCloak-owned source of configuration, while `oidc-provider` remains the protocol engine that applies the resulting settings.**
+
+### OIDC Token Lifetime Mapping
+
+The underlying `oidc-provider` configuration supports separate TTL configuration for OIDC artifacts.
+
+TSCloak's policy fields map conceptually to those artifacts:
+
+| TSCloak Policy | OIDC Artifact |
+|---|---|
+| `accessTokenTtl` | `AccessToken` |
+| `idTokenTtl` | `IdToken` |
+| `authorizationCodeTtl` | `AuthorizationCode` |
+| `refreshTokenTtl` | `RefreshToken` |
+| `sessionTtl` | `Session` |
+| `interactionTtl` | `Interaction` |
+
+The OIDC provider evaluates artifact expiration when tokens and other runtime objects are created.
+
+Conceptually:
+
+```mermaid
+flowchart LR
+    A["Security Policy"] --> B["TTL Configuration"]
+    B --> C["AccessToken"]
+    B --> D["IdToken"]
+    B --> E["AuthorizationCode"]
+    B --> F["RefreshToken"]
+    B --> G["Session"]
+    B --> H["Interaction"]
+```
+
+### Why the Values Are Not Hardcoded
+
+TSCloak deliberately separates policy values from the protocol configuration code.
+
+A hardcoded configuration would look conceptually like:
+
+```typescript
+ttl: {
+  AccessToken: 900,
+  RefreshToken: 2592000
+}
+```
+
+That approach requires changing application code and redeploying whenever policy values change.
+
+The Security Policy approach instead establishes:
+
+```text
+Database Policy
+      ↓
+SecurityPolicyService
+      ↓
+OIDC Configuration
+      ↓
+Protocol Behavior
+```
+
+This makes the values part of the authorization-server configuration model rather than implementation constants.
+
+### Runtime Configuration Considerations
+
+The current architecture distinguishes between **persisting a policy** and **when a provider consumes a policy value**.
+
+`oidc-provider` artifact TTL functions are synchronous when an artifact is being created. They cannot directly perform an asynchronous database query for every token issuance.
+
+Therefore, the policy integration must ensure that values required by synchronous OIDC callbacks are available synchronously at the point of evaluation.
+
+This is an important architectural constraint for future evolution:
+
+```text
+Async Database
+      │
+      │ cannot be awaited directly by
+      ▼
+Synchronous TTL callback
+      │
+      ▼
+OIDC artifact expiration
+```
+
+TSCloak's policy remains database-backed as the source of truth. How policy values are made available to synchronous runtime callbacks is a separate runtime integration concern and should not be confused with the persistence model.
+
+### Policy Changes and Existing Tokens
+
+Changing a policy does not retroactively alter the expiration already assigned to an existing token or authorization artifact.
+
+For example:
+
+```text
+Existing Access Token
+expires_in = 15 minutes
+        │
+        │ Admin changes policy
+        ▼
+New Access Token TTL = 30 minutes
+```
+
+The already-issued token retains its existing expiry. The changed policy affects provider behavior when the new configuration value is applied to future artifact creation.
+
+### Refresh Token Controls
+
+The policy model already includes two refresh-token security settings:
+
+- `refreshTokenRotationEnabled`
+- `refreshTokenReuseDetectionEnabled`
+
+These settings represent TSCloak's security-policy domain model for refresh-token behavior.
+
+They are intentionally separate from `refreshTokenTtl` because lifetime and lifecycle security are different concerns:
+
+```text
+Refresh Token Policy
+│
+├── How long is it valid?
+│       └── refreshTokenTtl
+│
+├── Is a replacement token issued?
+│       └── refreshTokenRotationEnabled
+│
+└── Is reuse detected?
+        └── refreshTokenReuseDetectionEnabled
+```
+
+This separation provides room for the refresh-token implementation to evolve without changing the persisted policy model.
+
+### Persistence and Scaling
+
+The policy is stored in the database, not in process-local memory.
+
+This is important for deployments with multiple application instances:
+
+```text
+              ┌───────────────┐
+              │   Instance 1  │
+              └───────┬───────┘
+                      │
+              ┌───────▼───────┐
+              │   Database    │
+              │ SecurityPolicy│
+              └───────▲───────┘
+                      │
+              ┌───────┴───────┐
+              │   Instance 2  │
+              └───────────────┘
+```
+
+The database provides a shared source of truth across instances. This avoids treating a single application's in-memory state as the authoritative security configuration.
+
+### Security Considerations
+
+Security Policy Management endpoints modify authorization-server behavior and should therefore be treated as administrative operations.
+
+In a production deployment, these endpoints should be protected with appropriate administrative authorization controls. Changes to token lifetimes or refresh-token security behavior can directly affect the security posture of the identity provider.
+
+### Current Scope
+
+The currently implemented Security Policy Management feature provides:
+
+- Database-backed server-level policy storage.
+- Automatic creation of a default policy.
+- Retrieval of the active policy.
+- Update of the active policy.
+- Configurable token lifetime fields.
+- Refresh-token policy fields.
+- Session and interaction lifetime fields.
+- Audit timestamps through TypeORM.
+
+The policy model also provides a foundation for future additions such as validation rules, policy-change auditing, multi-tenant policies, and more advanced runtime configuration strategies.
 
 <a id="signing-keys-and-jwks"></a>
 ## 🔑 Signing Keys and JWKS
