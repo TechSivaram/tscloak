@@ -55,8 +55,11 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ## 🧭 Navigation
 
-Use the links below to navigate the README. Main sections and their subsections follow the same order as the document.
+Use the links below to navigate the README. Main sections and subsections follow the same order as the document.
 
+  - [A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS](#a-modular-openid-connect-oauth-20-authorization-server-built-with-nestjs)
+- [📖 Overview](#overview)
+  - [✨ Highlights](#highlights)
 - [🏗️ Architecture](#architecture)
   - [Responsibility Layers](#responsibility-layers)
 - [🧩 Technology Stack](#technology-stack)
@@ -166,6 +169,7 @@ Use the links below to navigate the README. Main sections and their subsections 
   - [Planned](#planned)
 - [🤝 Contributing](#contributing)
 - [📄 License](#license)
+
 ## 🏗️ Architecture
 
 TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
