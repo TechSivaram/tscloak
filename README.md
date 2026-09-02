@@ -55,8 +55,9 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ## 🧭 Navigation
 
-This README is organized from project fundamentals through OIDC capabilities, management features, persistence, examples, and project information.
+This index includes every main section and subsection in the same order as the document.
 
+- [🏗️ Architecture](#architecture)
   - [Responsibility Layers](#responsibility-layers)
 - [🧩 Technology Stack](#technology-stack)
 - [📁 Project Structure](#project-structure)
@@ -80,6 +81,8 @@ This README is organized from project fundamentals through OIDC capabilities, ma
 - [🖥️ Interaction UI Customization](#interaction-ui-customization)
   - [Interaction Endpoints](#interaction-endpoints)
   - [Hosted UI Flow](#hosted-ui-flow)
+    - [Hosted Login UI](#hosted-login-ui)
+    - [Hosted Consent UI](#hosted-consent-ui)
   - [Custom Interaction UI Flow](#custom-interaction-ui-flow)
   - [Interaction URL Configuration](#interaction-url-configuration)
   - [External Interaction Redirect](#external-interaction-redirect)
@@ -122,9 +125,14 @@ This README is organized from project fundamentals through OIDC capabilities, ma
   - [Persistence Architecture](#persistence-architecture)
 - [🛡️ Security Policy Management](#security-policy-management)
   - [What the Security Policy Controls](#what-the-security-policy-controls)
+    - [Token Policy](#token-policy)
+    - [Refresh Token Policy](#refresh-token-policy)
+    - [Session Policy](#session-policy)
   - [Security Policy Data Model](#security-policy-data-model)
   - [Default Policy Creation](#default-policy-creation)
   - [Administrative API](#administrative-api)
+    - [Get Active Policy](#get-active-policy)
+    - [Update Active Policy](#update-active-policy)
   - [Management Architecture](#management-architecture)
   - [Reading the Policy](#reading-the-policy)
   - [Updating the Policy](#updating-the-policy)
@@ -165,6 +173,7 @@ This README is organized from project fundamentals through OIDC capabilities, ma
 - [🤝 Contributing](#contributing)
 - [📄 License](#license)
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
 TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
@@ -526,6 +535,7 @@ flowchart TD
     L --> M["Client Callback"]
 ```
 
+<a id="hosted-login-ui"></a>
 #### Hosted Login UI
 
 When a login interaction is required and no external login UI is configured, TSCloak renders its built-in login page.
@@ -536,6 +546,7 @@ The login page submits credentials to:
 POST /interaction/:uid/login
 ```
 
+<a id="hosted-consent-ui"></a>
 #### Hosted Consent UI
 
 When consent is required and no external consent UI is configured, TSCloak renders its built-in consent page.
@@ -1404,6 +1415,7 @@ This makes security configuration a first-class part of the TSCloak domain model
 
 The current `SecurityPolicy` model contains three groups of settings.
 
+<a id="token-policy"></a>
 #### Token Policy
 
 | Setting | Default | Purpose |
@@ -1413,6 +1425,7 @@ The current `SecurityPolicy` model contains three groups of settings.
 | `authorizationCodeTtl` | 300 seconds | Authorization Code lifetime |
 | `refreshTokenTtl` | 30 days | Refresh Token lifetime |
 
+<a id="refresh-token-policy"></a>
 #### Refresh Token Policy
 
 | Setting | Default | Purpose |
@@ -1420,6 +1433,7 @@ The current `SecurityPolicy` model contains three groups of settings.
 | `refreshTokenRotationEnabled` | `true` | Controls refresh token rotation policy |
 | `refreshTokenReuseDetectionEnabled` | `true` | Controls refresh token reuse detection policy |
 
+<a id="session-policy"></a>
 #### Session Policy
 
 | Setting | Default | Purpose |
@@ -1504,6 +1518,7 @@ Once created, the database becomes the persisted source of the policy rather tha
 
 The current Security Policy Management API exposes a single server-level policy.
 
+<a id="get-active-policy"></a>
 #### Get Active Policy
 
 ```http
@@ -1534,6 +1549,7 @@ A policy response contains the currently persisted configuration:
 }
 ```
 
+<a id="update-active-policy"></a>
 #### Update Active Policy
 
 ```http
