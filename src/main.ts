@@ -12,6 +12,8 @@ import {
 } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
+import { join } from 'path';
+import * as express from 'express';
 
 async function bootstrap() {
   const app =
@@ -19,6 +21,11 @@ async function bootstrap() {
       AppModule,
     );
 
+  // Product landing page
+  app.use(
+    '/',
+    express.static(join(process.cwd(), 'public')),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({

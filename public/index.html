@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="TSCloak is a modern Identity and Access Management platform built around OAuth 2.0 and OpenID Connect."
+  >
+
+  <title>TSCloak | Secure Identities. Trusted Access.</title>
+
+  <link rel="icon" type="image/png" href="./favicon.png">
+
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+
+<body>
+
+  <!-- =====================================================
+       Navigation
+  ====================================================== -->
+
+  <header class="navbar">
+
+    <div class="container nav-container">
+
+      <a href="/" class="brand">
+
+        <img
+          src="./assets/tscloak-icon.png"
+          alt="TSCloak"
+          class="brand-icon"
+        >
+
+        <span>TSCloak</span>
+
+      </a>
+
+      <nav class="nav-links">
+
+        <a href="#features">Features</a>
+
+        <a href="#architecture">Architecture</a>
+
+        <a href="#security">Security</a>
+
+        <a href="#developers">Developers</a>
+
+      </nav>
+
+      <div class="nav-actions">
+
+        <a
+          href="/docs"
+          class="btn btn-outline"
+        >
+          API Docs
+        </a>
+
+        <a
+          href="/.well-known/openid-configuration"
+          class="btn btn-primary"
+        >
+          OIDC Discovery
+        </a>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+       Hero
+  ====================================================== -->
+
+  <main>
+
+    <section class="hero">
+
+      <div class="container hero-content">
+
+        <div class="hero-text">
+
+          <div class="badge">
+            OAuth 2.0 · OpenID Connect
+          </div>
+
+          <h1>
+            Secure Identities.
+            <span>Trusted Access.</span>
+          </h1>
+
+          <p class="hero-description">
+
+            TSCloak is a modern, extensible Identity and Access
+            Management platform designed to provide secure
+            authentication and authorization using OAuth 2.0
+            and OpenID Connect.
+
+          </p>
+
+          <div class="hero-actions">
+
+            <a
+              href="/docs"
+              class="btn btn-primary btn-large"
+            >
+              Explore APIs
+            </a>
+
+            <a
+              href="#architecture"
+              class="btn btn-outline btn-large"
+            >
+              Explore Architecture
+            </a>
+
+          </div>
+
+        </div>
+
+
+        <div class="hero-visual">
+
+          <img
+            src="./assets/tscloak-brand.png"
+            alt="TSCloak Secure Identities Trusted Access"
+          >
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         Standards
+    ====================================================== -->
+
+    <section class="standards">
+
+      <div class="container">
+
+        <p class="section-label">
+          BUILT ON INDUSTRY STANDARDS
+        </p>
+
+        <div class="standards-list">
+
+          <div>OAuth 2.0</div>
+
+          <span>•</span>
+
+          <div>OpenID Connect</div>
+
+          <span>•</span>
+
+          <div>JWKS</div>
+
+          <span>•</span>
+
+          <div>OIDC Discovery</div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         Features
+    ====================================================== -->
+
+    <section
+      id="features"
+      class="section"
+    >
+
+      <div class="container">
+
+        <div class="section-heading">
+
+          <span class="eyebrow">
+            CORE CAPABILITIES
+          </span>
+
+          <h2>
+            Everything needed for modern identity
+          </h2>
+
+          <p>
+            Standards-based identity infrastructure designed
+            with modularity, security and extensibility in mind.
+          </p>
+
+        </div>
+
+
+        <div class="features-grid">
+
+          <article class="feature-card">
+
+            <div class="feature-icon">🔐</div>
+
+            <h3>
+              Authentication & Authorization
+            </h3>
+
+            <p>
+              Secure OAuth 2.0 and OpenID Connect flows
+              for modern applications and services.
+            </p>
+
+          </article>
+
+
+          <article class="feature-card">
+
+            <div class="feature-icon">👥</div>
+
+            <h3>
+              Client Management
+            </h3>
+
+            <p>
+              Manage OAuth clients, redirect URIs,
+              grants and application configuration.
+            </p>
+
+          </article>
+
+
+          <article class="feature-card">
+
+            <div class="feature-icon">🛡️</div>
+
+            <h3>
+              Security Policies
+            </h3>
+
+            <p>
+              Centralized security policies for controlling
+              authentication and identity behaviour.
+            </p>
+
+          </article>
+
+
+          <article class="feature-card">
+
+            <div class="feature-icon">🔑</div>
+
+            <h3>
+              Signing Keys & JWKS
+            </h3>
+
+            <p>
+              Secure signing key management and public
+              key distribution through JWKS.
+            </p>
+
+          </article>
+
+
+          <article class="feature-card">
+
+            <div class="feature-icon">🎫</div>
+
+            <h3>
+              Token Management
+            </h3>
+
+            <p>
+              Secure issuance and lifecycle management
+              for OAuth and OpenID Connect tokens.
+            </p>
+
+          </article>
+
+
+          <article class="feature-card">
+
+            <div class="feature-icon">💾</div>
+
+            <h3>
+              Persistent Storage
+            </h3>
+
+            <p>
+              Database-backed persistence for identity
+              and OpenID Connect configuration.
+            </p>
+
+          </article>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         Architecture
+    ====================================================== -->
+
+    <section
+      id="architecture"
+      class="section section-alt"
+    >
+
+      <div class="container">
+
+        <div class="section-heading">
+
+          <span class="eyebrow">
+            ARCHITECTURE
+          </span>
+
+          <h2>
+            Designed with clear separation of concerns
+          </h2>
+
+          <p>
+            TSCloak separates product interfaces,
+            protocol integration, domain logic and persistence
+            to keep the identity platform modular and extensible.
+          </p>
+
+        </div>
+
+
+        <div class="architecture">
+
+          <div class="architecture-layer">
+
+            <span class="layer-number">
+              01
+            </span>
+
+            <div>
+
+              <h3>
+                Product & API Layer
+              </h3>
+
+              <p>
+                REST APIs, administration capabilities,
+                Swagger documentation and product interfaces.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="architecture-arrow">
+            ↓
+          </div>
+
+
+          <div class="architecture-layer">
+
+            <span class="layer-number">
+              02
+            </span>
+
+            <div>
+
+              <h3>
+                OAuth & OIDC Integration
+              </h3>
+
+              <p>
+                Standards-compliant integration with
+                OAuth 2.0 and OpenID Connect provider flows.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="architecture-arrow">
+            ↓
+          </div>
+
+
+          <div class="architecture-layer">
+
+            <span class="layer-number">
+              03
+            </span>
+
+            <div>
+
+              <h3>
+                Identity & Domain Services
+              </h3>
+
+              <p>
+                Authentication, client configuration,
+                security policies and identity services.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="architecture-arrow">
+            ↓
+          </div>
+
+
+          <div class="architecture-layer">
+
+            <span class="layer-number">
+              04
+            </span>
+
+            <div>
+
+              <h3>
+                Persistence & Cryptography
+              </h3>
+
+              <p>
+                TypeORM persistence, signing key management
+                and cryptographic operations.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         Security
+    ====================================================== -->
+
+    <section
+      id="security"
+      class="section"
+    >
+
+      <div class="container security-container">
+
+        <div class="security-content">
+
+          <span class="eyebrow">
+            SECURITY BY DESIGN
+          </span>
+
+          <h2>
+            Identity infrastructure built with security at its core
+          </h2>
+
+          <p>
+            TSCloak provides a foundation for secure identity
+            management with centralized policies, signing keys
+            and standards-based token handling.
+          </p>
+
+
+          <ul class="security-list">
+
+            <li>
+              <span>✓</span>
+              OAuth 2.0 and OpenID Connect support
+            </li>
+
+            <li>
+              <span>✓</span>
+              Configurable security policies
+            </li>
+
+            <li>
+              <span>✓</span>
+              Signing key management and rotation
+            </li>
+
+            <li>
+              <span>✓</span>
+              JWKS public key distribution
+            </li>
+
+            <li>
+              <span>✓</span>
+              Database-backed configuration
+            </li>
+
+          </ul>
+
+        </div>
+
+
+        <div class="security-card">
+
+          <img
+            src="./assets/tscloak-icon.png"
+            alt="TSCloak"
+          >
+
+          <h3>
+            TSCloak
+          </h3>
+
+          <p>
+            Secure Identities.<br>
+            Trusted Access.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         Developer Section
+    ====================================================== -->
+
+    <section
+      id="developers"
+      class="section section-alt"
+    >
+
+      <div class="container">
+
+        <div class="section-heading">
+
+          <span class="eyebrow">
+            DEVELOPER FRIENDLY
+          </span>
+
+          <h2>
+            Built for developers and modern applications
+          </h2>
+
+          <p>
+            Explore APIs, OpenID Connect discovery
+            and standards-based endpoints directly
+            from your TSCloak instance.
+          </p>
+
+        </div>
+
+
+        <div class="developer-links">
+
+          <a
+            href="/docs"
+            class="developer-card"
+          >
+
+            <div class="developer-icon">
+              📚
+            </div>
+
+            <h3>
+              API Documentation
+            </h3>
+
+            <p>
+              Explore management APIs through Swagger.
+            </p>
+
+            <span>
+              Open Docs →
+            </span>
+
+          </a>
+
+
+          <a
+            href="/.well-known/openid-configuration"
+            class="developer-card"
+          >
+
+            <div class="developer-icon">
+              ⚙️
+            </div>
+
+            <h3>
+              OIDC Discovery
+            </h3>
+
+            <p>
+              View the OpenID Connect discovery document.
+            </p>
+
+            <span>
+              View Discovery →
+            </span>
+
+          </a>
+
+
+          <a
+            href="/jwks"
+            class="developer-card"
+          >
+
+            <div class="developer-icon">
+              🔑
+            </div>
+
+            <h3>
+              JWKS Endpoint
+            </h3>
+
+            <p>
+              Access public signing keys used by TSCloak.
+            </p>
+
+            <span>
+              View JWKS →
+            </span>
+
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         CTA
+    ====================================================== -->
+
+    <section class="cta">
+
+      <div class="container cta-content">
+
+        <img
+          src="./assets/tscloak-icon.png"
+          alt="TSCloak"
+          class="cta-icon"
+        >
+
+        <h2>
+          Secure your applications with trusted identity infrastructure.
+        </h2>
+
+        <p>
+          Standards-based. Modular. Extensible.
+        </p>
+
+        <div class="hero-actions">
+
+          <a
+            href="/docs"
+            class="btn btn-light btn-large"
+          >
+            Explore APIs
+          </a>
+
+          <a
+            href="/.well-known/openid-configuration"
+            class="btn btn-outline-light btn-large"
+          >
+            OIDC Discovery
+          </a>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+       Footer
+  ====================================================== -->
+
+  <footer class="footer">
+
+    <div class="container footer-content">
+
+      <div class="footer-brand">
+
+        <img
+          src="./assets/tscloak-icon.png"
+          alt="TSCloak"
+        >
+
+        <div>
+
+          <strong>TSCloak</strong>
+
+          <span>
+            Secure Identities. Trusted Access.
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="footer-links">
+
+        <a href="/docs">
+          API Docs
+        </a>
+
+        <a href="/.well-known/openid-configuration">
+          Discovery
+        </a>
+
+        <a href="/jwks">
+          JWKS
+        </a>
+
+      </div>
+
+    </div>
+
+  </footer>
+
+</body>
+</html>
