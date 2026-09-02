@@ -68,6 +68,13 @@ This index includes every main section and subsection in the same order as the d
   - [Architectural Principles](#architectural-principles)
   - [Architecture Summary](#architecture-summary)
 - [🧩 Technology Stack](#technology-stack)
+- [🛠️ Key Libraries and Tools](#key-libraries-and-tools)
+  - [NestJS](#nestjs)
+  - [`oidc-provider`](#oidc-provider-library)
+  - [`nest-oidc-provider`](#nest-oidc-provider-library)
+  - [TypeORM](#typeorm)
+  - [Node.js `crypto`](#nodejs-crypto)
+  - [Database Provider](#database-provider)
 - [📁 Project Structure](#project-structure)
   - [Module Responsibilities](#module-responsibilities)
 - [🚀 Getting Started](#getting-started)
@@ -538,6 +545,122 @@ The rest of this README expands each of these architectural areas in detail, inc
 | **better-sqlite3** | SQLite driver |
 
 ---
+
+<a id="key-libraries-and-tools"></a>
+## 🛠️ Key Libraries and Tools
+
+TSCloak uses a focused set of frameworks, libraries, and platform capabilities. This section highlights the components that play an important role in the architecture and implementation rather than listing every transitive dependency.
+
+| Library / Tool | Role in TSCloak |
+|---|---|
+| **NestJS** | Application framework, modular architecture, dependency injection, and HTTP hosting |
+| **oidc-provider** | Core OAuth 2.0 and OpenID Connect protocol engine |
+| **nest-oidc-provider** | Integration layer for hosting `oidc-provider` inside NestJS |
+| **TypeORM** | ORM and database persistence integration |
+| **Node.js `crypto`** | Native cryptographic operations, key generation, and key material handling |
+| **Database Provider** | Persistent storage for application configuration and OIDC artifacts |
+
+<a id="nestjs"></a>
+### NestJS
+
+NestJS provides the application foundation for TSCloak.
+
+It is responsible for:
+
+- Modular application structure
+- Dependency injection
+- Service composition
+- Controllers and administrative APIs
+- Application lifecycle management
+- Integration of infrastructure components
+
+TSCloak uses NestJS to organize domain concerns such as clients, identities, security policies, signing keys, sessions, and OIDC integration into dedicated modules.
+
+<a id="oidc-provider-library"></a>
+### `oidc-provider`
+
+`oidc-provider` is the core standards-oriented OAuth 2.0 and OpenID Connect protocol engine used by TSCloak.
+
+It provides protocol capabilities including:
+
+- Authorization flows
+- Authorization codes
+- Access tokens
+- Refresh tokens
+- ID tokens
+- OIDC discovery metadata
+- JWKS support
+- Sessions and grants
+- Protocol validation
+
+TSCloak builds around this provider rather than implementing OAuth 2.0 and OpenID Connect protocol behavior from scratch.
+
+<a id="nest-oidc-provider-library"></a>
+### `nest-oidc-provider`
+
+`nest-oidc-provider` integrates the underlying `oidc-provider` instance into the NestJS application.
+
+It enables TSCloak to:
+
+- Initialize the provider through NestJS module configuration
+- Use asynchronous NestJS configuration patterns
+- Integrate provider initialization with dependency injection
+- Host OIDC endpoints within the NestJS application
+- Access the provider for application-level integration when required
+
+This keeps the identity provider part of the overall NestJS architecture.
+
+<a id="typeorm"></a>
+### TypeORM
+
+TypeORM provides the database persistence layer used by TSCloak.
+
+Its responsibilities include:
+
+- Entity mapping
+- Repository integration
+- Database queries
+- Persistence of application-managed entities
+- Database abstraction
+
+TSCloak keeps domain services separated from direct persistence implementation through repository abstractions where appropriate.
+
+<a id="nodejs-crypto"></a>
+### Node.js `crypto`
+
+TSCloak uses the built-in Node.js `crypto` module for cryptographic operations required by identity infrastructure.
+
+Typical responsibilities include:
+
+- Cryptographic key pair generation
+- Public and private key handling
+- Secure random value generation
+- Key material import and export
+- Cryptographic transformations required by signing infrastructure
+
+Using the native Node.js cryptographic APIs avoids introducing an additional dependency for fundamental cryptographic operations where platform capabilities are sufficient.
+
+> The detailed signing-key lifecycle and JWKS behavior are documented in the [Signing Keys and JWKS](#signing-keys-and-jwks) section.
+
+<a id="database-provider"></a>
+### Database Provider
+
+TSCloak uses persistent database storage for both application-managed configuration and OIDC runtime artifacts.
+
+Examples of persisted application data include:
+
+- Client configuration
+- Security policies
+- Signing key metadata
+- Identity-related data
+
+OIDC runtime artifacts are persisted through the OIDC adapter integration.
+
+The persistence design is described in more detail in:
+
+- [Persistent OIDC Storage](#persistent-oidc-storage)
+- [Storage Architecture](#storage-architecture)
+- [OIDC Storage Model](#oidc-storage-model)
 
 <a id="project-structure"></a>
 ## 📁 Project Structure
