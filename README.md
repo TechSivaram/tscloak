@@ -55,9 +55,8 @@ The goal is to provide a maintainable architecture for building an authorization
 
 ## 🧭 Navigation
 
-  - [A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS](#a-modular-openid-connect-oauth-20-authorization-server-built-with-nestjs)
-- [📖 Overview](#overview)
-  - [✨ Highlights](#highlights)
+Use the links below to navigate the README. Main sections and their subsections follow the same order as the document.
+
 - [🏗️ Architecture](#architecture)
   - [Responsibility Layers](#responsibility-layers)
 - [🧩 Technology Stack](#technology-stack)
@@ -100,6 +99,15 @@ The goal is to provide a maintainable architecture for building an authorization
   - [Refresh Token Rotation](#refresh-token-rotation)
   - [Typical Token Lifecycle](#typical-token-lifecycle)
 - [👤 UserInfo Endpoint](#userinfo-endpoint)
+  - [Endpoint](#endpoint)
+  - [How It Fits Into the OIDC Flow](#how-it-fits-into-the-oidc-flow)
+  - [Calling the Endpoint](#calling-the-endpoint)
+  - [How TSCloak Resolves UserInfo Claims](#how-tscloak-resolves-userinfo-claims)
+  - [Scopes and Claims](#scopes-and-claims)
+  - [Example Response](#example-response)
+  - [ID Token vs UserInfo Endpoint](#id-token-vs-userinfo-endpoint)
+  - [Endpoint Discovery](#endpoint-discovery)
+  - [Error Handling](#error-handling)
 - [🔒 Token Management Endpoints](#token-management-endpoints)
   - [🚫 Token Revocation Endpoint](#token-revocation-endpoint)
   - [🔍 Token Introspection Endpoint](#token-introspection-endpoint)
@@ -114,6 +122,34 @@ The goal is to provide a maintainable architecture for building an authorization
   - [Using a Dynamically Registered Client](#using-a-dynamically-registered-client)
   - [Persistence Architecture](#persistence-architecture)
 - [🛡️ Security Policy Management](#security-policy-management)
+  - [What the Security Policy Controls](#what-the-security-policy-controls)
+  - [Security Policy Data Model](#security-policy-data-model)
+  - [Default Policy Creation](#default-policy-creation)
+  - [Administrative API](#administrative-api)
+  - [Management Architecture](#management-architecture)
+  - [Reading the Policy](#reading-the-policy)
+  - [Updating the Policy](#updating-the-policy)
+  - [Relationship with OIDC Configuration](#relationship-with-oidc-configuration)
+  - [OIDC Token Lifetime Mapping](#oidc-token-lifetime-mapping)
+  - [Why the Values Are Not Hardcoded](#why-the-values-are-not-hardcoded)
+  - [Runtime Configuration Considerations](#runtime-configuration-considerations)
+  - [Policy Changes and Existing Tokens](#policy-changes-and-existing-tokens)
+  - [Refresh Token Controls](#refresh-token-controls)
+  - [Persistence and Scaling](#persistence-and-scaling)
+  - [Security Considerations](#security-considerations)
+  - [Current Scope](#current-scope)
+- [🔑 Signing Keys and JWKS](#signing-keys-and-jwks)
+  - [Why Signing Keys Are Required](#why-signing-keys-are-required)
+  - [Signing Key Management](#signing-key-management)
+  - [How Keys Are Used During Token Issuance](#how-keys-are-used-during-token-issuance)
+  - [JWKS Endpoint](#jwks-endpoint)
+  - [JWKS Response](#jwks-response)
+  - [Token Verification Flow](#token-verification-flow)
+  - [Discovery Integration](#discovery-integration)
+  - [Key Identifiers (`kid`)](#key-identifiers-kid)
+  - [Key Rotation](#key-rotation)
+  - [Private Key Protection](#private-key-protection)
+  - [Relationship to Token Management](#relationship-to-token-management)
 - [🔑 Signing Keys and JWKS](#signing-keys-and-jwks)
 - [💾 Persistent OIDC Storage](#persistent-oidc-storage)
   - [Persisted Runtime Objects](#persisted-runtime-objects)
@@ -130,10 +166,6 @@ The goal is to provide a maintainable architecture for building an authorization
   - [Planned](#planned)
 - [🤝 Contributing](#contributing)
 - [📄 License](#license)
-
----
-
-<a id="architecture"></a>
 ## 🏗️ Architecture
 
 TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
