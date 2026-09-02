@@ -4,6 +4,9 @@
 
 # 🛡️ TSCloak
 
+
+<img src="assets/tscloak-brand.png" alt="TSCloak — Secure Identities. Trusted Access." width="850">
+
 <a id="a-modular-openid-connect-oauth-20-authorization-server-built-with-nestjs"></a>
 ### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
 
