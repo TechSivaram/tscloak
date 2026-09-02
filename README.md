@@ -2,10 +2,10 @@
 
 > **Implementation note:** TSCloak does not reimplement the OAuth 2.0 or OpenID Connect protocol stack. It uses `nest-oidc-provider`, which integrates the underlying `oidc-provider` library into the NestJS application architecture.
 
-<h1><img src="assets/tscloak-icon.png" alt="TSCloak" width="42" valign="middle"> TSCloak</h1>
+<h1><img src="public/assets/tscloak-icon.png" alt="TSCloak" width="42" valign="middle"> TSCloak</h1>
 
 
-<img src="assets/tscloak-brand.png" alt="TSCloak — Secure Identities. Trusted Access." width="850">
+<img src="public/assets/tscloak-brand.png" alt="TSCloak — Secure Identities. Trusted Access." width="850">
 
 <a id="a-modular-openid-connect-oauth-20-authorization-server-built-with-nestjs"></a>
 ### A modular OpenID Connect & OAuth 2.0 Authorization Server built with NestJS
