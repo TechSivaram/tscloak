@@ -59,6 +59,14 @@ This index includes every main section and subsection in the same order as the d
 
 - [🏗️ Architecture](#architecture)
   - [Responsibility Layers](#responsibility-layers)
+  - [Core Components](#core-components)
+  - [Request Processing Flow](#request-processing-flow)
+  - [Configuration Architecture](#configuration-architecture)
+  - [Runtime Domain Resolution](#runtime-domain-resolution)
+  - [Persistence Boundary](#persistence-boundary)
+  - [Separation of Concerns](#separation-of-concerns)
+  - [Architectural Principles](#architectural-principles)
+  - [Architecture Summary](#architecture-summary)
 - [🧩 Technology Stack](#technology-stack)
 - [📁 Project Structure](#project-structure)
   - [Module Responsibilities](#module-responsibilities)
@@ -176,7 +184,11 @@ This index includes every main section and subsection in the same order as the d
 <a id="architecture"></a>
 ## 🏗️ Architecture
 
-TSCloak is a NestJS-based Identity Provider that uses `nest-oidc-provider` as the NestJS integration layer for the underlying `oidc-provider` OAuth 2.0 and OpenID Connect implementation.
+TSCloak is a NestJS-based Identity Provider built around a clear separation between the application/domain layer and the underlying OAuth 2.0 / OpenID Connect protocol engine. It uses `nest-oidc-provider` as the NestJS integration layer for `oidc-provider`.
+
+The architecture is designed so that protocol processing remains the responsibility of `oidc-provider`, while TSCloak owns application-specific concerns such as client management, identity handling, security policies, signing keys, interaction experiences, and database integration.
+
+### High-Level Architecture
 
 ```mermaid
 flowchart TD
@@ -208,6 +220,11 @@ flowchart TD
     K --> L[("Database")]
 ```
 
+The diagram represents two complementary paths:
+
+1. **Protocol path** — OAuth 2.0 and OpenID Connect requests flow through NestJS integration into `oidc-provider`.
+2. **Application and persistence path** — TSCloak modules provide domain-specific configuration and persistence capabilities backed by repository abstractions and TypeORM.
+
 <a id="responsibility-layers"></a>
 ### Responsibility Layers
 
@@ -221,6 +238,291 @@ flowchart TD
 | **Signing Keys** | RSA key lifecycle and key material used to sign tokens |
 | **Repository Abstractions** | Decouple application and OIDC persistence from the underlying database |
 | **TypeORM** | Database persistence implementation |
+
+<a id="core-components"></a>
+### Core Components
+
+#### NestJS Application
+
+The NestJS application acts as the composition root for TSCloak. It provides:
+
+- Dependency injection and module composition
+- Application services and domain boundaries
+- REST/admin APIs
+- Integration with `nest-oidc-provider`
+- Database and repository configuration
+- Interaction and application-specific endpoints
+
+NestJS is therefore the **application host**, rather than the component implementing OAuth or OpenID Connect protocol semantics.
+
+#### `nest-oidc-provider`
+
+`nest-oidc-provider` bridges NestJS and `oidc-provider`.
+
+TSCloak uses it to:
+
+- Create and host the OIDC Provider inside the NestJS application
+- Configure the provider through NestJS dependency injection
+- Access the underlying provider when application integration is required
+- Integrate provider initialization with the NestJS module lifecycle
+
+This keeps the OIDC provider integrated into the application's architecture instead of running as an isolated server.
+
+#### `oidc-provider`
+
+`oidc-provider` is the protocol engine.
+
+It is responsible for core OAuth 2.0 and OpenID Connect behavior such as:
+
+- Authorization processing
+- Token issuance
+- Authorization codes
+- Access tokens
+- Refresh tokens
+- ID tokens
+- Sessions and grants
+- Discovery metadata
+- JWKS exposure
+- Protocol validation
+
+TSCloak does not reimplement these protocol flows. Instead, it configures and extends the provider around its own application and persistence requirements.
+
+#### Domain Modules
+
+TSCloak separates application concerns into dedicated modules.
+
+Examples include:
+
+- **Clients Module** — client application management and resolution
+- **Identity Module** — user and account-related concerns
+- **Sessions Module** — application session concerns
+- **OIDC Module** — OIDC integration and provider-specific configuration
+- **Security Module** — centralized security policy configuration
+- **Signing Keys Module** — signing key lifecycle and JWKS support
+
+This separation prevents OIDC protocol concerns from becoming tightly coupled with application/domain concerns.
+
+<a id="request-processing-flow"></a>
+### Request Processing Flow
+
+At runtime, a client request enters the TSCloak application and is processed by the OIDC provider integration.
+
+```mermaid
+sequenceDiagram
+    participant C as Client Application
+    participant N as TSCloak / NestJS
+    participant NI as nest-oidc-provider
+    participant OP as oidc-provider
+    participant S as TSCloak Services
+    participant R as Repositories
+    participant DB as Database
+
+    C->>N: OAuth 2.0 / OIDC Request
+    N->>NI: Route request to OIDC integration
+    NI->>OP: Process protocol request
+
+    OP->>S: Resolve application-specific requirements
+    S->>R: Read configuration or domain data
+    R->>DB: Query persistent storage
+    DB-->>R: Data
+    R-->>S: Domain data
+    S-->>OP: Configuration / result
+
+    OP-->>NI: Protocol response
+    NI-->>N: Response
+    N-->>C: OAuth / OIDC Response
+```
+
+Not every request requires every service. The actual dependencies depend on the endpoint and flow. For example:
+
+- Client-related operations may resolve client configuration.
+- Token issuance may use security policy values and signing keys.
+- OIDC artifacts use the configured persistence adapter.
+- User interactions may resolve account and session information.
+
+<a id="configuration-architecture"></a>
+### Configuration Architecture
+
+TSCloak distinguishes between **provider configuration** and **runtime domain data**.
+
+Provider configuration is supplied when the OIDC provider is initialized, while application services and persistence abstractions provide the domain data required by the application.
+
+```mermaid
+flowchart TD
+    A["NestJS Application Startup"] --> B["Dependency Injection Container"]
+    B --> C["OIDC Module Configuration"]
+    C --> D["OidcModule.forRootAsync()"]
+    D --> E["Options / Configuration Services"]
+    E --> F["OIDC Provider Configuration"]
+    F --> G["nest-oidc-provider"]
+    G --> H["oidc-provider Instance"]
+
+    I["Database-backed Domain Configuration"] --> E
+```
+
+The architecture keeps configuration responsibilities separate from protocol implementation:
+
+- TSCloak owns application configuration and domain policy.
+- `nest-oidc-provider` hosts the provider in NestJS.
+- `oidc-provider` consumes its provider configuration and executes protocol behavior.
+
+Detailed configuration mechanisms are documented in their respective sections, including Security Policy Management and Signing Keys and JWKS.
+
+<a id="runtime-domain-resolution"></a>
+### Runtime Domain Resolution
+
+During protocol processing, the OIDC engine may need information owned by TSCloak.
+
+Conceptually, the runtime resolution path is:
+
+```mermaid
+flowchart LR
+    A["OIDC Request"] --> B["oidc-provider"]
+
+    B --> C["Client Resolution"]
+    B --> D["Security Policy"]
+    B --> E["Signing Keys"]
+    B --> F["OIDC Persistence"]
+
+    C --> G["TSCloak Services"]
+    D --> G
+    E --> G
+    F --> H["OIDC Adapter"]
+
+    G --> I["Repository Abstractions"]
+    H --> I
+    I --> J["TypeORM"]
+    J --> K[("Database")]
+```
+
+This allows protocol processing to use application-managed data without embedding database access logic directly throughout the protocol layer.
+
+<a id="persistence-boundary"></a>
+### Persistence Boundary
+
+TSCloak separates **application data** from **OIDC runtime artifacts**.
+
+#### Application and configuration data
+
+Application modules manage data such as:
+
+- Clients
+- Users and identities
+- Security policies
+- Signing keys
+- Application-specific configuration
+
+These are accessed through the application's services and repository abstractions.
+
+#### OIDC runtime artifacts
+
+The OIDC provider generates runtime artifacts such as:
+
+- Authorization codes
+- Access tokens
+- Refresh tokens
+- Grants
+- Sessions
+- Device codes and other provider artifacts when enabled
+
+These artifacts are persisted through the OIDC adapter integration.
+
+```text
+Application Modules
+       │
+       ▼
+Repository Abstractions
+       │
+       ▼
+TypeORM
+       │
+       ▼
+Database
+
+oidc-provider Runtime Artifacts
+       │
+       ▼
+OIDC Adapter
+       │
+       ▼
+Repository Abstractions
+       │
+       ▼
+TypeORM
+       │
+       ▼
+Database
+```
+
+The detailed storage implementation is covered later in **Persistent OIDC Storage**, **Storage Architecture**, and **OIDC Storage Model**.
+
+<a id="separation-of-concerns"></a>
+### Separation of Concerns
+
+A key architectural boundary in TSCloak is the separation between protocol infrastructure and business/domain logic.
+
+| Concern | Primary Owner |
+|---|---|
+| OAuth 2.0 / OIDC protocol rules | `oidc-provider` |
+| NestJS hosting and integration | `nest-oidc-provider` |
+| Application composition and dependency injection | NestJS / TSCloak |
+| Client management | TSCloak Clients Module |
+| Identity and account concerns | TSCloak Identity Module |
+| Security policy management | TSCloak Security Module |
+| Signing key lifecycle | TSCloak Signing Keys Module |
+| OIDC artifact persistence | OIDC Adapter |
+| Database access abstraction | Repository layer / TypeORM |
+
+This boundary is important because it allows TSCloak to evolve its application and persistence model without attempting to replace the underlying standards-compliant protocol engine.
+
+<a id="architectural-principles"></a>
+### Architectural Principles
+
+The architecture follows these core principles:
+
+- **Protocol delegation** — OAuth 2.0 and OpenID Connect protocol behavior is delegated to `oidc-provider`.
+- **Separation of concerns** — Domain logic, protocol logic, and persistence concerns remain separate.
+- **Dependency injection** — NestJS services and modules are composed through the DI container.
+- **Database-backed domain configuration** — Application-managed entities such as security policies and signing keys are persisted rather than treated purely as hardcoded application constants.
+- **Persistence abstraction** — Repository abstractions reduce coupling between domain logic and the underlying database implementation.
+- **Pluggable OIDC persistence** — OIDC runtime artifacts are integrated through the provider adapter boundary.
+- **Distributed deployment awareness** — Persistent shared state is preferred for data that must remain consistent across multiple application instances.
+- **Focused modules** — Client, identity, security, signing-key, session, and OIDC concerns are organized into dedicated modules.
+
+<a id="architecture-summary"></a>
+### Architecture Summary
+
+TSCloak can be viewed as four cooperating layers:
+
+```text
+┌───────────────────────────────────────────────┐
+│           Client Applications                 │
+│       OAuth 2.0 / OpenID Connect              │
+└───────────────────────┬───────────────────────┘
+                        │
+┌───────────────────────▼───────────────────────┐
+│              TSCloak / NestJS                 │
+│                                               │
+│ Clients │ Identity │ Sessions │ Security │ Keys│
+└───────────────────────┬───────────────────────┘
+                        │
+┌───────────────────────▼───────────────────────┐
+│        nest-oidc-provider Integration         │
+└───────────────────────┬───────────────────────┘
+                        │
+┌───────────────────────▼───────────────────────┐
+│               oidc-provider                   │
+│        OAuth 2.0 / OIDC Protocol Engine       │
+└───────────────────────┬───────────────────────┘
+                        │
+┌───────────────────────▼───────────────────────┐
+│ Repository Abstractions │ OIDC Adapter │ TypeORM│
+└───────────────────────┬───────────────────────┘
+                        │
+                    Database
+```
+
+The rest of this README expands each of these architectural areas in detail, including authentication flows, client management, security policies, signing keys, and persistent OIDC storage.
 
 <a id="technology-stack"></a>
 ## 🧩 Technology Stack
