@@ -783,7 +783,7 @@ TSCloak provides an authentication interaction page for users to securely sign i
 
 <div align="center">
 
-![TSCloak Login Screen](docs/images/TSCloak-login.png)
+![TSCloak Login Screen](docs/images/login.png)
 
 *TSCloak authentication interaction page*
 
@@ -813,7 +813,7 @@ flowchart TD
 
 <div align="center">
 
-![TSCloak Login Screen](docs/images/TSCloak-consent.png)
+![TSCloak Login Screen](docs/images/Consent.png)
 
 *TSCloak consent interaction page*
 
