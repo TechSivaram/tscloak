@@ -713,7 +713,7 @@ flowchart TD
 ### Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/TechSivaram/tscloak
 cd TSCloak
 npm install
 ```

@@ -76,4 +76,6 @@ export class SecurityPolicy {
 
   @UpdateDateColumn()
   updatedAt: Date;
+  
+  initialAccessTokenTtl: any;
 }

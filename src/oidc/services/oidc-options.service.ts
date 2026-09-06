@@ -25,7 +25,7 @@ export class OidcOptionsService
     private readonly oidcRepository: OidcRepository,
     private readonly signingKeyService: SigningKeyService,
     private readonly securityPolicyService: SecurityPolicyService,
-  ) {}
+  ) { }
 
   /**
    * OIDC Provider configuration.
@@ -130,6 +130,9 @@ export class OidcOptionsService
            */
           Interaction: () =>
             securityPolicy.interactionTtl,
+
+          InitialAccessToken: () =>
+            securityPolicy.initialAccessTokenTtl,
         },
 
         /**
@@ -227,6 +230,7 @@ export class OidcOptionsService
            */
           registration: {
             enabled: true,
+            initialAccessToken: true,
           },
         },
 
