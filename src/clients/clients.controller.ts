@@ -64,6 +64,9 @@ export class ClientsController {
       redirectUris:
         result.client.redirectUris,
 
+      postLogoutRedirectUris:
+        result.client.postLogoutRedirectUris ?? [],
+
       allowedScopes:
         result.client.allowedScopes,
 

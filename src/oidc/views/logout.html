@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Sign out - TSCloak</title>
+
+  <style>
+    :root {
+      --tscloak-blue: #1f3f82;
+      --tscloak-blue-dark: #163266;
+      --tscloak-blue-light: #eef3fb;
+
+      --text-primary: #172033;
+      --text-muted: #667085;
+
+      --background: #f5f7fa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(31, 63, 130, 0.08),
+          transparent 40%
+        ),
+        var(--background);
+    }
+
+    /* =============================================
+       Logout Container
+    ============================================== */
+
+    .logout-container {
+      width: 100%;
+      max-width: 420px;
+
+      padding: 36px 32px;
+
+      background: white;
+
+      border: 1px solid rgba(31, 63, 130, 0.08);
+
+      border-radius: 16px;
+
+      box-shadow:
+        0 12px 40px rgba(31, 63, 130, 0.10);
+
+      text-align: center;
+    }
+
+    /* =============================================
+       TSCloak Branding
+    ============================================== */
+
+    .logo {
+      margin-bottom: 30px;
+    }
+
+    .logo-image {
+      width: 82px;
+      height: 82px;
+
+      display: block;
+
+      object-fit: contain;
+
+      margin: 0 auto 12px;
+    }
+
+    .logo h1 {
+      margin: 0;
+
+      color: var(--tscloak-blue);
+
+      font-size: 30px;
+
+      font-weight: 700;
+
+      letter-spacing: -0.5px;
+    }
+
+    .logo p {
+      margin: 7px 0 0;
+
+      color: var(--text-muted);
+
+      font-size: 13px;
+
+      font-weight: 500;
+    }
+
+    /* =============================================
+       Logout Content
+    ============================================== */
+
+    .logout-content {
+      margin-bottom: 26px;
+    }
+
+    .logout-content h2 {
+      margin: 0 0 10px;
+
+      color: var(--text-primary);
+
+      font-size: 22px;
+
+      font-weight: 600;
+    }
+
+    .logout-content p {
+      margin: 0;
+
+      color: var(--text-muted);
+
+      font-size: 14px;
+
+      line-height: 1.5;
+    }
+
+    /* =============================================
+       Logout Actions
+    ============================================== */
+
+    .logout-actions {
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 12px;
+    }
+
+    .logout-actions button {
+      width: 100%;
+
+      padding: 13px;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-size: 15px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        background 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .logout-actions button:active {
+      transform: translateY(1px);
+    }
+
+    /* =============================================
+       Sign Out Button
+    ============================================== */
+
+    .signout-button {
+      background: var(--tscloak-blue);
+
+      color: white;
+
+      box-shadow:
+        0 5px 12px rgba(31, 63, 130, 0.20);
+    }
+
+    .signout-button:hover {
+      background: var(--tscloak-blue-dark);
+
+      box-shadow:
+        0 7px 18px rgba(31, 63, 130, 0.25);
+    }
+
+    /* =============================================
+       Cancel Button
+    ============================================== */
+
+    .cancel-button {
+      background: var(--tscloak-blue-light);
+
+      color: var(--tscloak-blue);
+    }
+
+    .cancel-button:hover {
+      background: #e2e9f5;
+    }
+
+    /* =============================================
+       Footer
+    ============================================== */
+
+    .footer {
+      margin-top: 26px;
+
+      color: #98a2b3;
+
+      font-size: 11px;
+    }
+
+    .footer strong {
+      color: var(--tscloak-blue);
+    }
+
+    /* =============================================
+       Mobile
+    ============================================== */
+
+    @media (max-width: 480px) {
+
+      body {
+        padding: 14px;
+      }
+
+      .logout-container {
+        padding: 30px 24px;
+      }
+
+      .logo-image {
+        width: 72px;
+        height: 72px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="logout-container">
+
+    <!-- =============================================
+         TSCloak Branding
+    ============================================== -->
+
+    <div class="logo">
+
+      <img
+        src="/assets/tscloak-icon.png"
+        alt="TSCloak"
+        class="logo-image"
+      />
+
+      <h1>TSCloak</h1>
+
+      <p>
+        Secure Identities. Trusted Access.
+      </p>
+
+    </div>
+
+
+    <!-- =============================================
+         Logout Message
+    ============================================== -->
+
+    <div class="logout-content">
+
+     <h2>
+        Sign out of {{APPLICATION_NAME}}?
+      </h2>
+
+      <p>
+        You are currently signed in. Do you want to sign out?
+      </p>
+
+    </div>
+
+
+    <!-- =============================================
+         OIDC Provider Generated Logout Form
+
+         oidc-provider replaces:
+
+             placeholder LOGOUT_FORM
+
+         with its actual form.
+
+         DO NOT create the form manually.
+    ============================================== -->
+
+    {{LOGOUT_FORM}}
+
+
+    <!-- =============================================
+         Logout Actions
+    ============================================== -->
+
+    <div class="logout-actions">
+
+      <button
+        type="button"
+        class="signout-button"
+        onclick="confirmLogout()"
+      >
+        Sign out
+      </button>
+
+      <button
+        type="button"
+        class="cancel-button"
+        onclick="history.back()"
+      >
+        Cancel
+      </button>
+
+    </div>
+
+
+    <!-- =============================================
+         Footer
+    ============================================== -->
+
+    <div class="footer">
+      Secured by <strong>TSCloak</strong>
+    </div>
+
+  </div>
+
+
+  <!-- =============================================
+       Logout Script
+  ============================================== -->
+
+  <script>
+
+    function confirmLogout() {
+
+      const form =
+        document.getElementById('op.logoutForm');
+
+      if (!form) {
+
+        console.error(
+          'TSCloak: OIDC logout form was not found.'
+        );
+
+        return;
+      }
+
+
+      /*
+       * oidc-provider requires logout=yes
+       * when confirming the logout request.
+       */
+
+      let logoutInput =
+        form.querySelector(
+          'input[name="logout"]'
+        );
+
+
+      if (!logoutInput) {
+
+        logoutInput =
+          document.createElement('input');
+
+        logoutInput.type = 'hidden';
+
+        logoutInput.name = 'logout';
+
+        form.appendChild(logoutInput);
+      }
+
+
+      logoutInput.value = 'yes';
+
+
+      /*
+       * Submit the exact form generated
+       * by oidc-provider.
+       */
+
+      form.submit();
+    }
+
+  </script>
+
+</body>
+
+</html>

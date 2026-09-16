@@ -10,10 +10,20 @@ import { ClientRepository } from './repositories/client.repository';
 
 export interface CreateClientInput {
   name: string;
+
   redirectUris: string[];
+
+  /*
+   * OIDC RP-Initiated Logout
+   */
+  postLogoutRedirectUris?: string[];
+
   allowedScopes: string[];
+
   grantTypes: string[];
+
   responseTypes: string[];
+
   tokenEndpointAuthMethod: string;
 }
 
@@ -24,9 +34,14 @@ export interface CreatedClient {
 
 @Injectable()
 export class ClientsService {
+  async findByClientId(clientId: any) {
+    return await this.clients.findByClientId(
+      clientId,
+    );
+  }
   constructor(
     private readonly clients: ClientRepository,
-  ) {}
+  ) { }
 
   async createClient(
     input: CreateClientInput,
@@ -58,15 +73,32 @@ export class ClientsService {
     const client = new Client();
 
     client.clientId = clientId;
+
     client.clientSecret = clientSecret;
+
     client.name = input.name;
-    client.redirectUris = input.redirectUris;
-    client.allowedScopes = input.allowedScopes;
-    client.grantTypes = input.grantTypes;
+
+    client.redirectUris =
+      input.redirectUris;
+
+    /*
+     * OIDC RP-Initiated Logout
+     */
+    client.postLogoutRedirectUris =
+      input.postLogoutRedirectUris ?? [];
+
+    client.allowedScopes =
+      input.allowedScopes;
+
+    client.grantTypes =
+      input.grantTypes;
+
     client.responseTypes =
       input.responseTypes;
+
     client.tokenEndpointAuthMethod =
       input.tokenEndpointAuthMethod;
+
     client.enabled = true;
 
     const saved =

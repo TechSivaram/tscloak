@@ -46,6 +46,26 @@ export class CreateClientDto {
   )
   redirectUris: string[];
 
+  @ApiPropertyOptional({
+    example: [
+      'https://app.example.com/logout/callback',
+    ],
+    description:
+      'Allowed redirect URIs after RP-initiated logout.',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUrl(
+    {
+      require_tld: false,
+    },
+    {
+      each: true,
+    },
+  )
+  postLogoutRedirectUris: string[];
+
   @ApiProperty({
     example: [
       'openid',

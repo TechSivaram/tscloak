@@ -32,6 +32,12 @@ export class Client {
   @Column('simple-json')
   redirectUris: string[];
 
+  @Column({
+    type: 'simple-json',
+    default: [],
+  })
+  postLogoutRedirectUris: string[];
+
   @Column('simple-json')
   allowedScopes: string[];
 
@@ -89,10 +95,4 @@ export class Client {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @Column({
-    type: 'simple-json',
-    nullable: true,
-  })
-  postLogoutRedirectUris?: string[];
 }

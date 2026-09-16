@@ -5,7 +5,7 @@ import { ClientRepository } from '../../../clients/repositories/client.repositor
 export class OidcClientAdapter {
   constructor(
     private readonly clientRepository: ClientRepository,
-  ) { }
+  ) {}
 
   /**
    * Find a client by client_id.
@@ -64,6 +64,17 @@ export class OidcClientAdapter {
         ? payload.redirect_uris.map(String)
         : [];
 
+    /*
+     * OIDC RP-Initiated Logout
+     *
+     * Persist the redirect URIs that the client is
+     * allowed to use after logout.
+     */
+    client.postLogoutRedirectUris =
+      Array.isArray(payload.post_logout_redirect_uris)
+        ? payload.post_logout_redirect_uris.map(String)
+        : [];
+
     client.allowedScopes =
       typeof payload.scope === 'string'
         ? payload.scope.split(' ').filter(Boolean)
@@ -109,9 +120,6 @@ export class OidcClientAdapter {
    * Remove a dynamically registered client.
    *
    * Required for Dynamic Client Registration DELETE support.
-   *
-   * Currently intentionally left as a no-op until delete support
-   * is added to ClientRepository.
    */
   async destroy(clientId: string): Promise<void> {
     await this.clientRepository.deleteByClientId(clientId);
@@ -129,13 +137,22 @@ export class OidcClientAdapter {
 
       ...(client.clientSecret
         ? {
-          client_secret: client.clientSecret,
-        }
+            client_secret: client.clientSecret,
+          }
         : {}),
 
       client_name: client.name,
 
       redirect_uris: client.redirectUris,
+
+      /*
+       * OIDC RP-Initiated Logout
+       *
+       * oidc-provider uses this list to validate
+       * post_logout_redirect_uri.
+       */
+      post_logout_redirect_uris:
+        client.postLogoutRedirectUris ?? [],
 
       scope: client.allowedScopes.join(' '),
 
@@ -153,16 +170,16 @@ export class OidcClientAdapter {
 
       ...(client.interactionLoginUrl
         ? {
-          interaction_login_url:
-            client.interactionLoginUrl,
-        }
+            interaction_login_url:
+              client.interactionLoginUrl,
+          }
         : {}),
 
       ...(client.interactionConsentUrl
         ? {
-          interaction_consent_url:
-            client.interactionConsentUrl,
-        }
+            interaction_consent_url:
+              client.interactionConsentUrl,
+          }
         : {}),
     };
   }

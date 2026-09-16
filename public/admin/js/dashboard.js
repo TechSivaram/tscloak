@@ -341,7 +341,7 @@
 
         params.set(
             "client_id",
-            "YOUR_TSCLOAK_ADMIN_CLIENT_ID"
+            "04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363"
         );
 
         if (idToken) {

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 import {
   OidcModuleOptions,
@@ -15,6 +17,7 @@ import { OidcClientAdapter } from '../adapters/oidc-client.adapter/oidc-client.a
 import { OidcAdapter } from '../adapters/oidc.adapter/oidc.adapter';
 import { OidcRepository } from '../repositories/oidc.repository';
 import { ClientRegistrationPolicyService } from './client-registration-policy/client-registration-policy.service';
+import { ClientsService } from 'src/clients/clients.service';
 
 @Injectable()
 export class OidcOptionsService
@@ -27,6 +30,7 @@ export class OidcOptionsService
     private readonly signingKeyService: SigningKeyService,
     private readonly securityPolicyService: SecurityPolicyService,
     private readonly clientRegistrationPolicyService: ClientRegistrationPolicyService,
+    private readonly clientsService: ClientsService,
   ) { }
 
   /**
@@ -242,6 +246,45 @@ export class OidcOptionsService
            */
           introspection: {
             enabled: true,
+          },
+
+          /**
+           * RP-Initiated Logout.
+           */
+          rpInitiatedLogout: {
+            enabled: true,
+
+            logoutSource: async (ctx, form) => {
+
+              const clientId = ctx.oidc.params?.client_id;
+
+              // Find your Client entity using OIDC client_id
+              const client = clientId
+                ? await this.clientsService.findByClientId(clientId)
+                : null;
+
+              const applicationName =
+                client?.name ?? 'TSCloak';
+
+              const template = await readFile(
+                join(
+                  process.cwd(),
+                  'src',
+                  'oidc',
+                  'views',
+                  'logout.html',
+                ),
+                'utf8',
+              );
+
+              ctx.body = template.replace(
+                '{{APPLICATION_NAME}}',
+                applicationName,
+              ).replace(
+                '{{LOGOUT_FORM}}',
+                form,
+              );
+            },
           },
 
           /**
