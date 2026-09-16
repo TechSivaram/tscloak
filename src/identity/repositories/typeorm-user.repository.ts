@@ -13,15 +13,19 @@ export class TypeOrmUserRepository implements UserRepository {
   ) {
   }
 
-  async findById(id: string): Promise<User | null> {
+  async findById(id: string, client_id: any): Promise<User | null> {
     return this.repository.findOne({
-      where: { id },
+      where: { id, client: { clientId: client_id } }, relations: {
+        roles: true,
+      },
     });
   }
 
-  async findByUsername(username: string): Promise<User | null> {
+  async findByUsername(username: string, client_id: any): Promise<User | null> {
     return this.repository.findOne({
-      where: { username },
+      where: { username, client: { clientId: client_id } }, relations: {
+        roles: true,
+      },
     });
   }
 

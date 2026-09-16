@@ -40,6 +40,22 @@ export class SecurityPolicy {
   refreshTokenTtl: number;
 
   @Column({
+    type: 'integer',
+    default: 60 * 60 * 24,
+  })
+  initialAccessTokenTtl: number;
+
+  @Column({
+    type: 'integer',
+    default: 60 * 60 * 24,
+  })
+  registrationAccessTokenTtl: number;
+
+  // =========================
+  // Refresh Token Policy
+  // =========================
+
+  @Column({
     type: 'boolean',
     default: true,
   })
@@ -76,6 +92,4 @@ export class SecurityPolicy {
 
   @UpdateDateColumn()
   updatedAt: Date;
-  
-  initialAccessTokenTtl: any;
 }

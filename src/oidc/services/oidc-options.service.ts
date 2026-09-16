@@ -14,6 +14,7 @@ import { SecurityPolicyService } from 'src/security/services/security-policy/sec
 import { OidcClientAdapter } from '../adapters/oidc-client.adapter/oidc-client.adapter';
 import { OidcAdapter } from '../adapters/oidc.adapter/oidc.adapter';
 import { OidcRepository } from '../repositories/oidc.repository';
+import { ClientRegistrationPolicyService } from './client-registration-policy/client-registration-policy.service';
 
 @Injectable()
 export class OidcOptionsService
@@ -25,6 +26,7 @@ export class OidcOptionsService
     private readonly oidcRepository: OidcRepository,
     private readonly signingKeyService: SigningKeyService,
     private readonly securityPolicyService: SecurityPolicyService,
+    private readonly clientRegistrationPolicyService: ClientRegistrationPolicyService,
   ) { }
 
   /**
@@ -86,6 +88,13 @@ export class OidcOptionsService
          */
         jwks,
 
+        formats: {
+          default: 'opaque',
+          AccessToken: 'jwt',
+        },
+
+        conformIdTokenClaims: false,
+
         /**
          * TOKEN AND SESSION LIFETIMES
          *
@@ -133,6 +142,9 @@ export class OidcOptionsService
 
           InitialAccessToken: () =>
             securityPolicy.initialAccessTokenTtl,
+
+          RegistrationAccessToken: () =>
+            securityPolicy.registrationAccessTokenTtl,
         },
 
         /**
@@ -168,9 +180,12 @@ export class OidcOptionsService
             );
           }
 
+          const clientId = ctx.oidc.params.client_id ?? ctx.oidc.accessToken?.clientId;
+
           const user =
             await this.identityService.findById(
               accountId,
+              clientId
             );
 
           if (!user) {
@@ -193,6 +208,10 @@ export class OidcOptionsService
               email: user.email,
 
               email_verified: true,
+
+              roles: user.roles.map(
+                role => role.name,
+              ),
             }),
           };
         },
@@ -231,6 +250,12 @@ export class OidcOptionsService
           registration: {
             enabled: true,
             initialAccessToken: true,
+
+            policies: this.clientRegistrationPolicyService.getPolicies(),
+          },
+
+          registrationManagement: {
+            enabled: true,
           },
         },
 
@@ -260,6 +285,7 @@ export class OidcOptionsService
           'profile',
           'email',
           'offline_access',
+          'roles',
         ],
 
         /**
@@ -287,6 +313,10 @@ export class OidcOptionsService
           email: [
             'email',
             'email_verified',
+          ],
+
+          roles: [
+            'roles',
           ],
         },
       },

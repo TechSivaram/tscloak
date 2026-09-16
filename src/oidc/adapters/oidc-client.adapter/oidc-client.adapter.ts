@@ -5,7 +5,7 @@ import { ClientRepository } from '../../../clients/repositories/client.repositor
 export class OidcClientAdapter {
   constructor(
     private readonly clientRepository: ClientRepository,
-  ) {}
+  ) { }
 
   /**
    * Find a client by client_id.
@@ -113,10 +113,8 @@ export class OidcClientAdapter {
    * Currently intentionally left as a no-op until delete support
    * is added to ClientRepository.
    */
-  async destroy(
-    _clientId: string,
-  ): Promise<void> {
-    // DELETE support can be implemented later.
+  async destroy(clientId: string): Promise<void> {
+    await this.clientRepository.deleteByClientId(clientId);
   }
 
   /**
@@ -131,8 +129,8 @@ export class OidcClientAdapter {
 
       ...(client.clientSecret
         ? {
-            client_secret: client.clientSecret,
-          }
+          client_secret: client.clientSecret,
+        }
         : {}),
 
       client_name: client.name,
@@ -155,16 +153,16 @@ export class OidcClientAdapter {
 
       ...(client.interactionLoginUrl
         ? {
-            interaction_login_url:
-              client.interactionLoginUrl,
-          }
+          interaction_login_url:
+            client.interactionLoginUrl,
+        }
         : {}),
 
       ...(client.interactionConsentUrl
         ? {
-            interaction_consent_url:
-              client.interactionConsentUrl,
-          }
+          interaction_consent_url:
+            client.interactionConsentUrl,
+        }
         : {}),
     };
   }

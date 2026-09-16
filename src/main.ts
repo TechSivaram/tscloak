@@ -48,7 +48,7 @@ async function bootstrap() {
         {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'JWT',
+          bearerFormat: 'Opaque',
         },
         'access-token',
       )
@@ -59,6 +59,12 @@ async function bootstrap() {
       app,
       swaggerConfig,
     );
+
+  document.security = [
+    {
+      'access-token': [],
+    },
+  ];
 
   SwaggerModule.setup(
     'docs',

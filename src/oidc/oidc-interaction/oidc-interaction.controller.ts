@@ -11,6 +11,14 @@ import {
 import type { Response } from 'express';
 
 import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import {
   OidcInteraction,
   OidcService,
   type InteractionHelper,
@@ -37,6 +45,7 @@ interface ScopeInfo {
   description: string;
 }
 
+@ApiTags('Hosted UI')
 @Controller('interaction')
 export class OidcInteractionController {
   constructor(
@@ -45,13 +54,35 @@ export class OidcInteractionController {
 
     @Inject(ClientRepository)
     private readonly clientRepository: ClientRepository,
-  ) { }
+  ) {}
 
   // ============================================================
   // GET /interaction/:uid
   // ============================================================
 
   @Get(':uid')
+  @ApiOperation({
+    summary: 'Display Hosted UI',
+    description:
+      'Displays the TSCloak Hosted UI for an OIDC login or consent interaction. If the client is configured for an external interaction UI, the request is redirected to the configured external URL.',
+  })
+  @ApiParam({
+    name: 'uid',
+    description: 'OIDC interaction identifier.',
+    example: '4f8b7c9a6d2e4f1a',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Hosted UI HTML page returned.',
+  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirected to an externally configured interaction UI.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or unsupported OIDC interaction.',
+  })
   async interactionPage(
     @Param('uid') uid: string,
 
@@ -245,8 +276,8 @@ export class OidcInteractionController {
                 </div>
                 <div class="scope-description">
                   ${this.escapeHtml(
-              scopeInfo.description,
-            )}
+                    scopeInfo.description,
+                  )}
                 </div>
               </li>
             `;
@@ -260,28 +291,28 @@ export class OidcInteractionController {
       const missingScopesHtml =
         Array.isArray(missingOIDCScope)
           ? missingOIDCScope
-            .map((scope) => {
-              const scopeInfo =
-                this.getScopeDescription(
-                  String(scope),
-                );
+              .map((scope) => {
+                const scopeInfo =
+                  this.getScopeDescription(
+                    String(scope),
+                  );
 
-              return `
+                return `
                   <li class="scope-item">
                     <div class="scope-name">
                       ${this.escapeHtml(
-                scopeInfo.name,
-              )}
+                        scopeInfo.name,
+                      )}
                     </div>
                     <div class="scope-description">
                       ${this.escapeHtml(
-                scopeInfo.description,
-              )}
+                        scopeInfo.description,
+                      )}
                     </div>
                   </li>
                 `;
-            })
-            .join('')
+              })
+              .join('')
           : '';
 
       // --------------------------------------------------------
@@ -291,13 +322,13 @@ export class OidcInteractionController {
       const missingClaimsHtml =
         Array.isArray(missingOIDCClaims)
           ? missingOIDCClaims
-            .map(
-              (claim) =>
-                `<li>${this.escapeHtml(
-                  String(claim),
-                )}</li>`,
-            )
-            .join('')
+              .map(
+                (claim) =>
+                  `<li>${this.escapeHtml(
+                    String(claim),
+                  )}</li>`,
+              )
+              .join('')
           : '';
 
       // --------------------------------------------------------
@@ -359,6 +390,53 @@ export class OidcInteractionController {
   // ============================================================
 
   @Post(':uid/login')
+  @ApiOperation({
+    summary: 'Hosted UI Login',
+    description:
+      'Authenticates the user through the TSCloak Hosted UI and completes the OIDC login interaction.',
+  })
+  @ApiParam({
+    name: 'uid',
+    description: 'OIDC interaction identifier.',
+    example: '4f8b7c9a6d2e4f1a',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        username: {
+          type: 'string',
+          example: 'siva',
+          description: 'Username.',
+        },
+        password: {
+          type: 'string',
+          format: 'password',
+          example: 'Password123!',
+          description: 'User password.',
+        },
+      },
+      required: [
+        'username',
+        'password',
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'OIDC login interaction completed.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'The endpoint is not handling a login interaction.',
+  })
+  @ApiResponse({
+    status: 401,
+    description:
+      'Authentication failed.',
+  })
   async login(
     @Param('uid') uid: string,
 
@@ -389,6 +467,7 @@ export class OidcInteractionController {
         await this.authenticationService.authenticate(
           dto.username,
           dto.password,
+          details.params.client_id,
         );
 
       await interaction.finished({
@@ -442,6 +521,46 @@ export class OidcInteractionController {
   // ============================================================
 
   @Post(':uid/consent')
+  @ApiOperation({
+    summary: 'Hosted UI Consent',
+    description:
+      'Processes the user consent decision through the TSCloak Hosted UI and completes the OIDC consent interaction.',
+  })
+  @ApiParam({
+    name: 'uid',
+    description: 'OIDC interaction identifier.',
+    example: '4f8b7c9a6d2e4f1a',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        decision: {
+          type: 'string',
+          enum: [
+            'accept',
+            'reject',
+          ],
+          example: 'accept',
+          description:
+            'User consent decision.',
+        },
+      },
+      required: [
+        'decision',
+      ],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'OIDC consent interaction completed.',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Invalid consent interaction or decision.',
+  })
   async consent(
     @Param('uid') uid: string,
 
@@ -489,7 +608,9 @@ export class OidcInteractionController {
     // VALIDATE DECISION
     // ==========================================================
 
-    if (dto.decision !== 'accept') {
+    if (
+      dto.decision !== 'accept'
+    ) {
       response
         .status(400)
         .send(
@@ -625,6 +746,12 @@ export class OidcInteractionController {
           'Access your email address and email verification status.',
       },
 
+      roles: {
+        name: 'Roles',
+        description:
+          'Access your assigned roles and permissions.',
+      },
+
       offline_access: {
         name: 'Offline Access',
         description:
@@ -649,10 +776,25 @@ export class OidcInteractionController {
     value: string,
   ): string {
     return value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
+      .replaceAll(
+        '&',
+        '&amp;',
+      )
+      .replaceAll(
+        '<',
+        '&lt;',
+      )
+      .replaceAll(
+        '>',
+        '&gt;',
+      )
+      .replaceAll(
+        '"',
+        '&quot;',
+      )
+      .replaceAll(
+        "'",
+        '&#039;',
+      );
   }
 }

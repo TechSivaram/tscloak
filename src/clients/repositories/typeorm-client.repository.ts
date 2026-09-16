@@ -7,12 +7,17 @@ import { ClientRepository } from './client.repository';
 
 @Injectable()
 export class TypeOrmClientRepository
-  implements ClientRepository
-{
+  implements ClientRepository {
   constructor(
     @InjectRepository(Client)
     private readonly repository: Repository<Client>,
-  ) {}
+  ) { }
+
+  async deleteByClientId(clientId: string): Promise<void> {
+    await this.repository.delete({
+      clientId,
+    });
+  }
 
   async findByClientId(
     clientId: string,

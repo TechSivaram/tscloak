@@ -12,15 +12,14 @@ import { User } from '../identity/entities/user.entity';
 export class AuthenticationService {
   constructor(
     private readonly identityService: IdentityService,
-  ) {}
+  ) { }
 
   async authenticate(
-    username: string,
-    password: string,
+    username: string, password: string, client_id: any,
   ): Promise<User> {
     const user =
       await this.identityService.findByUsername(
-        username,
+        username, client_id,
       );
 
     if (!user || !user.enabled) {

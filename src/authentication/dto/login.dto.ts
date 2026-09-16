@@ -5,12 +5,16 @@ import {
 
 
 export class LoginDto {
- 
+
   @IsString()
   username: string;
 
-  
+
   @IsString()
   @MinLength(8)
   password: string;
+
+
+  @IsString()
+  client_id: string;
 }

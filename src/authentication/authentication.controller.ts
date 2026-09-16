@@ -21,10 +21,10 @@ export class AuthenticationController {
 
     private readonly sessionsService:
       SessionsService,
-  ) {}
+  ) { }
 
   @Post('login')
-  
+
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true })
@@ -34,6 +34,7 @@ export class AuthenticationController {
       await this.authenticationService.authenticate(
         dto.username,
         dto.password,
+        dto.client_id,
       );
 
     const session =

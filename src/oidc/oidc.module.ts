@@ -19,6 +19,7 @@ import { IdentityModule } from 'src/identity/identity.module';
 import { SigningKeysModule } from 'src/signing-keys/signing-keys.module';
 import { OidcOptionsService } from './services/oidc-options.service';
 import { SecurityModule } from 'src/security/security.module';
+import { ClientRegistrationPolicyModule } from './services/client-registration-policy/client-registration-policy.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SecurityModule } from 'src/security/security.module';
      * Required by OidcOptionsService.
      */
     SigningKeysModule,
+    ClientRegistrationPolicyModule,
 
     NestOidcModule.forRootAsync({
       /**
@@ -50,6 +52,7 @@ import { SecurityModule } from 'src/security/security.module';
         OidcPersistenceModule,
         SigningKeysModule,
         SecurityModule,
+        ClientRegistrationPolicyModule,
       ],
 
       useClass: OidcOptionsService,
@@ -64,4 +67,4 @@ import { SecurityModule } from 'src/security/security.module';
     OidcOptionsService,
   ],
 })
-export class OidcModule {}
+export class OidcModule { }
