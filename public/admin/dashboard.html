@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Dashboard</title>
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">T</div>
+        <div>
+          <div class="brand-name">TSCloak</div>
+          <div class="brand-subtitle">Administration</div>
+        </div>
+      </div>
+
+      <nav class="navigation">
+        <a class="nav-item active" href="./dashboard.html"><span>⌂</span>Dashboard</a>
+        <a class="nav-item" href="./clients.html"><span>▣</span>Clients</a>
+        <a class="nav-item" href="./users.html"><span>♙</span>Users</a>
+        <a class="nav-item" href="./roles.html"><span>◆</span>Roles</a>
+
+        <div class="nav-section-title">Registration</div>
+        <a class="nav-item" href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a>
+
+        <div class="nav-section-title">Configuration</div>
+        <a class="nav-item" href="./security-policy.html"><span>⚙</span>Security Policy</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="provider-status">
+          <span class="status-dot"></span>
+          <div><strong>System Operational</strong><small>TSCloak is running normally</small></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" type="button">☰</button>
+        <div class="page-heading">
+          <span class="breadcrumb">TSCloak</span>
+          <h1>Dashboard</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="icon-button" type="button" aria-label="Notifications">♢<i></i></button>
+          <div class="profile">
+            <div class="avatar" id="userAvatar">AD</div>
+            <div class="profile-details">
+              <strong id="userName">Administrator</strong>
+              <span id="userRole">IDP_ADMIN</span>
+            </div>
+            <button class="profile-menu-button" id="profileMenuButton" type="button">▾</button>
+            <div class="profile-menu" id="profileMenu">
+              <button type="button">Profile</button>
+              <button type="button" id="logoutButton">Sign out</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="welcome">
+          <div>
+            <p class="eyebrow">Identity Provider</p>
+            <h2>Welcome back, <span id="welcomeName">Administrator</span></h2>
+            <p>Manage your TSCloak identity platform from one place.</p>
+          </div>
+          <a class="button primary" href="./clients.html">Manage Clients</a>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card"><div class="stat-icon clients-icon">▣</div><div><span>Registered Clients</span><strong id="clientCount">—</strong><small>OAuth / OIDC applications</small></div></article>
+          <article class="stat-card"><div class="stat-icon users-icon">♙</div><div><span>Users</span><strong id="userCount">—</strong><small>Registered identities</small></div></article>
+          <article class="stat-card"><div class="stat-icon tokens-icon">⌁</div><div><span>Initial Access Tokens</span><strong id="tokenCount">—</strong><small>Registration credentials</small></div></article>
+          <article class="stat-card"><div class="stat-icon roles-icon">◆</div><div><span>Roles</span><strong id="roleCount">—</strong><small>Authorization roles</small></div></article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <div><p class="eyebrow">Platform</p><h3>System Status</h3></div>
+              <span class="healthy-badge"><span class="status-dot"></span>Operational</span>
+            </div>
+            <div class="status-list">
+              <div class="status-item"><div class="status-label"><span class="service-icon">◉</span><div><strong>OIDC Provider</strong><small>Authorization and token services</small></div></div><span class="status-value">Operational</span></div>
+              <div class="status-item"><div class="status-label"><span class="service-icon">▤</span><div><strong>Database</strong><small>Identity and configuration storage</small></div></div><span class="status-value">Connected</span></div>
+              <div class="status-item"><div class="status-label"><span class="service-icon">◇</span><div><strong>Registration Service</strong><small>OAuth/OIDC client registration</small></div></div><span class="status-value">Operational</span></div>
+              <div class="status-item"><div class="status-label"><span class="service-icon">◆</span><div><strong>Security Policy</strong><small>Token and session configuration</small></div></div><span class="status-value">Active</span></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header"><div><p class="eyebrow">Administration</p><h3>Quick Actions</h3></div></div>
+            <div class="quick-actions">
+              <a href="./clients.html" class="quick-action"><span class="quick-icon">▣</span><span><strong>Register Client</strong><small>Add an OAuth/OIDC application</small></span><b>›</b></a>
+              <a href="./users.html" class="quick-action"><span class="quick-icon">♙</span><span><strong>Create User</strong><small>Create a new identity</small></span><b>›</b></a>
+              <a href="./initial-access-tokens.html" class="quick-action"><span class="quick-icon">⌁</span><span><strong>Create Registration Token</strong><small>Authorize client registration</small></span><b>›</b></a>
+              <a href="./security-policy.html" class="quick-action"><span class="quick-icon">⚙</span><span><strong>Security Policy</strong><small>Review token and session settings</small></span><b>›</b></a>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel activity-panel">
+          <div class="panel-header"><div><p class="eyebrow">Audit</p><h3>Recent Activity</h3></div><button class="text-button" id="refreshActivity">Refresh</button></div>
+          <div class="activity-empty" id="activityEmpty"><div class="empty-icon">◌</div><strong>No recent activity</strong><span>Activity will appear here as administrative actions occur.</span></div>
+        </section>
+      </main>
+
+      <footer class="footer"><span>TSCloak Identity &amp; Access Management</span><span>Version 1.0</span></footer>
+    </div>
+  </div>
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+  <script src="./js/dashboard.js"></script>
+</body>
+</html>

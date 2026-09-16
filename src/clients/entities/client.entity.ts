@@ -89,4 +89,10 @@ export class Client {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({
+    type: 'simple-json',
+    nullable: true,
+  })
+  postLogoutRedirectUris?: string[];
 }
