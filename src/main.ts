@@ -27,6 +27,19 @@ async function bootstrap() {
     express.static(join(process.cwd(), 'public')),
   );
 
+  /*
+   * Multi-tenant client-admin portal: /client-admin/{clientId}/
+   * Falls back here only when no static asset matched above.
+   */
+  app.use(
+    '/client-admin/:clientId',
+    (req, res) => {
+      res.sendFile(
+        join(process.cwd(), 'public', 'client-admin', 'index.html'),
+      );
+    },
+  );
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
