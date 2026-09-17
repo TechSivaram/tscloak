@@ -9,6 +9,7 @@ import {
 
 import {  
   ApiOperation,
+  ApiBearerAuth,
   ApiParam,
   ApiResponse,
   ApiTags,

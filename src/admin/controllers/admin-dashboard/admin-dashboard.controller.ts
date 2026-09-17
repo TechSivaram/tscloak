@@ -13,7 +13,6 @@ import { RolesGuard } from 'src/security/guards/roles.guard';
 import { Roles } from 'src/security/decorators/roles.decorator';
 
 @ApiTags('Admin Dashboard')
-@ApiBearerAuth('access-token')
 @Controller('admin/dashboard')
 @UseGuards(
   OidcAuthGuard,

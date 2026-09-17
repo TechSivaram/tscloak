@@ -6,14 +6,20 @@ import {
 } from '@nestjs/common';
 
 import { ClientsService } from 'src/clients/clients.service';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('admin/config')
+@ApiTags('Portal Configuration')
 export class AdminClientConfigController {
   constructor(
     private readonly clientsService: ClientsService,
   ) {}
 
   @Get('oidc')
+  @ApiOperation({ summary: 'Resolve portal OIDC client configuration' })
+  @ApiQuery({ name: 'portal', enum: ['admin', 'client-admin'], required: false })
+  @ApiResponse({ status: 200, description: 'Public OIDC client configuration returned.' })
+  @ApiResponse({ status: 404, description: 'Unknown portal or no enabled client.' })
   async getOidcClient(
     @Query('portal') portal: string = 'admin',
   ): Promise<{ clientId: string; redirectUri: string; postLogoutRedirectUri?: string }> {

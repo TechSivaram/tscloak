@@ -5,6 +5,8 @@ import {
   Res,
 } from '@nestjs/common';
 
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
 
 import express from 'express';
 
@@ -14,6 +16,7 @@ import { LoginDto } from './dto/login.dto';
 import { SessionsService } from '../sessions/sessions.service';
 
 @Controller('auth')
+@ApiTags('Authentication')
 export class AuthenticationController {
   constructor(
     private readonly authenticationService:
@@ -24,6 +27,10 @@ export class AuthenticationController {
   ) { }
 
   @Post('login')
+  @ApiOperation({ summary: 'Authenticate a user and create an IDP session' })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({ status: 201, description: 'Session cookie created.' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials or portal access denied.' })
 
   async login(
     @Body() dto: LoginDto,

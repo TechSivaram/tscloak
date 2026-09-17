@@ -58,7 +58,6 @@ export class SecurityPolicyAdminController {
    * - IDP_ADMIN role
    */
   @Put()
-  @ApiBearerAuth('access-token')
   @UseGuards(OidcAuthGuard, RolesGuard)
   @Roles('IDP_ADMIN')
   @ApiOperation({

@@ -13,6 +13,7 @@ import {
 
 import {
   ApiOperation,
+  ApiBearerAuth,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -78,6 +79,8 @@ export class IdentityController {
 
   @Get()
   @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @ApiOperation({ summary: 'List users for the permitted client scope' })
+  @ApiResponse({ status: 200, description: 'Users returned.', type: [UserResponseDto] })
   async findUsers(
     @Req() request: AuthenticatedRequest,
     @Query('client_id') clientId?: string,
@@ -94,6 +97,8 @@ export class IdentityController {
 
   @Put(':id')
   @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @ApiOperation({ summary: 'Update a user' })
+  @ApiResponse({ status: 200, description: 'User updated.', type: UserResponseDto })
   async updateUser(
     @Param('id') userId: string,
     @Req() request: AuthenticatedRequest,
@@ -111,12 +116,16 @@ export class IdentityController {
 
   @Get('roles')
   @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @ApiOperation({ summary: 'List available roles' })
+  @ApiResponse({ status: 200, description: 'Roles returned.' })
   async findRoles() {
     return this.identityService.findRoles();
   }
 
   @Post('roles')
   @Roles('IDP_ADMIN')
+  @ApiOperation({ summary: 'Create a role' })
+  @ApiResponse({ status: 201, description: 'Role created.' })
   async createRole(
     @Body() body: { name: string; description?: string },
   ) {
@@ -128,6 +137,8 @@ export class IdentityController {
 
   @Put('roles/:id')
   @Roles('IDP_ADMIN')
+  @ApiOperation({ summary: 'Update a role description' })
+  @ApiResponse({ status: 200, description: 'Role updated.' })
   async updateRole(
     @Param('id') roleId: string,
     @Body() dto: UpdateRoleDto,
@@ -140,6 +151,8 @@ export class IdentityController {
 
   @Put(':id/roles')
   @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @ApiOperation({ summary: 'Assign roles to a user' })
+  @ApiResponse({ status: 200, description: 'User roles updated.', type: UserResponseDto })
   async assignRoles(
     @Param('id') userId: string,
     @Req() request: AuthenticatedRequest,

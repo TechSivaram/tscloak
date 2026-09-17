@@ -11,6 +11,7 @@ import {
 
 import {
   ApiOperation,
+  ApiBearerAuth,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -34,6 +35,9 @@ export class ClientsController {
 
   @Get()
   @Roles('IDP_ADMIN')
+  @ApiOperation({ summary: 'List registered clients' })
+  @ApiResponse({ status: 200, description: 'Registered clients returned.', type: [ClientResponseDto] })
+  @ApiResponse({ status: 403, description: 'Caller is not an IDP administrator.' })
   async findAll(): Promise<ClientResponseDto[]> {
     const clients = await this.clientsService.findAll();
 
@@ -130,6 +134,8 @@ export class ClientsController {
 
   @Delete(':clientId')
   @Roles('IDP_ADMIN')
+  @ApiOperation({ summary: 'Delete a client' })
+  @ApiResponse({ status: 200, description: 'Client deleted.' })
   async deleteClient(
     @Param('clientId') clientId: string,
   ): Promise<{ success: true }> {
@@ -139,6 +145,8 @@ export class ClientsController {
 
   @Put(':clientId')
   @Roles('IDP_ADMIN')
+  @ApiOperation({ summary: 'Update a client' })
+  @ApiResponse({ status: 200, description: 'Client updated.', type: ClientResponseDto })
   async updateClient(
     @Param('clientId') clientId: string,
     @Body() dto: UpdateClientDto,
