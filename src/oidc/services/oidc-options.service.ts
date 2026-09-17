@@ -8,7 +8,6 @@ import {
   OidcModuleOptionsFactory,
 } from 'nest-oidc-provider';
 
-import { ClientRepository } from 'src/clients/repositories/client.repository';
 import { IdentityService } from 'src/identity/identity.service';
 import { SigningKeyService } from 'src/signing-keys/services/signing-key/signing-key.service';
 import { SecurityPolicyService } from 'src/security/services/security-policy/security-policy.service';
@@ -25,7 +24,6 @@ export class OidcOptionsService
   constructor(
     private readonly config: ConfigService,
     private readonly identityService: IdentityService,
-    private readonly clientRepository: ClientRepository,
     private readonly oidcRepository: OidcRepository,
     private readonly signingKeyService: SigningKeyService,
     private readonly securityPolicyService: SecurityPolicyService,
@@ -370,7 +368,7 @@ export class OidcOptionsService
    * OIDC Adapter Factory.
    *
    * Client:
-   *   Dynamically resolved through ClientRepository.
+  *   Dynamically resolved through ClientsService.
    *
    * Other OIDC runtime models:
    *   Persisted through OidcRepository.
@@ -390,11 +388,11 @@ export class OidcOptionsService
        *      ↓
        * OidcClientAdapter
        *      ↓
-       * ClientRepository
+      * ClientsService
        */
       if (modelName === 'Client') {
         return new OidcClientAdapter(
-          this.clientRepository,
+          this.clientsService,
         );
       }
 

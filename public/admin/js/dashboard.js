@@ -345,11 +345,13 @@
         );
 
         if (idToken) {
+
             params.set(
                 "id_token_hint",
                 idToken
             );
         }
+
 
         /*
          * Clear local Admin UI state.
@@ -369,6 +371,7 @@
         sessionStorage.removeItem(
             "tscloak_admin_user"
         );
+
 
         /*
          * End the TSCloak OIDC session.
@@ -575,48 +578,181 @@
 
     /*
      * Dashboard data.
-     *
-     * We will connect this to the actual
-     * TSCloak Admin APIs next.
      */
     async function loadDashboard() {
 
-        /*
-         * Example when the dashboard API
-         * is implemented:
-         *
-         * const response =
-         *     await apiFetch(
-         *         "/api/admin/dashboard"
-         *     );
-         *
-         * if (!response) {
-         *     return;
-         * }
-         *
-         * const data =
-         *     await response.json();
-         *
-         * setCount(
-         *     "#clientCount",
-         *     data.clients
-         * );
-         *
-         * setCount(
-         *     "#userCount",
-         *     data.users
-         * );
-         *
-         * setCount(
-         *     "#tokenCount",
-         *     data.initialAccessTokens
-         * );
-         *
-         * setCount(
-         *     "#roleCount",
-         *     data.roles
-         * );
-         */
+        try {
+
+            console.log(
+                "Loading dashboard..."
+            );
+
+
+            const response =
+                await apiFetch(
+                    "/api/admin/dashboard"
+                );
+
+
+            if (!response) {
+                return;
+            }
+
+
+            console.log(
+                "Dashboard API status:",
+                response.status
+            );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                console.error(
+                    "Dashboard API error:",
+                    response.status,
+                    errorText
+                );
+
+                throw new Error(
+                    `Unable to load dashboard: ${response.status}`
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            console.log(
+                "Dashboard data:",
+                data
+            );
+
+
+            setCount(
+                "#clientCount",
+                data.clients
+            );
+
+
+            setCount(
+                "#userCount",
+                data.users
+            );
+
+
+            setCount(
+                "#tokenCount",
+                data.initialAccessTokens
+            );
+
+
+            setCount(
+                "#roleCount",
+                data.roles
+            );
+
+            setText(
+                "#overallStatus",
+                getOverallStatus(data.status)
+            );
+
+            setText(
+                "#sidebarStatus",
+                getOverallStatus(data.status)
+            );
+
+            setText(
+                "#oidcProviderStatus",
+                data.status?.oidcProvider
+            );
+
+            setText(
+                "#databaseStatus",
+                data.status?.database
+            );
+
+            setText(
+                "#registrationStatus",
+                data.status?.registration
+            );
+
+            setText(
+                "#securityPolicyStatus",
+                data.status?.securityPolicy
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load dashboard data:",
+                error
+            );
+
+
+            setCount(
+                "#clientCount",
+                null
+            );
+
+            setCount(
+                "#userCount",
+                null
+            );
+
+            setCount(
+                "#tokenCount",
+                null
+            );
+
+            setCount(
+                "#roleCount",
+                null
+            );
+
+            setText("#overallStatus", null);
+            setText("#sidebarStatus", null);
+            setText("#oidcProviderStatus", null);
+            setText("#databaseStatus", null);
+            setText("#registrationStatus", null);
+            setText("#securityPolicyStatus", null);
+        }
+    }
+
+
+    function getOverallStatus(status) {
+
+        if (!status) {
+            return null;
+        }
+
+        const values = Object.values(status);
+
+        return values.every(value =>
+            value === "Operational" ||
+            value === "Connected" ||
+            value === "Active"
+        )
+            ? "Operational"
+            : "Attention required";
+    }
+
+
+    function setText(selector, value) {
+
+        const element = $(selector);
+
+        if (!element) {
+            return;
+        }
+
+        element.textContent =
+            value === null || value === undefined
+                ? "—"
+                : String(value);
     }
 
 
@@ -636,7 +772,7 @@
 
         element.textContent =
             value === null ||
-                value === undefined
+            value === undefined
                 ? "—"
                 : String(value);
     }

@@ -4,4 +4,5 @@ export class UserResponseDto {
   email: string;
   enabled: boolean;
   createdAt: Date;
+  roles: string[];
 }

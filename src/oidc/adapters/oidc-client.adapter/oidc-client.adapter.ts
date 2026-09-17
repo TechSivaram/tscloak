@@ -1,10 +1,10 @@
 import { Client } from '../../../clients/entities/client.entity';
 import { InteractionMode } from '../../../clients/enums/interaction-mode.enum';
-import { ClientRepository } from '../../../clients/repositories/client.repository';
+import { ClientsService } from '../../../clients/clients.service';
 
 export class OidcClientAdapter {
   constructor(
-    private readonly clientRepository: ClientRepository,
+    private readonly clientsService: ClientsService,
   ) {}
 
   /**
@@ -20,7 +20,7 @@ export class OidcClientAdapter {
     clientId: string,
   ): Promise<Record<string, unknown> | undefined> {
     const client =
-      await this.clientRepository.findByClientId(clientId);
+      await this.clientsService.findByClientId(clientId);
 
     if (!client || !client.enabled) {
       return undefined;
@@ -40,7 +40,7 @@ export class OidcClientAdapter {
     _expiresIn?: number,
   ): Promise<void> {
     let client =
-      await this.clientRepository.findByClientId(clientId);
+      await this.clientsService.findByClientId(clientId);
 
     if (!client) {
       client = new Client();
@@ -113,7 +113,7 @@ export class OidcClientAdapter {
         ? payload.interaction_consent_url
         : null;
 
-    await this.clientRepository.save(client);
+    await this.clientsService.save(client);
   }
 
   /**
@@ -122,7 +122,7 @@ export class OidcClientAdapter {
    * Required for Dynamic Client Registration DELETE support.
    */
   async destroy(clientId: string): Promise<void> {
-    await this.clientRepository.deleteByClientId(clientId);
+    await this.clientsService.deleteByClientId(clientId);
   }
 
   /**

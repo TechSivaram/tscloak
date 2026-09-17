@@ -1,0 +1,2 @@
+/* Shared admin content layer. The dashboard stylesheet owns the shell and base tokens. */
+@import url("./dashboard.css");

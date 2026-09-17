@@ -1,8 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   Req,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 
@@ -14,6 +17,9 @@ import {
 
 import { IdentityService } from './identity.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { AssignUserRolesDto } from './dto/assign-user-roles.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { UserMapper } from './user.mapper';
 import { UserResponseDto } from './dto/user-response.dto';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
@@ -60,6 +66,74 @@ export class IdentityController {
     dto.clientId = request.user.clientId ?? "";
     const user =
       await this.identityService.createUser(dto);
+
+    return UserMapper.toResponse(user);
+  }
+
+  @Get()
+  @Roles('IDP_ADMIN')
+  async findUsers(): Promise<UserResponseDto[]> {
+    const users = await this.identityService.findUsers();
+    return users.map(UserMapper.toResponse);
+  }
+
+  @Put(':id')
+  @Roles('IDP_ADMIN')
+  async updateUser(
+    @Param('id') userId: string,
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.identityService.updateUser(
+      userId,
+      request.user.clientId ?? '',
+      dto,
+    );
+
+    return UserMapper.toResponse(user);
+  }
+
+  @Get('roles')
+  @Roles('IDP_ADMIN')
+  async findRoles() {
+    return this.identityService.findRoles();
+  }
+
+  @Post('roles')
+  @Roles('IDP_ADMIN')
+  async createRole(
+    @Body() body: { name: string; description?: string },
+  ) {
+    return this.identityService.createRole(
+      body.name,
+      body.description,
+    );
+  }
+
+  @Put('roles/:id')
+  @Roles('IDP_ADMIN')
+  async updateRole(
+    @Param('id') roleId: string,
+    @Body() dto: UpdateRoleDto,
+  ) {
+    return this.identityService.updateRole(
+      roleId,
+      dto.description,
+    );
+  }
+
+  @Put(':id/roles')
+  @Roles('IDP_ADMIN')
+  async assignRoles(
+    @Param('id') userId: string,
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: AssignUserRolesDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.identityService.assignRoles(
+      userId,
+      request.user.clientId ?? '',
+      dto.roles,
+    );
 
     return UserMapper.toResponse(user);
   }

@@ -6,6 +6,7 @@ import { SessionsModule } from '../sessions/sessions.module';
 import { ClientsModule } from '../clients/clients.module';
 import { SecurityModule } from 'src/security/security.module';
 import { RegistrationModule } from 'src/registration/registration.module';
+import { AdminModule } from 'src/admin/admin.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { RegistrationModule } from 'src/registration/registration.module';
     ClientsModule,
     SecurityModule,
     RegistrationModule,
+    AdminModule,
     RouterModule.register([
       {
         path: 'api', // Common prefix applied to ALL children below
@@ -25,6 +27,7 @@ import { RegistrationModule } from 'src/registration/registration.module';
           ClientsModule,        // Resolves to: /api + /clients
           SecurityModule,       // Resolves to: /api + /security
           RegistrationModule,   // Resolves to: /api + /registration
+          AdminModule,          // Resolves to: /api + /admin
         ],
       },
     ]),

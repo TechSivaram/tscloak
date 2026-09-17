@@ -1,0 +1,5 @@
+@import url("./admin-common.css");
+
+body.page-users td:nth-child(2) { min-width: 190px; }
+body.page-users .role-picker { min-width: 180px; }
+body.page-users .user-edit-panel { margin-top: 20px; }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Security Policy</title>
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body class="page-security-policy">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../assets/tscloak-icon.png" alt="TSCloak"></div><div><div class="brand-name">TSCloak</div><div class="brand-subtitle">Administration</div></div></div>
+      <nav class="navigation">
+        <a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a>
+        <a class="nav-item" href="./clients.html"><span>▣</span>Clients</a>
+        <a class="nav-item" href="./users.html"><span>♙</span>Users</a>
+        <a class="nav-item" href="./roles.html"><span>◆</span>Roles</a>
+        <div class="nav-section-title">Registration</div>
+        <a class="nav-item" href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a>
+        <div class="nav-section-title">Configuration</div>
+        <a class="nav-item active" href="./security-policy.html"><span>⚙</span>Security Policy</a>
+      </nav>
+      <div class="sidebar-footer"><div class="provider-status"><span class="status-dot"></span><div><strong>Admin Console</strong><small>Authenticated session</small></div></div></div>
+    </aside>
+    <div class="main-area">
+      <header class="topbar"><div class="page-heading"><span class="breadcrumb">TSCloak / Configuration</span><h1>Security Policy</h1></div><div class="topbar-actions"><span data-user-name>Administrator</span><button class="text-button" data-logout>Sign out</button></div></header>
+      <main class="content"><section class="panel"><div class="panel-header"><div><p class="eyebrow">Configuration</p><h3>Token and session policy</h3></div><a class="text-button" href="./dashboard.html">Back to dashboard</a></div><form id="policyForm" class="admin-form"><label>Access token TTL (seconds)<input name="accessTokenTtl" type="number" min="60" max="3600"></label><label>ID token TTL (seconds)<input name="idTokenTtl" type="number" min="60" max="3600"></label><label>Authorization code TTL (seconds)<input name="authorizationCodeTtl" type="number" min="60" max="600"></label><label>Refresh token TTL (seconds)<input name="refreshTokenTtl" type="number" min="3600"></label><label>Session TTL (seconds)<input name="sessionTtl" type="number" min="300"></label><label>Interaction TTL (seconds)<input name="interactionTtl" type="number" min="60" max="3600"></label><button class="button primary" type="submit">Save policy</button><p data-message></p></form></section></main>
+    </div>
+  </div>
+  <script src="./js/admin-common.js"></script>
+</body>
+</html>

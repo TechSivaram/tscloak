@@ -1,11 +1,13 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { randomBytes } from 'crypto';
 
 import { Client } from './entities/client.entity';
+import { InteractionMode } from './enums/interaction-mode.enum';
 import { ClientRepository } from './repositories/client.repository';
 
 export interface CreateClientInput {
@@ -25,6 +27,12 @@ export interface CreateClientInput {
   responseTypes: string[];
 
   tokenEndpointAuthMethod: string;
+
+  interactionMode?: InteractionMode;
+
+  interactionLoginUrl?: string;
+
+  interactionConsentUrl?: string;
 }
 
 export interface CreatedClient {
@@ -32,12 +40,60 @@ export interface CreatedClient {
   clientSecret: string | null;
 }
 
+export type UpdateClientInput = Partial<CreateClientInput>;
+export interface ClientStatusUpdate {
+  enabled?: boolean;
+}
+
 @Injectable()
 export class ClientsService {
-  async findByClientId(clientId: any) {
+  async count(): Promise<number> {
+    return this.clients.count();
+  }
+
+  async findAll(): Promise<Client[]> {
+    return this.clients.findAll();
+  }
+
+  async findByClientId(
+    clientId: string,
+  ): Promise<Client | null> {
     return await this.clients.findByClientId(
       clientId,
     );
+  }
+
+  async save(client: Client): Promise<Client> {
+    return this.clients.save(client);
+  }
+
+  async deleteByClientId(clientId: string): Promise<void> {
+    await this.clients.deleteByClientId(clientId);
+  }
+  
+  async updateClient(
+    clientId: string,
+    input: UpdateClientInput & ClientStatusUpdate,
+  ): Promise<Client> {
+    const client = await this.findByClientId(clientId);
+
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
+
+    if (input.name !== undefined) client.name = input.name;
+    if (input.redirectUris !== undefined) client.redirectUris = input.redirectUris;
+    if (input.postLogoutRedirectUris !== undefined) client.postLogoutRedirectUris = input.postLogoutRedirectUris;
+    if (input.allowedScopes !== undefined) client.allowedScopes = input.allowedScopes;
+    if (input.grantTypes !== undefined) client.grantTypes = input.grantTypes;
+    if (input.responseTypes !== undefined) client.responseTypes = input.responseTypes;
+    if (input.tokenEndpointAuthMethod !== undefined) client.tokenEndpointAuthMethod = input.tokenEndpointAuthMethod;
+    if (input.interactionMode !== undefined) client.interactionMode = input.interactionMode;
+    if (input.interactionLoginUrl !== undefined) client.interactionLoginUrl = input.interactionLoginUrl || null;
+    if (input.interactionConsentUrl !== undefined) client.interactionConsentUrl = input.interactionConsentUrl || null;
+  if (input.enabled !== undefined) client.enabled = input.enabled;
+
+    return this.save(client);
   }
   constructor(
     private readonly clients: ClientRepository,
@@ -99,10 +155,19 @@ export class ClientsService {
     client.tokenEndpointAuthMethod =
       input.tokenEndpointAuthMethod;
 
+    client.interactionMode =
+      input.interactionMode ?? InteractionMode.HOSTED;
+
+    client.interactionLoginUrl =
+      input.interactionLoginUrl ?? null;
+
+    client.interactionConsentUrl =
+      input.interactionConsentUrl ?? null;
+
     client.enabled = true;
 
     const saved =
-      await this.clients.save(client);
+      await this.save(client);
 
     return {
       client: saved,

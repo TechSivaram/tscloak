@@ -1,0 +1,23 @@
+@import url("./admin-common.css");
+
+body.page-clients .panel + .panel { margin-top: 20px; }
+body.page-clients td:nth-child(3) { min-width: 220px; }
+body.page-clients textarea {
+	width: 100%;
+	min-height: 78px;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	resize: vertical;
+	color: var(--text);
+	font: inherit;
+}
+body.page-clients textarea:focus {
+	outline: 2px solid rgba(19, 136, 8, .2);
+	border-color: var(--primary);
+}
+body.page-clients .admin-form small {
+	color: var(--light);
+	font-size: 10px;
+	font-weight: 400;
+}

@@ -1,6 +1,7 @@
 import {
   Controller,
   Delete,
+  Get,
   Param,
   Post,
   UseGuards,
@@ -55,6 +56,12 @@ export class InitialAccessTokenController {
   })
   async create() {
     return this.initialAccessTokenService.create();
+  }
+
+  @Get()
+  @Roles('IDP_ADMIN')
+  async findAll() {
+    return this.initialAccessTokenService.findAll();
   }
 
   @Delete(':id')

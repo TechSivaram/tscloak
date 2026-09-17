@@ -14,11 +14,21 @@ export class TypeOrmRoleRepository
     private readonly repository: Repository<Role>,
   ) {}
 
+  async count(): Promise<number> {
+    return this.repository.count();
+  }
+
   async findByName(
     name: string,
   ): Promise<Role | null> {
     return this.repository.findOne({
       where: { name },
+    });
+  }
+
+  async findById(id: string): Promise<Role | null> {
+    return this.repository.findOne({
+      where: { id },
     });
   }
 

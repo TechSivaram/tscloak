@@ -13,6 +13,30 @@ export class TypeOrmUserRepository implements UserRepository {
   ) {
   }
 
+  async count(): Promise<number> {
+    return this.repository.count();
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.repository.find({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        enabled: true,
+        createdAt: true,
+        updatedAt: true,
+        clientId: true,
+      },
+      relations: {
+        roles: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
   async findById(id: string, client_id: any): Promise<User | null> {
     return this.repository.findOne({
       where: { id, client: { clientId: client_id } }, relations: {

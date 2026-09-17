@@ -18,6 +18,19 @@ export class TypeOrmOidcRepository
         private readonly repository: Repository<Oidc>,
     ) { }
 
+    async countByModel(model: string): Promise<number> {
+        return this.repository.count({
+            where: { model },
+        });
+    }
+
+    async findAllByModel(model: string): Promise<Oidc[]> {
+        return this.repository.find({
+            where: { model },
+            order: { createdAt: 'DESC' },
+        });
+    }
+
     async find(
         model: string,
         id: string,

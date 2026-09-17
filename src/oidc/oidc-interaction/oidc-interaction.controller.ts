@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Inject,
   Param,
   Post,
   Res,
@@ -25,7 +24,7 @@ import {
 } from 'nest-oidc-provider';
 
 import { AuthenticationService } from '../../authentication/authentication.service';
-import { ClientRepository } from '../../clients/repositories/client.repository';
+import { ClientsService } from '../../clients/clients.service';
 import { InteractionMode } from '../../clients/enums/interaction-mode.enum';
 
 import { readFile } from 'node:fs/promises';
@@ -52,8 +51,7 @@ export class OidcInteractionController {
     private readonly authenticationService: AuthenticationService,
     private readonly oidcService: OidcService,
 
-    @Inject(ClientRepository)
-    private readonly clientRepository: ClientRepository,
+    private readonly clientsService: ClientsService,
   ) {}
 
   // ============================================================
@@ -102,7 +100,7 @@ export class OidcInteractionController {
 
     const client =
       typeof clientId === 'string' && clientId
-        ? await this.clientRepository.findByClientId(clientId)
+        ? await this.clientsService.findByClientId(clientId)
         : null;
 
     // ==========================================================

@@ -14,7 +14,7 @@ import { ClientsModule } from 'src/clients/clients.module';
 
 @Module({
   imports: [
-    ClientsModule,
+    forwardRef(() => ClientsModule),
     forwardRef(() => SecurityModule),
     TypeOrmModule.forFeature([User, Role]),
   ],

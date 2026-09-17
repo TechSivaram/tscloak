@@ -13,6 +13,18 @@ export class TypeOrmClientRepository
     private readonly repository: Repository<Client>,
   ) { }
 
+  async count(): Promise<number> {
+    return this.repository.count();
+  }
+
+  async findAll(): Promise<Client[]> {
+    return this.repository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
   async deleteByClientId(clientId: string): Promise<void> {
     await this.repository.delete({
       clientId,

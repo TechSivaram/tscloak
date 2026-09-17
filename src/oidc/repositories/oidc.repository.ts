@@ -3,6 +3,14 @@ import { DeepPartial } from 'typeorm';
 import { Oidc } from '../entities/oidc.entity';
 
 export abstract class OidcRepository {
+    abstract countByModel(
+        model: string,
+    ): Promise<number>;
+
+    abstract findAllByModel(
+        model: string,
+    ): Promise<Oidc[]>;
+
     abstract find(
         model: string,
         id: string,

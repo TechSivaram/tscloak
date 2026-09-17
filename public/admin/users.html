@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Users</title>
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body class="page-users">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../assets/tscloak-icon.png" alt="TSCloak"></div><div><div class="brand-name">TSCloak</div><div class="brand-subtitle">Administration</div></div></div>
+      <nav class="navigation">
+        <a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a>
+        <a class="nav-item" href="./clients.html"><span>▣</span>Clients</a>
+        <a class="nav-item active" href="./users.html"><span>♙</span>Users</a>
+        <a class="nav-item" href="./roles.html"><span>◆</span>Roles</a>
+        <div class="nav-section-title">Registration</div><a class="nav-item" href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a>
+        <div class="nav-section-title">Configuration</div><a class="nav-item" href="./security-policy.html"><span>⚙</span>Security Policy</a>
+      </nav>
+    </aside>
+    <div class="main-area">
+      <header class="topbar"><div class="page-heading"><span class="breadcrumb">TSCloak / Administration</span><h1>Users</h1></div><div class="topbar-actions"><span data-user-name>Administrator</span><button class="text-button" data-logout>Sign out</button></div></header>
+      <main class="content">
+        <section class="management-intro"><div><p class="eyebrow">Identity &amp; access</p><h2>Users</h2><p>Manage identities and control which roles they can use.</p></div><button class="button primary" id="showUserForm">Create user</button></section>
+        <section class="panel"><div class="panel-header"><div><p class="eyebrow">Directory</p><h3>Registered users</h3></div><span class="record-count" id="userCount">— users</span></div><p data-message></p><div class="table-wrap"><table><thead><tr><th>Username</th><th>Email</th><th>Roles</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="userRows"><tr><td colspan="6">Loading users...</td></tr></tbody></table></div></section>
+        <section class="panel form-panel" id="userFormPanel" hidden><div class="panel-header"><div><p class="eyebrow">Identity</p><h3>Create user</h3></div></div><form id="userForm" class="admin-form"><label>Username<input name="username" required minlength="3"></label><label>Email<input name="email" type="email" required></label><label>Temporary password<input name="password" type="password" required minlength="8"></label><button class="button primary" type="submit">Create user</button></form></section>
+      </main>
+    </div>
+  </div>
+  <script src="./js/admin-common.js"></script>
+</body>
+</html>

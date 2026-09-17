@@ -5,13 +5,17 @@ import { ClientRepository } from './repositories/client.repository';
 describe('ClientsService', () => {
   let service: ClientsService;
   let clients: {
+    count: jest.Mock;
     findByClientId: jest.Mock;
+    deleteByClientId: jest.Mock;
     save: jest.Mock;
   };
 
   beforeEach(async () => {
     clients = {
+      count: jest.fn().mockResolvedValue(0),
       findByClientId: jest.fn().mockResolvedValue(null),
+      deleteByClientId: jest.fn(),
       save: jest.fn().mockImplementation(async client => ({
         ...client,
         id: 'client-id',

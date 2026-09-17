@@ -1,6 +1,10 @@
 import { User } from '../entities/user.entity';
 
 export abstract class UserRepository {
+  abstract count(): Promise<number>;
+
+  abstract findAll(): Promise<User[]>;
+
   abstract findById(id: string,
     client_id: any,): Promise<User | null>;
 

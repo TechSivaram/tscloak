@@ -9,6 +9,7 @@ import { ApiModule } from './api/api.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SigningKeysModule } from './signing-keys/signing-keys.module';
 import { join } from 'path';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -27,7 +28,9 @@ import { join } from 'path';
 
     OidcModule,
 
-    SigningKeysModule,    
+    SigningKeysModule,
+
+    AdminModule,    
   ],
 })
 export class AppModule { }

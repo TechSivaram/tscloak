@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Clients</title>
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body class="page-clients">
+  <div class="app-shell">
+    <aside class="sidebar"><div class="brand"><div class="brand-mark"><img src="../assets/tscloak-icon.png" alt="TSCloak"></div><div><div class="brand-name">TSCloak</div><div class="brand-subtitle">Administration</div></div></div><nav class="navigation"><a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a><a class="nav-item active" href="./clients.html"><span>▣</span>Clients</a><a class="nav-item" href="./users.html"><span>♙</span>Users</a><a class="nav-item" href="./roles.html"><span>◆</span>Roles</a><div class="nav-section-title">Registration</div><a class="nav-item" href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a><div class="nav-section-title">Configuration</div><a class="nav-item" href="./security-policy.html"><span>⚙</span>Security Policy</a></nav></aside>
+    <div class="main-area"><header class="topbar"><div class="page-heading"><span class="breadcrumb">TSCloak / Administration</span><h1>Clients</h1></div><div class="topbar-actions"><span data-user-name>Administrator</span><button class="text-button" data-logout>Sign out</button></div></header>
+      <main class="content"><section class="panel"><div class="panel-header"><div><p class="eyebrow">OAuth / OIDC</p><h3>Registered clients</h3></div><button class="button primary" id="showClientForm">Register client</button></div><p data-message></p><div class="table-wrap"><table><thead><tr><th>Name</th><th>Client ID</th><th>Redirect URIs</th><th>Mode</th><th>Status</th><th></th></tr></thead><tbody id="clientRows"><tr><td colspan="6">Loading clients...</td></tr></tbody></table></div></section>
+      <section class="panel" id="clientFormPanel" hidden><div class="panel-header"><div><p class="eyebrow">New application</p><h3>Register client</h3></div></div><form id="clientForm" class="admin-form"><label>Application name<input name="name" required minlength="2" placeholder="My Web Application"></label><label>Token endpoint authentication<select name="tokenEndpointAuthMethod"><option value="none">None (public client)</option><option value="client_secret_basic">Client secret basic</option><option value="client_secret_post">Client secret post</option></select></label><label>Redirect URIs<textarea name="redirectUris" required placeholder="https://app.example.com/callback"></textarea><small>Enter one URI per line.</small></label><label>Post-logout redirect URIs<textarea name="postLogoutRedirectUris" placeholder="https://app.example.com/logout/callback"></textarea><small>Enter one URI per line.</small></label><label>Allowed scopes<input name="allowedScopes" value="openid profile email"></label><label>Grant types<input name="grantTypes" value="authorization_code refresh_token"></label><label>Response types<input name="responseTypes" value="code"></label><label>Interaction mode<select name="interactionMode" id="interactionMode"><option value="hosted">Hosted TSCloak pages</option><option value="external">External client pages</option></select></label><label class="interaction-field" id="interactionLoginField">External login page URL<input name="interactionLoginUrl" type="url" placeholder="https://app.example.com/login"></label><label class="interaction-field" id="interactionConsentField">External consent page URL<input name="interactionConsentUrl" type="url" placeholder="https://app.example.com/consent"></label><button class="button primary" type="submit">Create client</button></form></section></main>
+    </div>
+  </div>
+  <script src="./js/admin-common.js"></script>
+</body>
+</html>

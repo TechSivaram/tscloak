@@ -1,0 +1,4 @@
+@import url("./admin-common.css");
+
+body.page-roles td:nth-child(2) { min-width: 260px; }
+body.page-roles .role-edit-panel { margin-top: 20px; }

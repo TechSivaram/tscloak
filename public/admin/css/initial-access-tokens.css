@@ -1,0 +1,4 @@
+@import url("./admin-common.css");
+
+body.page-initial-access-tokens td:first-child { min-width: 210px; }
+body.page-initial-access-tokens td:nth-child(2) { min-width: 220px; }
