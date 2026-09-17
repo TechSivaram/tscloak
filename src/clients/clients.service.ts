@@ -8,6 +8,7 @@ import { randomBytes } from 'crypto';
 
 import { Client } from './entities/client.entity';
 import { InteractionMode } from './enums/interaction-mode.enum';
+import { ClientPortal } from './enums/client-portal.enum';
 import { ClientRepository } from './repositories/client.repository';
 
 export interface CreateClientInput {
@@ -33,6 +34,8 @@ export interface CreateClientInput {
   interactionLoginUrl?: string;
 
   interactionConsentUrl?: string;
+
+  portalType?: ClientPortal;
 }
 
 export interface CreatedClient {
@@ -54,6 +57,72 @@ export class ClientsService {
   async findAll(): Promise<Client[]> {
     return this.clients.findAll();
   }
+
+  async findClientForCallback(
+    callbackPath: string,
+  ): Promise<Client | null> {
+    const clients = await this.findAll();
+    return clients.find(client => client.redirectUris.some(uri => {
+      try {
+        return new URL(uri).pathname === callbackPath;
+      } catch {
+        return false;
+      }
+    })) ?? null;
+  }
+
+  async findClientForPortal(
+    portal: ClientPortal,
+    callbackPath: string,
+  ): Promise<Client | null> {
+    const clients = await this.findAll();
+    return clients.find(client => client.portalType === portal)
+      ?? clients.find(client => client.portalType === ClientPortal.NONE
+        && client.redirectUris.some(uri => {
+          try {
+            return new URL(uri).pathname === callbackPath;
+          } catch {
+            return false;
+          }
+        }))
+      ?? null;
+  }
+
+    async requiredRoleForClient(
+      clientId: string,
+    ): Promise<string | null> {
+      const client = await this.findByClientId(clientId);
+
+      if (!client) {
+        return null;
+      }
+
+      if (client.portalType === ClientPortal.ADMIN) {
+        return 'IDP_ADMIN';
+      }
+
+      if (client.portalType === ClientPortal.CLIENT_ADMIN) {
+        return 'CLIENT_ADMIN';
+      }
+
+      const paths = client.redirectUris.map(uri => {
+        try {
+          return new URL(uri).pathname;
+        } catch {
+          return '';
+        }
+      });
+
+      if (paths.includes('/admin/callback.html')) {
+        return 'IDP_ADMIN';
+      }
+
+      if (paths.includes('/client-admin/callback.html')) {
+        return 'CLIENT_ADMIN';
+      }
+
+      return null;
+    }
 
   async findByClientId(
     clientId: string,
@@ -91,6 +160,7 @@ export class ClientsService {
     if (input.interactionMode !== undefined) client.interactionMode = input.interactionMode;
     if (input.interactionLoginUrl !== undefined) client.interactionLoginUrl = input.interactionLoginUrl || null;
     if (input.interactionConsentUrl !== undefined) client.interactionConsentUrl = input.interactionConsentUrl || null;
+    if (input.portalType !== undefined) client.portalType = input.portalType;
   if (input.enabled !== undefined) client.enabled = input.enabled;
 
     return this.save(client);
@@ -131,6 +201,7 @@ export class ClientsService {
     client.clientId = clientId;
 
     client.clientSecret = clientSecret;
+    client.portalType = input.portalType ?? ClientPortal.NONE;
 
     client.name = input.name;
 

@@ -66,6 +66,27 @@ export class OidcOptionsService
       this.signingKeyService.getPrivateJwks();
 
     return {
+      factory: ({ issuer, config, module }) => {
+        const provider = new module.Provider(
+          issuer,
+          config,
+        );
+
+        provider.on(
+          'registration_create.success',
+          async (ctx) => {
+            const initialAccessToken =
+              ctx.oidc.entities.InitialAccessToken;
+
+            if (initialAccessToken) {
+              await initialAccessToken.destroy();
+            }
+          },
+        );
+
+        return provider;
+      },
+
       issuer:
         this.config.get<string>('OIDC_ISSUER') ??
         'http://localhost:3000',
@@ -193,6 +214,22 @@ export class OidcOptionsService
           if (!user) {
             throw new Error(
               `OIDC account not found: ${accountId}`,
+            );
+          }
+
+          const requiredRole =
+            await this.clientsService.requiredRoleForClient(
+              clientId,
+            );
+
+          if (
+            requiredRole &&
+            !user.roles?.some(
+              role => role.name === requiredRole,
+            )
+          ) {
+            throw new Error(
+              'OIDC account is not allowed to access this portal',
             );
           }
 

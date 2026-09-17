@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Client Dashboard</title>
+  <link rel="stylesheet" href="./css/client-admin.css">
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body class="client-dashboard-page">
+  <div class="app-shell">
+    <aside class="sidebar"><div class="brand"><img src="../assets/tscloak-icon.png" alt="TSCloak"><strong>TSCloak</strong><small>Client Administration</small></div><nav><a class="active" href="./dashboard.html">Dashboard</a><a href="./users.html">Users</a><a href="./settings.html">Client settings</a><a href="./profile.html">Profile</a></nav><button class="signout" data-logout>Sign out</button></aside>
+    <div class="main-area">
+      <header><div><span class="eyebrow">Client administration</span><h1>Dashboard</h1></div><div class="user-chip"><strong data-user-name>Administrator</strong><span data-user-role>CLIENT_ADMIN</span></div></header>
+      <main>
+        <section class="client-welcome"><div><span class="eyebrow">Your client workspace</span><h2 id="clientName">Loading client...</h2><p>Manage the users, roles, and application settings belonging to this client.</p></div><div class="welcome-actions"><a class="primary" href="./users.html">Manage users</a><a class="secondary" href="./settings.html">Client settings</a></div></section>
+        <section class="client-stats"><a href="./users.html"><div class="stat-icon">♙</div><div><span>Client users</span><strong id="userCount">—</strong><small>Identities managed in this workspace</small></div></a><a href="./settings.html"><div class="stat-icon settings-icon">⚙</div><div><span>Application status</span><strong>Active</strong><small>Configuration and redirect settings</small></div></a></section>
+        <section class="client-grid"><article class="client-panel"><div class="panel-heading"><div><span class="eyebrow">Workspace</span><h3>Common actions</h3></div></div><div class="action-list"><a href="./users.html"><span class="action-icon">♙</span><span><strong>Manage users</strong><small>Create users, edit status, and assign roles</small></span><b>›</b></a><a href="./settings.html"><span class="action-icon">⚙</span><span><strong>Update client settings</strong><small>Maintain redirect and OAuth configuration</small></span><b>›</b></a><a href="./profile.html"><span class="action-icon">◎</span><span><strong>View profile</strong><small>Review your authenticated administrator account</small></span><b>›</b></a></div></article><article class="client-panel context-panel"><div class="panel-heading"><div><span class="eyebrow">Access boundary</span><h3>Client-scoped access</h3></div><span class="status-badge">Protected</span></div><p>Your account can manage resources belonging to its authenticated client. Client identity, secret, ownership, and enabled state remain protected.</p><a class="text-link" href="./profile.html">View account details →</a></article></section>
+      </main>
+    </div>
+  </div>
+  <script src="./js/common.js"></script><script src="./js/dashboard.js"></script>
+</body>
+</html>

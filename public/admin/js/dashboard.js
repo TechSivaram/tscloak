@@ -204,6 +204,11 @@
                 ? roles[0]
                 : "Administrator";
 
+        const roleSummary =
+            roles.length > 1
+                ? `${primaryRole} +${roles.length - 1} roles`
+                : primaryRole;
+
 
         const userName =
             $("#userName");
@@ -242,7 +247,25 @@
         if (userRole) {
 
             userRole.textContent =
-                primaryRole;
+                roleSummary;
+
+            userRole.title =
+                roles.length > 0
+                    ? roles.join(", ")
+                    : "Administrator";
+
+            userRole.dataset.roleTooltip =
+                roles.length > 0
+                    ? roles.join(", ")
+                    : "Administrator";
+        }
+
+        const profile =
+            document.querySelector(".profile");
+
+        if (profile) {
+            profile.title =
+                `Roles: ${roles.length > 0 ? roles.join(", ") : "Administrator"}`;
         }
     }
 
@@ -336,13 +359,22 @@
 
         params.set(
             "post_logout_redirect_uri",
-            `${window.location.origin}/admin/`
+            sessionStorage.getItem(
+                "tscloak_admin_post_logout_redirect_uri"
+            ) || `${window.location.origin}/admin/`
         );
 
-        params.set(
-            "client_id",
-            "04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363"
-        );
+        const clientId =
+            sessionStorage.getItem(
+                "tscloak_admin_client_id"
+            );
+
+        if (clientId) {
+            params.set(
+                "client_id",
+                clientId
+            );
+        }
 
         if (idToken) {
 
@@ -366,6 +398,10 @@
 
         sessionStorage.removeItem(
             "tscloak_admin_id_token"
+        );
+
+        sessionStorage.removeItem(
+            "tscloak_admin_client_id"
         );
 
         sessionStorage.removeItem(
@@ -821,6 +857,11 @@
         setupMobileNavigation();
 
         setupRefresh();
+
+        document.addEventListener(
+            "admin:refresh",
+            loadDashboard
+        );
 
 
         /*

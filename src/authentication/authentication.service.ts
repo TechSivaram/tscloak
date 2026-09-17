@@ -7,11 +7,13 @@ import * as argon2 from 'argon2';
 
 import { IdentityService } from '../identity/identity.service';
 import { User } from '../identity/entities/user.entity';
+import { ClientsService } from '../clients/clients.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     private readonly identityService: IdentityService,
+    private readonly clientsService: ClientsService,
   ) { }
 
   async authenticate(
@@ -39,6 +41,19 @@ export class AuthenticationService {
         'Invalid username or password',
       );
     }
+
+      const requiredRole = await this.clientsService.requiredRoleForClient(
+        client_id,
+      );
+
+      if (
+        requiredRole &&
+        !user.roles?.some(role => role.name === requiredRole)
+      ) {
+        throw new UnauthorizedException(
+          'User is not allowed to access this portal',
+        );
+      }
 
     return user;
   }

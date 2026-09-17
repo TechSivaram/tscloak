@@ -15,8 +15,17 @@ import {
 } from '@nestjs/swagger';
 
 import { InteractionMode } from '../enums/interaction-mode.enum';
+import { ClientPortal } from '../enums/client-portal.enum';
 
 export class CreateClientDto {
+  @ApiPropertyOptional({
+    enum: ClientPortal,
+    default: ClientPortal.NONE,
+    description: 'Portal assigned by an IDP administrator.',
+  })
+  @IsOptional()
+  @IsEnum(ClientPortal)
+  portalType?: ClientPortal;
   @ApiProperty({
     example: 'My Web Application',
     description:

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Profile</title>
+  <link rel="stylesheet" href="./css/dashboard.css">
+</head>
+<body class="page-profile">
+  <div class="app-shell">
+    <aside class="sidebar"><div class="brand"><div class="brand-mark"><img src="../assets/tscloak-icon.png" alt="TSCloak"></div><div><div class="brand-name">TSCloak</div><div class="brand-subtitle">Administration</div></div></div><nav class="navigation"><a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a><a class="nav-item" href="./clients.html"><span>▣</span>Clients</a><a class="nav-item" href="./users.html"><span>♙</span>Users</a><a class="nav-item" href="./roles.html"><span>◆</span>Roles</a><div class="nav-section-title">Registration</div><a class="nav-item" href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a><div class="nav-section-title">Configuration</div><a class="nav-item" href="./security-policy.html"><span>⚙</span>Security Policy</a></nav></aside>
+    <div class="main-area"><header class="topbar"><div class="page-heading"><span class="breadcrumb">TSCloak / Administration</span><h1>Profile</h1></div><div class="topbar-actions"><span data-user-name>Administrator</span><button class="text-button" data-logout>Sign out</button></div></header>
+      <main class="content"><section class="management-intro"><div><p class="eyebrow">Account</p><h2 id="profileName">Profile</h2><p>Authenticated administrator account details.</p></div><a class="button secondary" href="./dashboard.html">Back to dashboard</a></section><section class="panel profile-details-panel"><div class="panel-header"><div><p class="eyebrow">Identity</p><h3>Account information</h3></div></div><dl class="profile-list"><div><dt>Username</dt><dd id="profileUsername">—</dd></div><div><dt>Email</dt><dd id="profileEmail">—</dd></div><div><dt>Roles</dt><dd id="profileRoles">—</dd></div><div><dt>Client</dt><dd id="profileClient">—</dd></div></dl><p data-message></p></section></main>
+    </div>
+  </div>
+  <script src="./js/admin-common.js"></script>
+</body>
+</html>

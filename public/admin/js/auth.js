@@ -1,5 +1,5 @@
 const oidc = {
-  clientId: '04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363',
+  clientId: null,
 
   redirectUri:
     `${window.location.origin}/admin/callback.html`,
@@ -62,6 +62,35 @@ async function createPkce() {
 
 async function login() {
 
+  const clientResponse =
+    await fetch(
+      '/api/admin/config/oidc?portal=admin',
+    );
+
+  if (!clientResponse.ok) {
+    throw new Error('Admin OIDC client is not configured');
+  }
+
+  const clientConfig = await clientResponse.json();
+  oidc.clientId = clientConfig.clientId;
+  oidc.redirectUri = clientConfig.redirectUri;
+  oidc.postLogoutRedirectUri = clientConfig.postLogoutRedirectUri;
+
+  sessionStorage.setItem(
+    'tscloak_admin_client_id',
+    oidc.clientId,
+  );
+  sessionStorage.setItem(
+    'tscloak_admin_redirect_uri',
+    oidc.redirectUri,
+  );
+  if (oidc.postLogoutRedirectUri) {
+    sessionStorage.setItem(
+      'tscloak_admin_post_logout_redirect_uri',
+      oidc.postLogoutRedirectUri,
+    );
+  }
+
   const {
     codeVerifier,
     codeChallenge,
@@ -92,8 +121,7 @@ async function login() {
     new URLSearchParams({
       client_id: oidc.clientId,
 
-      redirect_uri:
-        oidc.redirectUri,
+      redirect_uri: oidc.redirectUri,
 
       response_type: 'code',
 

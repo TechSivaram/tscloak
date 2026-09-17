@@ -10,6 +10,7 @@ import { ClientRepository } from './repositories/client.repository';
 import { TypeOrmClientRepository } from './repositories/typeorm-client.repository';
 import { SecurityModule } from 'src/security/security.module';
 import { IdentityModule } from 'src/identity/identity.module';
+import { ClientAdminSettingsController } from './client-admin-settings.controller';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { IdentityModule } from 'src/identity/identity.module';
 
   controllers: [
     ClientsController,
+    ClientAdminSettingsController,
   ],
 
   providers: [

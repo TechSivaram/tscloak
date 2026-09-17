@@ -1,0 +1,8 @@
+@import url("./admin-common.css");
+
+body.page-profile .profile-details-panel { max-width: 820px; }
+body.page-profile .profile-list { margin: 0; padding: 24px 22px 26px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+body.page-profile .profile-list div { padding: 15px; border: 1px solid var(--border); border-radius: 9px; background: #fbfdfb; }
+body.page-profile dt { color: var(--light); font-size: 10px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+body.page-profile dd { margin: 7px 0 0; color: var(--text); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 760px) { body.page-profile .profile-list { grid-template-columns: 1fr; padding: 18px 15px; } }

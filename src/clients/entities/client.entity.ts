@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 
 import { InteractionMode } from '../enums/interaction-mode.enum';
+import { ClientPortal } from '../enums/client-portal.enum';
 
 @Entity('clients')
 export class Client {
@@ -23,6 +24,12 @@ export class Client {
     nullable: true,
   })
   clientSecret: string | null;
+
+  @Column({
+    type: 'varchar',
+    default: ClientPortal.NONE,
+  })
+  portalType: ClientPortal;
 
   @Column({
     unique: true,

@@ -2,7 +2,6 @@ import {
   IsEmail,
   IsOptional,
   IsString,
-  IsUUID,
   MinLength,
 } from 'class-validator';
 
@@ -42,6 +41,6 @@ export class CreateUserDto {
       'Resolved from the authenticated client context by the server.',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   clientId: string;
 }

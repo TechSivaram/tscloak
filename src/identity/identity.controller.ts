@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -6,6 +7,7 @@ import {
   Post,
   Req,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -63,30 +65,44 @@ export class IdentityController {
     @Body() dto: CreateUserDto,
   ): Promise<UserResponseDto> {
 
-    dto.clientId = request.user.clientId ?? "";
-    const user =
-      await this.identityService.createUser(dto);
+    dto.clientId = await this.resolveTargetClientId(
+      request,
+      dto.clientId,
+    );
+    const user = request.user.roles.includes('CLIENT_ADMIN')
+      ? await this.identityService.createClientUser(dto)
+      : await this.identityService.createUser(dto);
 
     return UserMapper.toResponse(user);
   }
 
   @Get()
-  @Roles('IDP_ADMIN')
-  async findUsers(): Promise<UserResponseDto[]> {
-    const users = await this.identityService.findUsers();
+  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  async findUsers(
+    @Req() request: AuthenticatedRequest,
+    @Query('client_id') clientId?: string,
+  ): Promise<UserResponseDto[]> {
+    const targetClientId = await this.resolveTargetClientId(
+      request,
+      clientId,
+    );
+    const users = await this.identityService.findUsers(
+      targetClientId,
+    );
     return users.map(UserMapper.toResponse);
   }
 
   @Put(':id')
-  @Roles('IDP_ADMIN')
+  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
   async updateUser(
     @Param('id') userId: string,
     @Req() request: AuthenticatedRequest,
+    @Query('client_id') clientId: string | undefined,
     @Body() dto: UpdateUserDto,
   ): Promise<UserResponseDto> {
     const user = await this.identityService.updateUser(
       userId,
-      request.user.clientId ?? '',
+      await this.resolveTargetClientId(request, clientId),
       dto,
     );
 
@@ -94,7 +110,7 @@ export class IdentityController {
   }
 
   @Get('roles')
-  @Roles('IDP_ADMIN')
+  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
   async findRoles() {
     return this.identityService.findRoles();
   }
@@ -123,18 +139,47 @@ export class IdentityController {
   }
 
   @Put(':id/roles')
-  @Roles('IDP_ADMIN')
+  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
   async assignRoles(
     @Param('id') userId: string,
     @Req() request: AuthenticatedRequest,
+    @Query('client_id') clientId: string | undefined,
     @Body() dto: AssignUserRolesDto,
   ): Promise<UserResponseDto> {
+    const requestedRoles = request.user.roles.includes('CLIENT_ADMIN')
+      ? ['USER']
+      : dto.roles;
+
     const user = await this.identityService.assignRoles(
       userId,
-      request.user.clientId ?? '',
-      dto.roles,
+      await this.resolveTargetClientId(request, clientId),
+      requestedRoles,
     );
 
     return UserMapper.toResponse(user);
+  }
+
+  private async resolveTargetClientId(
+    request: AuthenticatedRequest,
+    requestedClientId?: string,
+  ): Promise<string> {
+    const authenticatedClientId = request.user.clientId ?? '';
+    const authenticatedUser = await this.identityService.findById(
+      request.user.id,
+      authenticatedClientId,
+    );
+    const isIdpAdmin = authenticatedUser?.roles?.some(
+      role => role.name === 'IDP_ADMIN',
+    );
+
+    if (isIdpAdmin && requestedClientId) {
+      return requestedClientId;
+    }
+
+    if (!authenticatedClientId) {
+      throw new BadRequestException('Client ID is required');
+    }
+
+    return authenticatedClientId;
   }
 }

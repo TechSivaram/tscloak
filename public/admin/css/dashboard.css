@@ -478,6 +478,39 @@ button {
     font-size: 10px;
 }
 
+.profile-details span[data-role-tooltip] {
+    position: relative;
+    cursor: help;
+}
+
+.profile-details span[data-role-tooltip]::after {
+    content: attr(data-role-tooltip);
+    position: absolute;
+    right: 0;
+    top: calc(100% + 9px);
+    z-index: 140;
+    width: max-content;
+    max-width: 260px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: #17351d;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-3px);
+    transition: opacity .15s ease, transform .15s ease;
+}
+
+.profile-details span[data-role-tooltip]:hover::after,
+.profile-details span[data-role-tooltip]:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .profile-menu-button {
     border: 0;
 
@@ -529,6 +562,20 @@ button {
     text-align: left;
 
     cursor: pointer;
+}
+
+.profile-menu a {
+    display: block;
+    padding: 9px 10px;
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.profile-menu a:hover {
+    background: var(--primary-soft);
+    color: var(--green);
 }
 
 .profile-menu button:hover {
@@ -1298,6 +1345,11 @@ td code {
 
 .text-button:hover {
     color: var(--primary-dark);
+}
+
+.admin-refresh-button:disabled {
+    opacity: .55;
+    cursor: wait;
 }
 
 .activity-empty {

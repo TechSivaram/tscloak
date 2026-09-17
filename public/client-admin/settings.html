@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSCloak | Client Settings</title>
+  <link rel="stylesheet" href="./css/client-admin.css">
+  <link rel="stylesheet" href="./css/settings.css">
+</head>
+<body class="settings-page">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/tscloak-icon.png" alt="TSCloak"><strong>TSCloak</strong><small>Client Administration</small></div>
+      <nav><a href="./dashboard.html">Dashboard</a><a href="./users.html">Users</a><a class="active" href="./settings.html">Client settings</a><a href="./profile.html">Profile</a></nav>
+      <button class="signout" data-logout>Sign out</button>
+    </aside>
+    <div class="main-area">
+      <header><div><span class="eyebrow">Client administration / Configuration</span><h1>Client settings</h1></div><div class="user-chip"><strong data-user-name>Administrator</strong><span data-user-role>CLIENT_ADMIN</span></div></header>
+      <main>
+        <section class="settings-intro"><div><span class="eyebrow">Application configuration</span><h2 id="settingsTitle">Client settings</h2><p>Keep your OAuth/OIDC application details current without changing its identity or ownership.</p></div><div class="protected-note"><span>Protected</span><strong>Client ID, secret, ownership</strong><small>Only IDP administrators can change these values.</small></div></section>
+        <form id="settingsForm" class="settings-form">
+          <section class="settings-section"><div class="section-heading"><span class="section-number">01</span><div><h3>Application identity</h3><p>The display information used for this client.</p></div></div><div class="field-grid"><label>Application name<input name="name" required></label><label>Token endpoint authentication<select name="tokenEndpointAuthMethod"><option value="none">None</option><option value="client_secret_basic">Client secret basic</option><option value="client_secret_post">Client secret post</option></select></label></div></section>
+          <section class="settings-section"><div class="section-heading"><span class="section-number">02</span><div><h3>Redirect security</h3><p>Exact locations the provider may redirect to.</p></div></div><div class="field-grid"><label>Redirect URIs<textarea name="redirectUris" required></textarea><small>One URI per line.</small></label><label>Post-logout redirect URIs<textarea name="postLogoutRedirectUris"></textarea><small>One URI per line.</small></label></div></section>
+          <section class="settings-section"><div class="section-heading"><span class="section-number">03</span><div><h3>OAuth capabilities</h3><p>Scopes and protocol flows enabled for this application.</p></div></div><div class="field-grid"><label>Allowed scopes<input name="allowedScopes"><small>Separate values with spaces.</small></label><label>Grant types<input name="grantTypes"><small>Separate values with spaces.</small></label><label>Response types<input name="responseTypes"><small>Separate values with spaces.</small></label></div></section>
+          <section class="settings-section"><div class="section-heading"><span class="section-number">04</span><div><h3>Interaction experience</h3><p>Choose where login and consent screens are hosted.</p></div></div><div class="field-grid"><label>Interaction mode<select name="interactionMode"><option value="hosted">Hosted TSCloak pages</option><option value="external">External application pages</option></select></label><label>External login URL<input name="interactionLoginUrl" type="url"></label><label>External consent URL<input name="interactionConsentUrl" type="url"></label></div></section>
+          <div class="settings-actions"><p id="message" role="status"></p><button class="secondary" type="button" id="cancelSettings">Discard changes</button><button class="primary" type="submit">Save settings</button></div>
+        </form>
+      </main>
+    </div>
+  </div>
+  <script src="./js/common.js"></script><script src="./js/settings.js"></script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { RegistrationModule } from 'src/registration/registration.module';
 import { SecurityModule } from 'src/security/security.module';
 
 import { AdminDashboardController } from './controllers/admin-dashboard/admin-dashboard.controller';
+import { AdminClientConfigController } from './controllers/admin-client-config/admin-client-config.controller';
 import { AdminDashboardService } from './services/admin-dashboard/admin-dashboard.service';
 
 @Module({
@@ -17,6 +18,7 @@ import { AdminDashboardService } from './services/admin-dashboard/admin-dashboar
 
   controllers: [
     AdminDashboardController,
+    AdminClientConfigController,
   ],
 
   providers: [

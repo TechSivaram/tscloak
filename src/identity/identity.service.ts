@@ -37,8 +37,8 @@ export class IdentityService {
     return this.users.count();
   }
 
-  async findUsers(): Promise<User[]> {
-    return this.users.findAll();
+  async findUsers(clientId?: string): Promise<User[]> {
+    return this.users.findAll(clientId);
   }
 
   async countRoles(): Promise<number> {
@@ -46,6 +46,17 @@ export class IdentityService {
   }
 
   async createUser(input: CreateUserInput): Promise<User> {
+    return this.createUserWithRoles(input);
+  }
+
+  async createClientUser(input: CreateUserInput): Promise<User> {
+    return this.createUserWithRoles(input);
+  }
+
+  private async createUserWithRoles(
+    input: CreateUserInput,
+    roleNames: string[] = ['USER'],
+  ): Promise<User> {
 
     if(!input.clientId) {
       throw new BadRequestException(
@@ -90,6 +101,22 @@ export class IdentityService {
     user.passwordHash = passwordHash;
     user.enabled = true;
     user.clientId = input.clientId;
+
+    if (roleNames.length > 0) {
+      const assignedRoles = await Promise.all(
+        roleNames.map(roleName => this.roles.findByName(roleName)),
+      );
+
+      if (assignedRoles.some(role => !role)) {
+        throw new ConflictException(
+          'Required user role is not configured',
+        );
+      }
+
+      user.roles = assignedRoles.filter(
+        (role): role is Role => role !== null,
+      );
+    }
 
     return this.users.save(user);
   }

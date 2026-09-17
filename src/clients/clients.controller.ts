@@ -39,6 +39,7 @@ export class ClientsController {
 
     return clients.map(client => ({
       id: client.id,
+      portalType: client.portalType,
       clientId: client.clientId,
       name: client.name,
       redirectUris: client.redirectUris,
@@ -163,4 +164,5 @@ export class ClientsController {
       enabled: client.enabled,
     };
   }
+
 }

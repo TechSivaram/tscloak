@@ -1,6 +1,7 @@
 (() => {
   const rows = document.getElementById('userRows');
   const roleOptions = [];
+  let selectedClientId = '';
 
   function rolePicker(user) {
     const selected = user.roles || [];
@@ -10,7 +11,8 @@
   }
 
   async function loadUsers() {
-    const [usersResponse, rolesResponse] = await Promise.all([Admin.apiFetch('/api/users'), Admin.apiFetch('/api/users/roles')]);
+    const query = selectedClientId ? `?client_id=${encodeURIComponent(selectedClientId)}` : '';
+    const [usersResponse, rolesResponse] = await Promise.all([Admin.apiFetch(`/api/users${query}`), Admin.apiFetch('/api/users/roles')]);
     if (!usersResponse || !usersResponse.ok || !rolesResponse || !rolesResponse.ok) { rows.innerHTML = '<tr><td colspan="6">Unable to load users or roles.</td></tr>'; return; }
     const users = await usersResponse.json();
     roleOptions.splice(0, roleOptions.length, ...(await rolesResponse.json()));
@@ -33,7 +35,8 @@
     panel.querySelector('form').addEventListener('submit', async event => {
       event.preventDefault();
       const values = Object.fromEntries(new FormData(event.target));
-      const response = await Admin.apiFetch(`/api/users/${user.id}`, { method: 'PUT', body: JSON.stringify({ email: values.email, enabled: values.enabled === 'true' }) });
+      const query = selectedClientId ? `?client_id=${encodeURIComponent(selectedClientId)}` : '';
+      const response = await Admin.apiFetch(`/api/users/${user.id}${query}`, { method: 'PUT', body: JSON.stringify({ email: values.email, enabled: values.enabled === 'true' }) });
       if (response && response.ok) { Admin.showMessage('User updated.'); panel.remove(); loadUsers(); } else Admin.showMessage('Unable to update user.', true);
     });
   }
@@ -53,17 +56,33 @@
       const menu = button.closest('.role-picker-menu');
       const roles = Array.from(menu.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
       button.disabled = true;
-      const response = await Admin.apiFetch(`/api/users/${button.dataset.saveRoles}/roles`, { method: 'PUT', body: JSON.stringify({ roles }) });
+      const query = selectedClientId ? `?client_id=${encodeURIComponent(selectedClientId)}` : '';
+      const response = await Admin.apiFetch(`/api/users/${button.dataset.saveRoles}/roles${query}`, { method: 'PUT', body: JSON.stringify({ roles }) });
       button.disabled = false;
       if (response && response.ok) { Admin.showMessage('User roles updated.'); menu.hidden = true; loadUsers(); } else Admin.showMessage('Unable to update user roles.', true);
     }));
   }
 
   function init() {
-    loadUsers();
+    setupClientScope().then(loadUsers);
+    document.addEventListener('admin:refresh', loadUsers);
     document.addEventListener('click', event => { if (!event.target.closest('.role-picker')) rows.querySelectorAll('.role-picker-menu').forEach(menu => { menu.hidden = true; }); });
     document.getElementById('showUserForm').addEventListener('click', () => { const panel = document.getElementById('userFormPanel'); panel.hidden = !panel.hidden; if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-    document.getElementById('userForm').addEventListener('submit', async event => { event.preventDefault(); const response = await Admin.apiFetch('/api/users', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(event.target))) }); if (response && response.ok) { event.target.reset(); document.getElementById('userFormPanel').hidden = true; loadUsers(); } else Admin.showMessage('Unable to create user.', true); });
+    document.getElementById('userForm').addEventListener('submit', async event => { event.preventDefault(); const payload = Object.fromEntries(new FormData(event.target)); if (selectedClientId) payload.clientId = selectedClientId; const response = await Admin.apiFetch('/api/users', { method: 'POST', body: JSON.stringify(payload) }); if (response && response.ok) { event.target.reset(); document.getElementById('userFormPanel').hidden = true; loadUsers(); } else Admin.showMessage('Unable to create user.', true); });
+  }
+
+  async function setupClientScope() {
+    const response = await Admin.apiFetch('/api/admin/clients');
+    if (!response || !response.ok) return;
+    const clients = await response.json();
+    if (!clients.length) return;
+    selectedClientId = clients[0].clientId;
+    const intro = document.querySelector('.management-intro');
+    const scope = document.createElement('label');
+    scope.className = 'client-scope-control';
+    scope.innerHTML = `<span>Managing client</span><select id="clientScope">${clients.map(client => `<option value="${client.clientId}">${client.name}</option>`).join('')}</select>`;
+    intro.appendChild(scope);
+    scope.querySelector('select').addEventListener('change', event => { selectedClientId = event.target.value; loadUsers(); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

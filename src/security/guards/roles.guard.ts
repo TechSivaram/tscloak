@@ -106,6 +106,8 @@ export class RolesGuard
         (role) => role.name,
       ) ?? [];
 
+    request.user.roles = userRoles;
+
     // ==========================================================
     // Check required roles
     // ==========================================================

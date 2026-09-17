@@ -69,18 +69,31 @@ if (!codeVerifier) {
 
 async function exchangeCode() {
 
+    const clientId =
+        sessionStorage.getItem(
+            'tscloak_admin_client_id'
+        );
+
+    if (!clientId) {
+        throw new Error(
+            'Admin OIDC client configuration is missing'
+        );
+    }
+
     const body =
         new URLSearchParams({
             grant_type:
                 'authorization_code',
 
             client_id:
-                '04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363',
+                clientId,
 
             code,
 
             redirect_uri:
-                `${window.location.origin}/admin/callback.html`,
+                sessionStorage.getItem(
+                    'tscloak_admin_redirect_uri'
+                ),
 
             code_verifier:
                 codeVerifier,
@@ -108,6 +121,23 @@ async function exchangeCode() {
 
     const tokens =
         await response.json();
+
+    const profileResponse = await fetch('/me', {
+        headers: {
+            Authorization: `Bearer ${tokens.access_token}`,
+            Accept: 'application/json',
+        },
+    });
+
+    const profile = profileResponse.ok
+        ? await profileResponse.json()
+        : null;
+
+    if (!profile?.roles?.includes('IDP_ADMIN')) {
+        throw new Error(
+            'Access denied: IDP_ADMIN role is required for this portal',
+        );
+    }
 
     sessionStorage.setItem(
         'tscloak_admin_access_token',
@@ -148,6 +178,15 @@ async function exchangeCode() {
 
 exchangeCode()
     .catch(error => {
+
+        sessionStorage.removeItem('tscloak_admin_access_token');
+        sessionStorage.removeItem('tscloak_admin_refresh_token');
+        sessionStorage.removeItem('tscloak_admin_id_token');
+        sessionStorage.removeItem('tscloak_admin_client_id');
+        sessionStorage.removeItem('tscloak_admin_redirect_uri');
+        sessionStorage.removeItem('tscloak_admin_state');
+        sessionStorage.removeItem('tscloak_admin_code_verifier');
+        sessionStorage.removeItem('tscloak_admin_nonce');
 
         console.error(error);
 

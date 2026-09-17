@@ -29,6 +29,7 @@
   function init() {
     document.querySelector('#roleRows').closest('table').querySelector('thead tr').insertAdjacentHTML('beforeend', '<th>Actions</th>');
     loadRoles();
+    document.addEventListener('admin:refresh', loadRoles);
     document.getElementById('showRoleForm').addEventListener('click', () => { const panel = document.getElementById('roleFormPanel'); panel.hidden = !panel.hidden; });
     document.getElementById('roleForm').addEventListener('submit', async event => { event.preventDefault(); const response = await Admin.apiFetch('/api/users/roles', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(event.target))) }); if (response && response.ok) { event.target.reset(); document.getElementById('roleFormPanel').hidden = true; loadRoles(); } else Admin.showMessage('Unable to create role.', true); });
   }

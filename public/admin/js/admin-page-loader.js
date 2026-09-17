@@ -5,6 +5,7 @@
     'roles.html': ['roles.css', 'roles.js'],
     'initial-access-tokens.html': ['initial-access-tokens.css', 'initial-access-tokens.js'],
     'security-policy.html': ['security-policy.css', 'security-policy.js'],
+    'profile.html': ['profile.css', 'profile.js'],
   };
 
   const page = pages[window.location.pathname.split('/').pop()];

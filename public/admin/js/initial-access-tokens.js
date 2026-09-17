@@ -12,7 +12,8 @@
 
   function init() {
     loadTokens();
-    document.getElementById('createToken').addEventListener('click', async () => { const response = await Admin.apiFetch('/api/admin/initial-access-tokens', { method: 'POST' }); if (response && response.ok) { const data = await response.json(); const result = document.getElementById('tokenResult'); result.hidden = false; result.textContent = data.token || JSON.stringify(data, null, 2); Admin.showMessage('Token created. Copy it now; it may not be shown again.'); loadTokens(); } else if (response) Admin.showMessage('Unable to create token.', true); });
+    document.addEventListener('admin:refresh', loadTokens);
+    document.getElementById('createToken').addEventListener('click', async () => { const response = await Admin.apiFetch('/api/admin/initial-access-tokens', { method: 'POST' }); if (response && response.ok) { const data = await response.json(); const result = document.getElementById('tokenResult'); const token = data.token; const link = `${window.location.origin}/admin/register.html?initial_access_token=${encodeURIComponent(token)}`; result.hidden = false; result.textContent = `Registration link:\n${link}\n\nInitial access token:\n${token}`; Admin.showMessage('Registration link created. Copy it into the email.'); loadTokens(); } else if (response) Admin.showMessage('Unable to create token.', true); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
