@@ -6,10 +6,6 @@
   const actions = form.querySelector('.form-actions');
   let editingClientId = null;
 
-  const portalLabel = document.createElement('label');
-  portalLabel.innerHTML = 'Portal classification<select name="portalType"><option value="none">Standard client</option><option value="admin">IDP Admin Portal</option><option value="client-admin">Client Admin Portal</option></select>';
-  form.insertBefore(portalLabel, actions || submitButton);
-
   const statusLabel = document.createElement('label');
   statusLabel.innerHTML = 'Client status<select name="enabled"><option value="true">Enabled</option><option value="false">Disabled</option></select>';
   form.insertBefore(statusLabel, actions || submitButton);
@@ -39,7 +35,6 @@
       if (!client) return;
       editingClientId = client.clientId;
       form.elements.name.value = client.name;
-      form.elements.portalType.value = client.portalType || 'none';
       form.elements.redirectUris.value = client.redirectUris.join('\n');
       form.elements.postLogoutRedirectUris.value = (client.postLogoutRedirectUris || []).join('\n');
       form.elements.allowedScopes.value = client.allowedScopes.join(' ');
@@ -76,7 +71,6 @@
       const list = name => String(get(name) || '').split(/\r?\n|,/).map(value => value.trim()).filter(Boolean);
       const payload = {
         name: get('name'), redirectUris: list('redirectUris'),
-        portalType: get('portalType'),
         postLogoutRedirectUris: list('postLogoutRedirectUris'),
         allowedScopes: get('allowedScopes').split(/\s+/).filter(Boolean),
         grantTypes: get('grantTypes').split(/\s+/).filter(Boolean),
