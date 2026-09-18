@@ -42,7 +42,7 @@ export class IdentityController {
   ) { }
 
   @Post()
-  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({
     summary: 'Create a user',
     description:
@@ -70,7 +70,7 @@ export class IdentityController {
       request,
       dto.clientId,
     );
-    const user = request.user.roles.includes('CLIENT_ADMIN')
+    const user = request.user.roles.includes('IDP_CLIENT_ADMIN')
       ? await this.identityService.createClientUser(dto)
       : await this.identityService.createUser(dto);
 
@@ -78,7 +78,7 @@ export class IdentityController {
   }
 
   @Get()
-  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'List users for the permitted client scope' })
   @ApiResponse({ status: 200, description: 'Users returned.', type: [UserResponseDto] })
   async findUsers(
@@ -96,7 +96,7 @@ export class IdentityController {
   }
 
   @Put(':id')
-  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'Update a user' })
   @ApiResponse({ status: 200, description: 'User updated.', type: UserResponseDto })
   async updateUser(
@@ -115,7 +115,7 @@ export class IdentityController {
   }
 
   @Get('roles')
-  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'List available roles' })
   @ApiResponse({ status: 200, description: 'Roles returned.' })
   async findRoles() {
@@ -150,7 +150,7 @@ export class IdentityController {
   }
 
   @Put(':id/roles')
-  @Roles('IDP_ADMIN', 'CLIENT_ADMIN')
+  @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'Assign roles to a user' })
   @ApiResponse({ status: 200, description: 'User roles updated.', type: UserResponseDto })
   async assignRoles(
@@ -159,7 +159,7 @@ export class IdentityController {
     @Query('client_id') clientId: string | undefined,
     @Body() dto: AssignUserRolesDto,
   ): Promise<UserResponseDto> {
-    const requestedRoles = request.user.roles.includes('CLIENT_ADMIN')
+    const requestedRoles = request.user.roles.includes('IDP_CLIENT_ADMIN')
       ? ['USER']
       : dto.roles;
 

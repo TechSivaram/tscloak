@@ -28,14 +28,14 @@ async function bootstrap() {
   );
 
   /*
-   * Multi-tenant client-admin portal: /client-admin/{clientId}/
+   * Multi-tenant client-admin portal: /idp-client-admin/{clientId}/
    * Falls back here only when no static asset matched above.
    */
   app.use(
-    '/client-admin/:clientId',
+    '/idp-client-admin/:clientId',
     (req, res) => {
       res.sendFile(
-        join(process.cwd(), 'public', 'client-admin', 'index.html'),
+        join(process.cwd(), 'public', 'idp-client-admin', 'index.html'),
       );
     },
   );

@@ -59,6 +59,7 @@ export class ClientsController {
   }
 
   @Post()
+  @Roles('IDP_ADMIN')
   @ApiOperation({
     summary: 'Register an OAuth/OIDC client',
     description:

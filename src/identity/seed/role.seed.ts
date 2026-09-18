@@ -12,7 +12,7 @@ export async function seedRoles(
       description: 'TSCloak identity provider administrator',
     },
     {
-      name: 'CLIENT_ADMIN',
+      name: 'IDP_CLIENT_ADMIN',
       description: 'Administrator for a client',
     },
     {

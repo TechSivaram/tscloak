@@ -173,7 +173,7 @@ async function exchangeCode() {
     );
 
     window.location.href =
-        '/admin/dashboard.html';
+        '/idp-admin/dashboard.html';
 }
 
 exchangeCode()

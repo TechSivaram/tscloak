@@ -5,7 +5,7 @@
     const params = new URLSearchParams();
     const idToken = sessionStorage.getItem('client_admin_id_token');
     const clientId = sessionStorage.getItem('client_admin_client_id');
-    const redirectUri = sessionStorage.getItem('client_admin_post_logout_redirect_uri') || `${window.location.origin}/client-admin/`;
+    const redirectUri = sessionStorage.getItem('client_admin_post_logout_redirect_uri') || `${window.location.origin}/idp-client-admin/`;
 
     params.set('post_logout_redirect_uri', redirectUri);
     if (clientId) params.set('client_id', clientId);
@@ -26,13 +26,13 @@
     const user = await response.json();
     const name = user.name || user.preferred_username || user.username || 'Administrator';
     const roles = Array.isArray(user.roles) ? user.roles : [];
-    const roleSummary = roles.length > 1 ? `${roles[0]} +${roles.length - 1} roles` : (roles[0] || 'CLIENT_ADMIN');
+    const roleSummary = roles.length > 1 ? `${roles[0]} +${roles.length - 1} roles` : (roles[0] || 'IDP_CLIENT_ADMIN');
     document.querySelectorAll('[data-user-name]').forEach(node => node.textContent = name);
     document.querySelectorAll('[data-user-role]').forEach(node => node.textContent = roleSummary);
 
     document.querySelectorAll('.user-chip').forEach(chip => {
       const initials = name.trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'AD';
-      chip.title = `Roles: ${roles.length ? roles.join(', ') : 'CLIENT_ADMIN'}`;
+      chip.title = `Roles: ${roles.length ? roles.join(', ') : 'IDP_CLIENT_ADMIN'}`;
       chip.innerHTML = `<span class="header-avatar">${initials}</span><span class="header-identity"><strong>${name}</strong><small>${roleSummary}</small></span><button class="header-profile-button" type="button" aria-label="Open profile menu">⌄</button><span class="header-profile-menu"><a href="./profile.html">Profile</a><button type="button" data-header-logout>Sign out</button></span>`;
       const menuButton = chip.querySelector('.header-profile-button');
       const menu = chip.querySelector('.header-profile-menu');

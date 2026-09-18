@@ -2,7 +2,7 @@ const oidc = {
   clientId: null,
 
   redirectUri:
-    `${window.location.origin}/admin/callback.html`,
+    `${window.location.origin}/idp-admin/callback.html`,
 
   scope:
     'openid profile email offline_access roles',

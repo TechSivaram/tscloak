@@ -24,20 +24,20 @@ export class ClientAdminSettingsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Get()
-  @Roles('CLIENT_ADMIN')
+  @Roles('IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'Get client-admin client settings' })
   @ApiResponse({ status: 200, description: 'Current client settings returned.' })
-  @ApiResponse({ status: 403, description: 'Caller is not a CLIENT_ADMIN.' })
+  @ApiResponse({ status: 403, description: 'Caller is not an IDP_CLIENT_ADMIN.' })
   async get(@Req() request: AuthenticatedRequest): Promise<ClientResponseDto> {
     return this.toResponse(await this.clientsService.findByClientId(request.user.clientId ?? ''));
   }
 
   @Put()
-  @Roles('CLIENT_ADMIN')
+  @Roles('IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'Update client-admin client settings' })
   @ApiResponse({ status: 200, description: 'Client settings updated.' })
   @ApiResponse({ status: 400, description: 'Invalid client settings.' })
-  @ApiResponse({ status: 403, description: 'Caller is not a CLIENT_ADMIN.' })
+  @ApiResponse({ status: 403, description: 'Caller is not an IDP_CLIENT_ADMIN.' })
   async update(
     @Req() request: AuthenticatedRequest,
     @Body() dto: UpdateClientSettingsDto,

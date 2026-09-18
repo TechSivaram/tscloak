@@ -1,12 +1,12 @@
 async function login() {
     /*
      * The client-admin portal is multi-tenant: the clientId is
-     * supplied via the URL path (/client-admin/{clientId}/) instead
+     * supplied via the URL path (/idp-client-admin/{clientId}/) instead
      * of being resolved from callback URLs (which are ambiguous
      * across tenants).
      */
     const pathSegments = window.location.pathname.split("/").filter(Boolean);
-    const clientId = pathSegments[0] === "client-admin" ? pathSegments[1] : undefined;
+    const clientId = pathSegments[0] === "idp-client-admin" ? pathSegments[1] : undefined;
 
     if (!clientId) {
         throw new Error("Missing clientId in the page URL");

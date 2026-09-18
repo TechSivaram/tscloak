@@ -33,7 +33,7 @@
         if (!accessToken) {
 
             window.location.href =
-                "/admin/";
+                "/idp-admin/";
 
             return false;
         }
@@ -361,7 +361,7 @@
             "post_logout_redirect_uri",
             sessionStorage.getItem(
                 "tscloak_admin_post_logout_redirect_uri"
-            ) || `${window.location.origin}/admin/`
+            ) || `${window.location.origin}/idp-admin/`
         );
 
         const clientId =

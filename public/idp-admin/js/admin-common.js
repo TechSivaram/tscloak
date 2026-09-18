@@ -15,7 +15,7 @@
     sessionStorage.removeItem("tscloak_admin_client_id");
     sessionStorage.removeItem("tscloak_admin_post_logout_redirect_uri");
     sessionStorage.removeItem(userKey);
-    window.location.href = "/admin/";
+    window.location.href = "/idp-admin/";
   }
 
   async function apiFetch(url, options = {}) {
@@ -50,10 +50,46 @@
 
   function setup() {
     if (!token()) {
-      window.location.href = "/admin/";
+      window.location.href = "/idp-admin/";
       return;
     }
 
+    verifyIdpAdminRole().then(authorized => {
+      if (!authorized) return;
+      renderShell();
+    });
+  }
+
+  /*
+   * Defense-in-depth: re-check the IDP_ADMIN role on every admin
+   * page load, not just at the login callback, in case a stored
+   * token belongs to a user who no longer holds that role.
+   */
+  async function verifyIdpAdminRole() {
+    const cached = JSON.parse(sessionStorage.getItem(userKey) || "null");
+    const roles = Array.isArray(cached?.roles) ? cached.roles : null;
+
+    if (roles) {
+      if (!roles.includes("IDP_ADMIN")) {
+        logout();
+        return false;
+      }
+      return true;
+    }
+
+    const response = await apiFetch("/me");
+    const user = response && response.ok ? await response.json() : null;
+
+    if (!user?.roles?.includes("IDP_ADMIN")) {
+      logout();
+      return false;
+    }
+
+    sessionStorage.setItem(userKey, JSON.stringify(user));
+    return true;
+  }
+
+  function renderShell() {
     const user = JSON.parse(sessionStorage.getItem(userKey) || "null");
     const name = user?.name || user?.preferred_username || user?.username || "Administrator";
     const nameElement = document.querySelector("[data-user-name]");

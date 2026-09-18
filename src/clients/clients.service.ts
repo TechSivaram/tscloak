@@ -85,12 +85,12 @@ export class ClientsService {
         }
       });
 
-      if (paths.includes('/admin/callback.html')) {
+      if (paths.includes('/idp-admin/callback.html')) {
         return 'IDP_ADMIN';
       }
 
-      if (paths.includes('/client-admin/callback.html')) {
-        return 'CLIENT_ADMIN';
+      if (paths.includes('/idp-client-admin/callback.html')) {
+        return 'IDP_CLIENT_ADMIN';
       }
 
       return null;
