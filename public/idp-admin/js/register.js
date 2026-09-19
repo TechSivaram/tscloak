@@ -196,8 +196,8 @@
         const clientAdminUrl =
           clientId
             ? `${window.location.origin}` +
-              `/idp-client-admin/` +
-              `${encodeURIComponent(clientId)}`
+            `/idp-client-admin/` +
+            `${encodeURIComponent(clientId)}`
             : null;
 
 
@@ -219,9 +219,8 @@
 
 
         message +=
-          `Client ID: ${
-            clientId ||
-            'provided by the provider'
+          `Client ID: ${clientId ||
+          'provided by the provider'
           }\n\n`;
 
 
@@ -244,8 +243,7 @@
         if (data.client_secret) {
 
           message +=
-            `Client secret: ${
-              data.client_secret
+            `Client secret: ${data.client_secret
             }\n\n`;
         }
 
