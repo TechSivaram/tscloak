@@ -386,30 +386,6 @@
 
 
         /*
-         * Clear local Admin UI state.
-         */
-        sessionStorage.removeItem(
-            "tscloak_admin_access_token"
-        );
-
-        sessionStorage.removeItem(
-            "tscloak_admin_refresh_token"
-        );
-
-        sessionStorage.removeItem(
-            "tscloak_admin_id_token"
-        );
-
-        sessionStorage.removeItem(
-            "tscloak_admin_client_id"
-        );
-
-        sessionStorage.removeItem(
-            "tscloak_admin_user"
-        );
-
-
-        /*
          * End the TSCloak OIDC session.
          */
         window.location.href =
@@ -808,7 +784,7 @@
 
         element.textContent =
             value === null ||
-            value === undefined
+                value === undefined
                 ? "—"
                 : String(value);
     }

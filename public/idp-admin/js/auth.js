@@ -64,7 +64,7 @@ async function login() {
 
   const clientResponse =
     await fetch(
-      '/api/admin/config/oidc?portal=admin',
+      '/api/admin/config/oidc?portal=idp-admin',
     );
 
   if (!clientResponse.ok) {

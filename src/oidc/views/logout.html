@@ -4,10 +4,7 @@
 <head>
   <meta charset="UTF-8" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Sign out - TSCloak</title>
 
@@ -46,11 +43,9 @@
         sans-serif;
 
       background:
-        radial-gradient(
-          circle at top right,
+        radial-gradient(circle at top right,
           rgba(31, 63, 130, 0.08),
-          transparent 40%
-        ),
+          transparent 40%),
         var(--background);
     }
 
@@ -264,11 +259,7 @@
 
     <div class="logo">
 
-      <img
-        src="/assets/tscloak-icon.png"
-        alt="TSCloak"
-        class="logo-image"
-      />
+      <img src="/assets/tscloak-icon.png" alt="TSCloak" class="logo-image" />
 
       <h1>TSCloak</h1>
 
@@ -285,7 +276,7 @@
 
     <div class="logout-content">
 
-     <h2>
+      <h2>
         Sign out of {{APPLICATION_NAME}}?
       </h2>
 
@@ -317,19 +308,11 @@
 
     <div class="logout-actions">
 
-      <button
-        type="button"
-        class="signout-button"
-        onclick="confirmLogout()"
-      >
+      <button type="button" class="signout-button" onclick="confirmLogout()">
         Sign out
       </button>
 
-      <button
-        type="button"
-        class="cancel-button"
-        onclick="history.back()"
-      >
+      <button type="button" class="cancel-button" onclick="history.back()">
         Cancel
       </button>
 
@@ -393,6 +376,28 @@
 
 
       logoutInput.value = 'yes';
+
+      sessionStorage.removeItem('tscloak_admin_access_token');
+      sessionStorage.removeItem('tscloak_admin_id_token');
+      sessionStorage.removeItem('tscloak_admin_refresh_token');
+      sessionStorage.removeItem('tscloak_admin_client_id');
+      sessionStorage.removeItem('tscloak_admin_redirect_uri');
+      sessionStorage.removeItem('tscloak_admin_post_logout_redirect_uri');
+      sessionStorage.removeItem('tscloak_admin_state');
+      sessionStorage.removeItem('tscloak_admin_code_verifier');
+      sessionStorage.removeItem('tscloak_admin_nonce');
+      sessionStorage.removeItem("tscloak_admin_user");
+
+
+      sessionStorage.removeItem('tscloak_client_admin_access_token');
+      sessionStorage.removeItem('tscloak_client_admin_id_token');
+      sessionStorage.removeItem('tscloak_client_admin_refresh_token');
+      sessionStorage.removeItem('tscloak_client_admin_client_id');
+      sessionStorage.removeItem('tscloak_client_admin_redirect_uri');
+      sessionStorage.removeItem('tscloak_client_admin_post_logout_redirect_uri');
+      sessionStorage.removeItem('tscloak_client_admin_state');
+      sessionStorage.removeItem('tscloak_client_admin_code_verifier');
+      sessionStorage.removeItem('tscloak_client_admin_nonce');
 
 
       /*

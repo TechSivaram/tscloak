@@ -59,9 +59,9 @@ export class AdminClientConfigController {
   }> {
 
     const callbackPath =
-      portal === 'client-admin'
+      portal === 'idp-client-admin'
         ? '/idp-client-admin/callback.html'
-        : portal === 'admin'
+        : portal === 'idp-admin'
           ? '/idp-admin/callback.html'
           : null;
 
@@ -74,16 +74,14 @@ export class AdminClientConfigController {
       clientId
         ? await this.clientsService.findByClientId(clientId)
         : callbackPath
-          ? await this.clientsService.findClientForCallback(
-            callbackPath,
-          )
+          ? await this.clientsService.findClientForCallback(callbackPath,)
           : null;
 
 
     if (!client || !client.enabled) {
 
       throw new NotFoundException(
-        'No enabled client is registered for this redirect URI',
+        'No enabled client is registered for this redirect URI or clientId',
       );
     }
 
@@ -98,7 +96,7 @@ export class AdminClientConfigController {
      * bare portal path to avoid picking the wrong one.
      */
     const postLogoutPath =
-      portal === 'client-admin'
+      portal === 'idp-client-admin'
         ? `/idp-client-admin/${client.clientId}/`
         : '/idp-admin/';
 

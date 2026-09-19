@@ -13,7 +13,7 @@ async function login() {
     }
 
     const configResponse = await fetch(
-        `/api/admin/config/oidc?portal=client-admin&clientId=${encodeURIComponent(clientId)}`
+        `/api/admin/config/oidc?portal=idp-client-admin&clientId=${encodeURIComponent(clientId)}`
     );
 
     if (!configResponse.ok) {
@@ -52,14 +52,14 @@ async function login() {
 
     const state = random(32);
 
-    sessionStorage.setItem("client_admin_code_verifier", verifier);
-    sessionStorage.setItem("client_admin_state", state);
-    sessionStorage.setItem("client_admin_client_id", config.clientId);
-    sessionStorage.setItem("client_admin_redirect_uri", redirectUri);
+    sessionStorage.setItem("tscloak_client_admin_code_verifier", verifier);
+    sessionStorage.setItem("tscloak_client_admin_state", state);
+    sessionStorage.setItem("tscloak_client_admin_client_id", config.clientId);
+    sessionStorage.setItem("tscloak_client_admin_redirect_uri", redirectUri);
 
     if (config.postLogoutRedirectUri) {
         sessionStorage.setItem(
-            "client_admin_post_logout_redirect_uri",
+            "tscloak_client_admin_post_logout_redirect_uri",
             config.postLogoutRedirectUri
         );
     }

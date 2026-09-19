@@ -9,6 +9,7 @@ import { randomBytes } from 'crypto';
 import { Client } from './entities/client.entity';
 import { InteractionMode } from './enums/interaction-mode.enum';
 import { ClientRepository } from './repositories/client.repository';
+import { ConfigService } from '@nestjs/config';
 
 export interface CreateClientInput {
   name: string;
@@ -68,40 +69,96 @@ export class ClientsService {
     })) ?? null;
   }
 
-    async requiredRoleForClient(
-      clientId: string,
-    ): Promise<string | null> {
-      const client = await this.findByClientId(clientId);
+  async requiredRoleForClient(
+    clientId: string,
+  ): Promise<string | null> {
+    const client = await this.findByClientId(clientId);
 
-      if (!client) {
-        return null;
-      }
-
-      const paths = client.redirectUris.map(uri => {
-        try {
-          return new URL(uri).pathname;
-        } catch {
-          return '';
-        }
-      });
-
-      if (paths.includes('/idp-admin/callback.html')) {
-        return 'IDP_ADMIN';
-      }
-
-      if (paths.includes('/idp-client-admin/callback.html')) {
-        return 'IDP_CLIENT_ADMIN';
-      }
-
+    if (!client) {
       return null;
     }
+
+    const paths = client.redirectUris.map(uri => {
+      try {
+        return new URL(uri).pathname;
+      } catch {
+        return '';
+      }
+    });
+
+    if (paths.includes('/idp-admin/callback.html')) {
+      return 'IDP_ADMIN';
+    }
+
+    if (paths.includes('/idp-client-admin/callback.html')) {
+      return 'IDP_CLIENT_ADMIN';
+    }
+
+    return null;
+  }
 
   async findByClientId(
     clientId: string,
   ): Promise<Client | null> {
-    return await this.clients.findByClientId(
-      clientId,
-    );
+    var client = await this.clients.findByClientId(clientId,);
+
+    if(client) {
+      client.redirectUris = this.resolveRedirectUris(client);
+      client.postLogoutRedirectUris = this.resolvePostLogoutRedirectUris(client);
+    }
+
+    return client;
+  }
+
+  private resolveRedirectUris(
+    client: Client,
+  ): string[] {
+    const registered =
+      client.redirectUris ?? [];
+
+    const issuer =
+      this.config.get<string>('OIDC_ISSUER');
+
+    if (!issuer) {
+      return registered;
+    }
+
+    const idpClientAdminCallback =
+      `${issuer.replace(/\/+$/, '')}` +
+      `/idp-client-admin/callback.html`;
+
+    return [
+      ...new Set([
+        ...registered,
+        idpClientAdminCallback,
+      ]),
+    ];
+  }
+
+  private resolvePostLogoutRedirectUris(
+    client: Client,
+  ): string[] {
+
+    const registered =
+      client.postLogoutRedirectUris ?? [];
+
+    const issuer =
+      this.config.get<string>('OIDC_ISSUER');
+
+    if (!issuer) {
+      return registered;
+    }
+
+    const idpClientAdminUri =
+      `${issuer.replace(/\/+$/, '')}` +
+      `/idp-client-admin/${encodeURIComponent(client.clientId)}`;
+
+    return [
+      ...new Set([
+        ...registered,
+        idpClientAdminUri,
+      ]),
+    ];
   }
 
   async save(client: Client): Promise<Client> {
@@ -111,7 +168,7 @@ export class ClientsService {
   async deleteByClientId(clientId: string): Promise<void> {
     await this.clients.deleteByClientId(clientId);
   }
-  
+
   async updateClient(
     clientId: string,
     input: UpdateClientInput & ClientStatusUpdate,
@@ -132,12 +189,13 @@ export class ClientsService {
     if (input.interactionMode !== undefined) client.interactionMode = input.interactionMode;
     if (input.interactionLoginUrl !== undefined) client.interactionLoginUrl = input.interactionLoginUrl || null;
     if (input.interactionConsentUrl !== undefined) client.interactionConsentUrl = input.interactionConsentUrl || null;
-  if (input.enabled !== undefined) client.enabled = input.enabled;
+    if (input.enabled !== undefined) client.enabled = input.enabled;
 
     return this.save(client);
   }
   constructor(
     private readonly clients: ClientRepository,
+    private readonly config: ConfigService,
   ) { }
 
   async createClient(

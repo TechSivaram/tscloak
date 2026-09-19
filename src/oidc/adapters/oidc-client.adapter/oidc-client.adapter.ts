@@ -1,11 +1,13 @@
 import { Client } from '../../../clients/entities/client.entity';
 import { InteractionMode } from '../../../clients/enums/interaction-mode.enum';
 import { ClientsService } from '../../../clients/clients.service';
+import { ConfigService } from '@nestjs/config';
 
 export class OidcClientAdapter {
   constructor(
     private readonly clientsService: ClientsService,
-  ) {}
+    private readonly config: ConfigService,
+  ) { }
 
   /**
    * Find a client by client_id.
@@ -137,13 +139,13 @@ export class OidcClientAdapter {
 
       ...(client.clientSecret
         ? {
-            client_secret: client.clientSecret,
-          }
+          client_secret: client.clientSecret,
+        }
         : {}),
 
       client_name: client.name,
 
-      redirect_uris: client.redirectUris,
+      redirect_uris: client.redirectUris ?? [],
 
       /*
        * OIDC RP-Initiated Logout
@@ -151,8 +153,7 @@ export class OidcClientAdapter {
        * oidc-provider uses this list to validate
        * post_logout_redirect_uri.
        */
-      post_logout_redirect_uris:
-        client.postLogoutRedirectUris ?? [],
+      post_logout_redirect_uris: client.postLogoutRedirectUris ?? [],
 
       scope: client.allowedScopes.join(' '),
 
@@ -170,16 +171,16 @@ export class OidcClientAdapter {
 
       ...(client.interactionLoginUrl
         ? {
-            interaction_login_url:
-              client.interactionLoginUrl,
-          }
+          interaction_login_url:
+            client.interactionLoginUrl,
+        }
         : {}),
 
       ...(client.interactionConsentUrl
         ? {
-            interaction_consent_url:
-              client.interactionConsentUrl,
-          }
+          interaction_consent_url:
+            client.interactionConsentUrl,
+        }
         : {}),
     };
   }

@@ -29,6 +29,7 @@ export class OidcOptionsService
     private readonly securityPolicyService: SecurityPolicyService,
     private readonly clientRegistrationPolicyService: ClientRegistrationPolicyService,
     private readonly clientsService: ClientsService,
+
   ) { }
 
   /**
@@ -429,7 +430,7 @@ export class OidcOptionsService
        */
       if (modelName === 'Client') {
         return new OidcClientAdapter(
-          this.clientsService,
+          this.clientsService, this.config
         );
       }
 

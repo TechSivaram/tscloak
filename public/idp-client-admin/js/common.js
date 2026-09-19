@@ -1,22 +1,16 @@
 (() => {
-  const key = 'client_admin_access_token';
+  const key = 'tscloak_client_admin_access_token';
   const token = () => sessionStorage.getItem(key);
   const logout = () => {
     const params = new URLSearchParams();
-    const idToken = sessionStorage.getItem('client_admin_id_token');
-    const clientId = sessionStorage.getItem('client_admin_client_id');
-    const redirectUri = sessionStorage.getItem('client_admin_post_logout_redirect_uri') || `${window.location.origin}/idp-client-admin/`;
+    const idToken = sessionStorage.getItem('tscloak_client_admin_id_token');
+    const clientId = sessionStorage.getItem('tscloak_client_admin_client_id');
+    const redirectUri = sessionStorage.getItem('tscloak_client_admin_post_logout_redirect_uri') || `${window.location.origin}/idp-client-admin/`;
 
     params.set('post_logout_redirect_uri', redirectUri);
     if (clientId) params.set('client_id', clientId);
     if (idToken) params.set('id_token_hint', idToken);
 
-    sessionStorage.removeItem(key);
-    sessionStorage.removeItem('client_admin_refresh_token');
-    sessionStorage.removeItem('client_admin_id_token');
-    sessionStorage.removeItem('client_admin_client_id');
-    sessionStorage.removeItem('client_admin_redirect_uri');
-    sessionStorage.removeItem('client_admin_post_logout_redirect_uri');
     location.href = `/session/end?${params.toString()}`;
   };
   async function api(url, options = {}) { if (!token()) { logout(); return null; } const headers = new Headers(options.headers || {}); headers.set('Authorization', `Bearer ${token()}`); headers.set('Accept', 'application/json'); if (options.body) headers.set('Content-Type', 'application/json'); const response = await fetch(url, { ...options, headers }); if (response.status === 401 || response.status === 403) logout(); return response; }
