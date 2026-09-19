@@ -1665,3 +1665,68 @@ td code {
         display: block;
     }
 }
+
+
+/* =========================================================
+   RESPONSIVE MANAGEMENT TABLES
+   Desktop: normal tables / Mobile: row cards
+   ========================================================= */
+
+@media (max-width: 760px) {
+    .table-wrap { width: 100%; overflow: visible; }
+    .table-wrap table { width: 100%; min-width: 0; border-collapse: separate; border-spacing: 0 12px; }
+    .table-wrap thead { display: none; }
+    .table-wrap tbody { display: grid; gap: 12px; }
+    .table-wrap tbody tr { display: block; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: 0 5px 15px rgba(16, 50, 22, .06); }
+    .table-wrap tbody tr:hover { background: var(--surface); }
+    .table-wrap tbody td { display: grid; grid-template-columns: 88px minmax(0, 1fr); align-items: start; gap: 10px; width: 100%; padding: 7px 0; border: 0; line-height: 1.45; overflow-wrap: anywhere; vertical-align: top; }
+    .table-wrap tbody td::before { color: var(--light); font-size: 9px; font-weight: 800; letter-spacing: .65px; line-height: 1.45; text-transform: uppercase; }
+
+    .page-clients .table-wrap tbody td:nth-child(1)::before { content: "Name"; }
+    .page-clients .table-wrap tbody td:nth-child(2)::before { content: "Client ID"; }
+    .page-clients .table-wrap tbody td:nth-child(3)::before { content: "Redirect URIs"; }
+    .page-clients .table-wrap tbody td:nth-child(4)::before { content: "Mode"; }
+    .page-clients .table-wrap tbody td:nth-child(5)::before { content: "Status"; }
+    .page-clients .table-wrap tbody td:nth-child(6)::before { content: "Actions"; }
+
+    .page-users .table-wrap tbody td:nth-child(1)::before { content: "Username"; }
+    .page-users .table-wrap tbody td:nth-child(2)::before { content: "Email"; }
+    .page-users .table-wrap tbody td:nth-child(3)::before { content: "Roles"; }
+    .page-users .table-wrap tbody td:nth-child(4)::before { content: "Status"; }
+    .page-users .table-wrap tbody td:nth-child(5)::before { content: "Created"; }
+    .page-users .table-wrap tbody td:nth-child(6)::before { content: "Actions"; }
+
+    .page-roles .table-wrap tbody td:nth-child(1)::before { content: "Name"; }
+    .page-roles .table-wrap tbody td:nth-child(2)::before { content: "Description"; }
+    .page-roles .table-wrap tbody td:nth-child(3)::before { content: "ID"; }
+
+    .page-initial-access-tokens .table-wrap tbody td:nth-child(1)::before { content: "OIDC Record"; }
+    .page-initial-access-tokens .table-wrap tbody td:nth-child(2)::before { content: "Policies"; }
+    .page-initial-access-tokens .table-wrap tbody td:nth-child(3)::before { content: "Expires"; }
+    .page-initial-access-tokens .table-wrap tbody td:nth-child(4)::before { content: "Created"; }
+    .page-initial-access-tokens .table-wrap tbody td:nth-child(5)::before { content: "Actions"; }
+
+    .table-wrap tbody td:last-child { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 7px; padding-top: 11px; border-top: 1px solid var(--border); }
+    .table-wrap tbody td:last-child::before { margin-right: auto; }
+
+    /* Roles table has no Actions column; the last cell is the role ID. */
+    .page-roles .table-wrap tbody td:last-child {
+        display: grid;
+        margin-top: 0;
+        padding-top: 7px;
+        border-top: 0;
+    }
+
+    .page-roles .table-wrap tbody td:last-child::before {
+        margin-right: 0;
+    }
+    .table-wrap tbody td[colspan] { display: block; padding: 10px; border: 0; text-align: center; }
+    .table-wrap tbody td[colspan]::before { display: none; }
+    .table-wrap td code { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+    .table-wrap td a, .table-wrap td span { max-width: 100%; overflow-wrap: anywhere; }
+    .table-wrap .role-picker { width: 100%; min-width: 0; }
+    .table-wrap .role-picker-button { width: 100%; max-width: 100%; }
+    .table-wrap .role-picker-menu { left: 0; right: 0; width: auto; max-width: 100%; }
+    .table-wrap .status-pill, .table-wrap .healthy-badge { justify-self: start; width: fit-content; }
+    .table-wrap .table-action { max-width: 100%; }
+}
