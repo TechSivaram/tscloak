@@ -134,6 +134,12 @@ export class IdentityService {
     return this.users.findById(id, client_id);
   }
 
+  async findByIdForOidc(
+    id: string,
+  ): Promise<User | null> {
+    return this.users.findByIdForOidc(id);
+  }
+
   async updateUser(
     userId: string,
     clientId: string,

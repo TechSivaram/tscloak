@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { interactionPolicy } from 'oidc-provider';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -29,7 +30,6 @@ export class OidcOptionsService
     private readonly securityPolicyService: SecurityPolicyService,
     private readonly clientRegistrationPolicyService: ClientRegistrationPolicyService,
     private readonly clientsService: ClientsService,
-
   ) { }
 
   /**
@@ -73,6 +73,68 @@ export class OidcOptionsService
           config,
         );
 
+        /**
+         * When a browser already has an authenticated OIDC
+         * session for another client, start a fresh session
+         * for the requested client.
+         *
+         * Same-client requests continue to use normal OIDC SSO.
+         */
+        provider.use(async (ctx, next) => {
+          if (
+            ctx.method === 'GET' &&
+            ctx.path === '/auth'
+          ) {
+            const requestedClientId =
+              typeof ctx.query.client_id === 'string'
+                ? ctx.query.client_id
+                : undefined;
+
+            if (requestedClientId) {
+              try {
+                const session =
+                  await provider.Session.get(ctx);
+
+                if (session?.accountId) {
+                  const clientSessionId =
+                    session.sidFor(
+                      requestedClientId,
+                    );
+
+                  if (!clientSessionId) {
+                    await session.destroy();
+
+                    const {
+                      maxAge,
+                      ...cookieOptions
+                    } =
+                      provider.configuration(
+                        'cookies.long',
+                      );
+
+                    ctx.cookies.set(
+                      provider.cookieName('session'),
+                      null,
+                      cookieOptions,
+                    );
+
+                    ctx.redirect(
+                      ctx.originalUrl,
+                    );
+
+                    return;
+                  }
+                }
+              } catch {
+                // Allow oidc-provider to handle the request
+                // normally if the existing session cannot be read.
+              }
+            }
+          }
+
+          await next();
+        });
+
         provider.on(
           'registration_create.success',
           async (ctx) => {
@@ -84,6 +146,72 @@ export class OidcOptionsService
             }
           },
         );
+
+        provider.on('server_error', (ctx, error) => {
+          console.error(
+            '========== OIDC SERVER ERROR ==========',
+          );
+          console.error(
+            'URL:',
+            ctx?.request?.url,
+          );
+          console.error(
+            'Method:',
+            ctx?.request?.method,
+          );
+          console.error(
+            'Error:',
+            error,
+          );
+          console.error(
+            'Stack:',
+            error?.stack,
+          );
+          console.error(
+            '========================================',
+          );
+        });
+
+        provider.on(
+          'authorization.error',
+          (ctx, error) => {
+            console.error(
+              '========== OIDC AUTHORIZATION ERROR ==========',
+            );
+            console.error(
+              'URL:',
+              ctx?.request?.url,
+            );
+            console.error(
+              'Error:',
+              error,
+            );
+            console.error(
+              'Stack:',
+              error?.stack,
+            );
+            console.error(
+              '==============================================',
+            );
+          },
+        );
+
+        provider.on('grant.error', (ctx, error) => {
+          console.error(
+            '========== OIDC GRANT ERROR ==========',
+          );
+          console.error(
+            'Error:',
+            error,
+          );
+          console.error(
+            'Stack:',
+            error?.stack,
+          );
+          console.error(
+            '======================================',
+          );
+        });
 
         return provider;
       },
@@ -204,12 +332,13 @@ export class OidcOptionsService
             );
           }
 
-          const clientId = ctx.oidc.params.client_id ?? ctx.oidc.accessToken?.clientId;
+          const clientId =
+            ctx.oidc.params.client_id ??
+            ctx.oidc.accessToken?.clientId;
 
           const user =
-            await this.identityService.findById(
+            await this.identityService.findByIdForOidc(
               accountId,
-              clientId
             );
 
           if (!user) {
@@ -291,12 +420,13 @@ export class OidcOptionsService
             enabled: true,
 
             logoutSource: async (ctx, form) => {
+              const clientId =
+                ctx.oidc.params?.client_id;
 
-              const clientId = ctx.oidc.params?.client_id;
-
-              // Find your Client entity using OIDC client_id
               const client = clientId
-                ? await this.clientsService.findByClientId(clientId)
+                ? await this.clientsService.findByClientId(
+                  clientId,
+                )
                 : null;
 
               const applicationName =
@@ -313,13 +443,15 @@ export class OidcOptionsService
                 'utf8',
               );
 
-              ctx.body = template.replace(
-                '{{APPLICATION_NAME}}',
-                applicationName,
-              ).replace(
-                '{{LOGOUT_FORM}}',
-                form,
-              );
+              ctx.body = template
+                .replace(
+                  '{{APPLICATION_NAME}}',
+                  applicationName,
+                )
+                .replace(
+                  '{{LOGOUT_FORM}}',
+                  form,
+                );
             },
           },
 
@@ -330,7 +462,8 @@ export class OidcOptionsService
             enabled: true,
             initialAccessToken: true,
 
-            policies: this.clientRegistrationPolicyService.getPolicies(),
+            policies:
+              this.clientRegistrationPolicyService.getPolicies(),
           },
 
           registrationManagement: {
@@ -345,6 +478,8 @@ export class OidcOptionsService
          * are routed through our interaction controller.
          */
         interactions: {
+          policy: this.createInteractionPolicy(),
+
           url(
             ctx,
             interaction,
@@ -403,10 +538,21 @@ export class OidcOptionsService
   }
 
   /**
+   * Creates the OIDC interaction policy used by TSCloak.
+   *
+   * Client-session switching is handled by the provider
+   * pre-middleware before oidc-provider starts processing
+   * the authorization request.
+   */
+  private createInteractionPolicy() {
+    return interactionPolicy.base();
+  }
+
+  /**
    * OIDC Adapter Factory.
    *
    * Client:
-  *   Dynamically resolved through ClientsService.
+   *   Dynamically resolved through ClientsService.
    *
    * Other OIDC runtime models:
    *   Persisted through OidcRepository.
@@ -426,11 +572,12 @@ export class OidcOptionsService
        *      ↓
        * OidcClientAdapter
        *      ↓
-      * ClientsService
+       * ClientsService
        */
       if (modelName === 'Client') {
         return new OidcClientAdapter(
-          this.clientsService, this.config
+          this.clientsService,
+          this.config,
         );
       }
 
