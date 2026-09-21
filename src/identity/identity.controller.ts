@@ -5,30 +5,25 @@ import {
   Get,
   Param,
   Post,
-  Req,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 
-import {
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { IdentityService } from './identity.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { AssignUserRolesDto } from './dto/assign-user-roles.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
-import { UserMapper } from './user.mapper';
-import { UserResponseDto } from './dto/user-response.dto';
+import { Roles } from 'src/security/decorators/roles.decorator';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
 import { RolesGuard } from 'src/security/guards/roles.guard';
-import { Roles } from 'src/security/decorators/roles.decorator';
 import type { AuthenticatedRequest } from 'src/security/types/authenticated-request';
+import { AssignUserRolesDto } from './dto/assign-user-roles.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserResponseDto } from './dto/user-response.dto';
+import { IdentityService } from './identity.service';
+import { UserMapper } from './user.mapper';
 
 @UseGuards(OidcAuthGuard, RolesGuard)
 @ApiTags('Users')

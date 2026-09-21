@@ -9,20 +9,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import {
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { ClientsService } from './clients.service';
-import { CreateClientDto } from './dto/create-client.dto';
-import { UpdateClientDto } from './dto/update-client.dto';
-import { ClientResponseDto } from './dto/client-response.dto';
+import { Roles } from 'src/security/decorators/roles.decorator';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
 import { RolesGuard } from 'src/security/guards/roles.guard';
-import { Roles } from 'src/security/decorators/roles.decorator';
+import { ClientsService } from './clients.service';
+import { ClientResponseDto } from './dto/client-response.dto';
+import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
 
 @ApiTags('Clients')
 @Controller('admin/clients')

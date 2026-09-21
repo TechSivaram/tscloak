@@ -2,25 +2,20 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Put,
   Req,
-  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 
-import { ClientsService } from './clients.service';
-import { UpdateClientSettingsDto } from './dto/update-client-settings.dto';
-import { ClientResponseDto } from './dto/client-response.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/security/decorators/roles.decorator';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
 import { RolesGuard } from 'src/security/guards/roles.guard';
-import { Roles } from 'src/security/decorators/roles.decorator';
 import type { AuthenticatedRequest } from 'src/security/types/authenticated-request';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ClientsService } from './clients.service';
+import { ClientResponseDto } from './dto/client-response.dto';
+import { UpdateClientSettingsDto } from './dto/update-client-settings.dto';
 
 @Controller('client-admin/settings')
 @UseGuards(OidcAuthGuard, RolesGuard)

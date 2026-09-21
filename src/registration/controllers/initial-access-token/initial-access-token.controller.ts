@@ -7,13 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import {
-  ApiOperation,
-  ApiBearerAuth,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { InitialAccessTokenService } from 'src/registration/services/initial-access-token/initial-access-token.service';
 import { Roles } from 'src/security/decorators/roles.decorator';

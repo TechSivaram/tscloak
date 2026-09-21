@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 
 import {
-  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiResponse,
@@ -12,9 +11,9 @@ import {
 import { UpdateSecurityPolicyDto } from '../../dto/update-security-policy.dto';
 import { SecurityPolicyService } from '../../services/security-policy/security-policy.service';
 
+import { Roles } from 'src/security/decorators/roles.decorator';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
 import { RolesGuard } from 'src/security/guards/roles.guard';
-import { Roles } from 'src/security/decorators/roles.decorator';
 
 @ApiTags('Security Policy')
 @Controller('admin/security-policy')
