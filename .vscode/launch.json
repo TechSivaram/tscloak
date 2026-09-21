@@ -10,6 +10,28 @@
       "skipFiles": [
         "<node_internals>/**"
       ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Refresh Token E2E",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--experimental-vm-modules",
+        "./node_modules/jest/bin/jest.js",
+        "--config",
+        "./test/jest-e2e.json",
+        "--runInBand"
+      ],
+      "args": [
+        "test/e2e/refresh-token.e2e-spec.ts"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     }
   ]
 }
