@@ -6,12 +6,11 @@ import { Client } from '../entities/client.entity';
 import { ClientRepository } from './client.repository';
 
 @Injectable()
-export class TypeOrmClientRepository
-  implements ClientRepository {
+export class TypeOrmClientRepository implements ClientRepository {
   constructor(
     @InjectRepository(Client)
     private readonly repository: Repository<Client>,
-  ) { }
+  ) {}
 
   async count(): Promise<number> {
     return this.repository.count();
@@ -31,9 +30,7 @@ export class TypeOrmClientRepository
     });
   }
 
-  async findByClientId(
-    clientId: string,
-  ): Promise<Client | null> {
+  async findByClientId(clientId: string): Promise<Client | null> {
     return this.repository.findOne({
       where: {
         clientId,
@@ -41,9 +38,7 @@ export class TypeOrmClientRepository
     });
   }
 
-  async save(
-    client: Client,
-  ): Promise<Client> {
+  async save(client: Client): Promise<Client> {
     return this.repository.save(client);
   }
 }

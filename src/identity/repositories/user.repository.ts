@@ -5,24 +5,16 @@ export abstract class UserRepository {
 
   abstract findAll(clientId?: string): Promise<User[]>;
 
-  abstract findById(
-    id: string,
-    client_id: any,
-  ): Promise<User | null>;
+  abstract findById(id: string, client_id: any): Promise<User | null>;
 
-  abstract findByIdForOidc(
-    id: string,
-  ): Promise<User | null>;
+  abstract findByIdForOidc(id: string): Promise<User | null>;
 
   abstract findByUsername(
     username: string,
     client_id: any,
   ): Promise<User | null>;
 
-  abstract findByEmail(
-    email: string,
-    client_id: any,
-  ): Promise<User | null>;
+  abstract findByEmail(email: string, client_id: any): Promise<User | null>;
 
   abstract save(user: User): Promise<User>;
 }

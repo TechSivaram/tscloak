@@ -1,0 +1,12 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always"
+    }
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always",
+        "source.organizeImports": "always"
+    }
+}

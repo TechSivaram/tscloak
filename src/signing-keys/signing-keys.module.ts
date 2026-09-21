@@ -16,8 +16,6 @@ import { SigningKeyService } from './services/signing-key/signing-key.service';
     SigningKeyService,
   ],
 
-  exports: [
-    SigningKeyService,
-  ],
+  exports: [SigningKeyService],
 })
 export class SigningKeysModule {}

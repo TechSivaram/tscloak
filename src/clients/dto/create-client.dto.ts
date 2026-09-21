@@ -9,29 +9,22 @@ import {
   MinLength,
 } from 'class-validator';
 
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { InteractionMode } from '../enums/interaction-mode.enum';
 
 export class CreateClientDto {
   @ApiProperty({
     example: 'My Web Application',
-    description:
-      'Display name of the OAuth/OIDC client.',
+    description: 'Display name of the OAuth/OIDC client.',
   })
   @IsString()
   @MinLength(2)
   name: string;
 
   @ApiProperty({
-    example: [
-      'http://localhost:4200/callback',
-    ],
-    description:
-      'Allowed redirect URIs for the OAuth/OIDC client.',
+    example: ['http://localhost:4200/callback'],
+    description: 'Allowed redirect URIs for the OAuth/OIDC client.',
     type: [String],
   })
   @IsArray()
@@ -47,11 +40,8 @@ export class CreateClientDto {
   redirectUris: string[];
 
   @ApiPropertyOptional({
-    example: [
-      'https://app.example.com/logout/callback',
-    ],
-    description:
-      'Allowed redirect URIs after RP-initiated logout.',
+    example: ['https://app.example.com/logout/callback'],
+    description: 'Allowed redirect URIs after RP-initiated logout.',
     type: [String],
   })
   @IsOptional()
@@ -67,36 +57,24 @@ export class CreateClientDto {
   postLogoutRedirectUris: string[];
 
   @ApiProperty({
-    example: [
-      'openid',
-      'profile',
-      'email',
-    ],
-    description:
-      'OAuth/OIDC scopes allowed for the client.',
+    example: ['openid', 'profile', 'email'],
+    description: 'OAuth/OIDC scopes allowed for the client.',
     type: [String],
   })
   @IsArray()
   allowedScopes: string[];
 
   @ApiProperty({
-    example: [
-      'authorization_code',
-      'refresh_token',
-    ],
-    description:
-      'OAuth/OIDC grant types allowed for the client.',
+    example: ['authorization_code', 'refresh_token'],
+    description: 'OAuth/OIDC grant types allowed for the client.',
     type: [String],
   })
   @IsArray()
   grantTypes: string[];
 
   @ApiProperty({
-    example: [
-      'code',
-    ],
-    description:
-      'OAuth/OIDC response types allowed for the client.',
+    example: ['code'],
+    description: 'OAuth/OIDC response types allowed for the client.',
     type: [String],
   })
   @IsArray()
@@ -104,20 +82,11 @@ export class CreateClientDto {
 
   @ApiProperty({
     example: 'none',
-    enum: [
-      'none',
-      'client_secret_basic',
-      'client_secret_post',
-    ],
-    description:
-      'Client authentication method used at the token endpoint.',
+    enum: ['none', 'client_secret_basic', 'client_secret_post'],
+    description: 'Client authentication method used at the token endpoint.',
   })
   @IsString()
-  @IsIn([
-    'none',
-    'client_secret_basic',
-    'client_secret_post',
-  ])
+  @IsIn(['none', 'client_secret_basic', 'client_secret_post'])
   tokenEndpointAuthMethod: string;
 
   @ApiProperty({
@@ -131,8 +100,7 @@ export class CreateClientDto {
   interactionMode: InteractionMode;
 
   @ApiPropertyOptional({
-    example:
-      'https://app.example.com/auth/login',
+    example: 'https://app.example.com/auth/login',
     description:
       'External login page URL. Required when interaction mode is EXTERNAL.',
   })
@@ -143,8 +111,7 @@ export class CreateClientDto {
   interactionLoginUrl?: string;
 
   @ApiPropertyOptional({
-    example:
-      'https://app.example.com/auth/consent',
+    example: 'https://app.example.com/auth/consent',
     description:
       'External consent page URL. Required when interaction mode is EXTERNAL and consent is required.',
   })

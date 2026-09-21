@@ -41,7 +41,6 @@ export class User {
   })
   clientId: string;
 
-
   @ManyToOne(() => Client)
   @JoinColumn({
     name: 'clientId',
@@ -49,7 +48,7 @@ export class User {
   })
   client: Client;
 
-  @ManyToMany(() => Role, role => role.users)
+  @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
   })

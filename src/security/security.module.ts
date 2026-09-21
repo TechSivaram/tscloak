@@ -14,9 +14,7 @@ import { IdentityModule } from 'src/identity/identity.module';
   imports: [
     OidcPersistenceModule,
     forwardRef(() => IdentityModule),
-    TypeOrmModule.forFeature([
-      SecurityPolicy,
-    ]),
+    TypeOrmModule.forFeature([SecurityPolicy]),
   ],
   providers: [
     SecurityPolicyService,
@@ -24,12 +22,7 @@ import { IdentityModule } from 'src/identity/identity.module';
     OidcTokenService,
     RolesGuard,
   ],
-  exports: [
-    SecurityPolicyService,
-    OidcAuthGuard,
-    OidcTokenService,
-    RolesGuard,
-  ],
+  exports: [SecurityPolicyService, OidcAuthGuard, OidcTokenService, RolesGuard],
   controllers: [SecurityPolicyAdminController],
 })
-export class SecurityModule { }
+export class SecurityModule {}

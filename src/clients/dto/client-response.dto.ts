@@ -1,7 +1,4 @@
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ClientResponseDto {
   @ApiProperty({
@@ -23,92 +20,64 @@ export class ClientResponseDto {
   name: string;
 
   @ApiProperty({
-    example: [
-      'http://localhost:4200/callback',
-    ],
-    description:
-      'Allowed redirect URIs for the client.',
+    example: ['http://localhost:4200/callback'],
+    description: 'Allowed redirect URIs for the client.',
     type: [String],
   })
   redirectUris: string[];
 
   @ApiPropertyOptional({
-    example: [
-      'https://app.example.com/logout/callback',
-    ],
-    description:
-      'Allowed redirect URIs after RP-initiated logout.',
+    example: ['https://app.example.com/logout/callback'],
+    description: 'Allowed redirect URIs after RP-initiated logout.',
     type: [String],
   })
   postLogoutRedirectUris: string[];
 
   @ApiProperty({
-    example: [
-      'openid',
-      'profile',
-      'email',
-    ],
-    description:
-      'OAuth/OIDC scopes allowed for the client.',
+    example: ['openid', 'profile', 'email'],
+    description: 'OAuth/OIDC scopes allowed for the client.',
     type: [String],
   })
   allowedScopes: string[];
 
   @ApiProperty({
-    example: [
-      'authorization_code',
-      'refresh_token',
-    ],
-    description:
-      'OAuth/OIDC grant types allowed for the client.',
+    example: ['authorization_code', 'refresh_token'],
+    description: 'OAuth/OIDC grant types allowed for the client.',
     type: [String],
   })
   grantTypes: string[];
 
   @ApiProperty({
-    example: [
-      'code',
-    ],
-    description:
-      'OAuth/OIDC response types allowed for the client.',
+    example: ['code'],
+    description: 'OAuth/OIDC response types allowed for the client.',
     type: [String],
   })
   responseTypes: string[];
 
   @ApiProperty({
     example: 'none',
-    enum: [
-      'none',
-      'client_secret_basic',
-      'client_secret_post',
-    ],
-    description:
-      'Client authentication method used at the token endpoint.',
+    enum: ['none', 'client_secret_basic', 'client_secret_post'],
+    description: 'Client authentication method used at the token endpoint.',
   })
   tokenEndpointAuthMethod: string;
 
   @ApiProperty({
     example: 'HOSTED',
-    enum: [
-      'HOSTED',
-      'EXTERNAL',
-    ],
+    enum: ['HOSTED', 'EXTERNAL'],
     description:
       'Determines where OIDC login and consent interactions are rendered.',
   })
   interactionMode: string;
 
   @ApiPropertyOptional({
-    example:
-      'https://app.example.com/auth/login',
+    example: 'https://app.example.com/auth/login',
     description:
       'External login page URL. Used when interaction mode is EXTERNAL.',
   })
   interactionLoginUrl?: string;
 
   @ApiPropertyOptional({
-    example:
-      'https://app.example.com/auth/consent',
+    example: 'https://app.example.com/auth/consent',
     description:
       'External consent page URL. Used when interaction mode is EXTERNAL.',
   })
@@ -116,8 +85,7 @@ export class ClientResponseDto {
 
   @ApiProperty({
     example: true,
-    description:
-      'Indicates whether the client is enabled.',
+    description: 'Indicates whether the client is enabled.',
   })
   enabled: boolean;
 }

@@ -5,55 +5,55 @@
  * It must NEVER be exposed through an API.
  */
 export interface RsaPrivateJwk {
-    /**
-     * Key type.
-     */
-    kty: 'RSA';
+  /**
+   * Key type.
+   */
+  kty: 'RSA';
 
-    /**
-     * Unique key identifier.
-     */
-    kid: string;
+  /**
+   * Unique key identifier.
+   */
+  kid: string;
 
-    /**
-     * Intended key usage.
-     */
-    use?: 'sig';
+  /**
+   * Intended key usage.
+   */
+  use?: 'sig';
 
-    /**
-     * Signing algorithm.
-     */
-    alg?: 'RS256';
+  /**
+   * Signing algorithm.
+   */
+  alg?: 'RS256';
 
-    /**
-     * RSA public modulus.
-     */
-    n: string;
+  /**
+   * RSA public modulus.
+   */
+  n: string;
 
-    /**
-     * RSA public exponent.
-     */
-    e: string;
+  /**
+   * RSA public exponent.
+   */
+  e: string;
 
-    /**
-     * RSA private exponent.
-     */
-    d: string;
+  /**
+   * RSA private exponent.
+   */
+  d: string;
 
-    /**
-     * RSA private prime factors.
-     */
-    p?: string;
-    q?: string;
+  /**
+   * RSA private prime factors.
+   */
+  p?: string;
+  q?: string;
 
-    /**
-     * RSA CRT parameters.
-     */
-    dp?: string;
-    dq?: string;
-    qi?: string;
+  /**
+   * RSA CRT parameters.
+   */
+  dp?: string;
+  dq?: string;
+  qi?: string;
 
-    [key: string]: unknown;
+  [key: string]: unknown;
 }
 
 /**
@@ -62,7 +62,7 @@ export interface RsaPrivateJwk {
  * Used internally for token signing.
  */
 export interface PrivateJwks {
-    keys: RsaPrivateJwk[];
+  keys: RsaPrivateJwk[];
 }
 
 /**
@@ -71,18 +71,18 @@ export interface PrivateJwks {
  * Safe to expose through the JWKS endpoint.
  */
 export interface RsaPublicJwk {
-    kty: 'RSA';
-    kid: string;
-    use?: 'sig';
-    alg?: 'RS256';
+  kty: 'RSA';
+  kid: string;
+  use?: 'sig';
+  alg?: 'RS256';
 
-    n: string;
-    e: string;
+  n: string;
+  e: string;
 }
 
 /**
  * Public JSON Web Key Set.
  */
 export interface PublicJwks {
-    keys: RsaPublicJwk[];
+  keys: RsaPublicJwk[];
 }

@@ -6,31 +6,23 @@ import { Session } from '../entities/session.entity';
 import { SessionRepository } from './session.repository';
 
 @Injectable()
-export class TypeOrmSessionRepository
-  implements SessionRepository
-{
+export class TypeOrmSessionRepository implements SessionRepository {
   constructor(
     @InjectRepository(Session)
     private readonly repository: Repository<Session>,
   ) {}
 
-  async create(
-    session: Session,
-  ): Promise<Session> {
+  async create(session: Session): Promise<Session> {
     return this.repository.save(session);
   }
 
-  async findById(
-    id: string,
-  ): Promise<Session | null> {
+  async findById(id: string): Promise<Session | null> {
     return this.repository.findOne({
       where: { id },
     });
   }
 
-  async save(
-    session: Session,
-  ): Promise<Session> {
+  async save(session: Session): Promise<Session> {
     return this.repository.save(session);
   }
 }

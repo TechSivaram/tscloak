@@ -1,9 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Role } from '../entities/role.entity';
 
-export async function seedRoles(
-  dataSource: DataSource,
-): Promise<void> {
+export async function seedRoles(dataSource: DataSource): Promise<void> {
   const roleRepository = dataSource.getRepository(Role);
 
   const roles = [
@@ -29,9 +27,7 @@ export async function seedRoles(
     });
 
     if (!existingRole) {
-      await roleRepository.save(
-        roleRepository.create(roleData),
-      );
+      await roleRepository.save(roleRepository.create(roleData));
     }
   }
 }

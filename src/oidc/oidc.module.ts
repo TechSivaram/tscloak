@@ -1,12 +1,8 @@
 import { Module } from '@nestjs/common';
 
-import {
-  ConfigModule,
-} from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 
-import {
-  OidcModule as NestOidcModule,
-} from 'nest-oidc-provider';
+import { OidcModule as NestOidcModule } from 'nest-oidc-provider';
 
 import { OidcInteractionController } from './oidc-interaction/oidc-interaction.controller';
 
@@ -59,12 +55,8 @@ import { ClientRegistrationPolicyModule } from './services/client-registration-p
     }),
   ],
 
-  controllers: [
-    OidcInteractionController,
-  ],
+  controllers: [OidcInteractionController],
 
-  providers: [
-    OidcOptionsService,
-  ],
+  providers: [OidcOptionsService],
 })
-export class OidcModule { }
+export class OidcModule {}

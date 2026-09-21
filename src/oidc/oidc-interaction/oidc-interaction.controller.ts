@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 
 import type { Response } from 'express';
 
@@ -116,42 +109,25 @@ export class OidcInteractionController {
     // fall back to the hosted TSCloak UI.
     // ==========================================================
 
-    if (
-      client?.interactionMode === InteractionMode.EXTERNAL
-    ) {
+    if (client?.interactionMode === InteractionMode.EXTERNAL) {
       let externalInteractionUrl: string | null = null;
 
       if (prompt === 'login') {
-        externalInteractionUrl =
-          client.interactionLoginUrl;
+        externalInteractionUrl = client.interactionLoginUrl;
       } else if (prompt === 'consent') {
-        externalInteractionUrl =
-          client.interactionConsentUrl;
+        externalInteractionUrl = client.interactionConsentUrl;
       }
 
       if (externalInteractionUrl) {
-        const interactionUrl = new URL(
-          externalInteractionUrl,
-        );
+        const interactionUrl = new URL(externalInteractionUrl);
 
-        interactionUrl.searchParams.set(
-          'interaction_uid',
-          uid,
-        );
+        interactionUrl.searchParams.set('interaction_uid', uid);
 
-        interactionUrl.searchParams.set(
-          'prompt',
-          prompt ?? '',
-        );
+        interactionUrl.searchParams.set('prompt', prompt ?? '');
 
-        interactionUrl.searchParams.set(
-          'client_id',
-          clientId,
-        );
+        interactionUrl.searchParams.set('client_id', clientId);
 
-        response.redirect(
-          interactionUrl.toString(),
-        );
+        response.redirect(interactionUrl.toString());
 
         return;
       }
@@ -163,30 +139,15 @@ export class OidcInteractionController {
 
     if (prompt === 'login') {
       const template = await readFile(
-        join(
-          process.cwd(),
-          'src',
-          'oidc',
-          'views',
-          'login.html',
-        ),
+        join(process.cwd(), 'src', 'oidc', 'views', 'login.html'),
         'utf8',
       );
 
       const html = template
-        .replaceAll(
-          '{{UID}}',
-          encodeURIComponent(uid),
-        )
-        .replaceAll(
-          '{{ERROR}}',
-          '',
-        );
+        .replaceAll('{{UID}}', encodeURIComponent(uid))
+        .replaceAll('{{ERROR}}', '');
 
-      response
-        .status(200)
-        .type('html')
-        .send(html);
+      response.status(200).type('html').send(html);
 
       return;
     }
@@ -196,25 +157,14 @@ export class OidcInteractionController {
     // ==========================================================
 
     if (prompt === 'consent') {
-      const accountId =
-        details.session?.accountId;
+      const accountId = details.session?.accountId;
 
-      if (
-        typeof accountId !== 'string' ||
-        !accountId
-      ) {
-        throw new Error(
-          'OIDC consent: accountId is missing',
-        );
+      if (typeof accountId !== 'string' || !accountId) {
+        throw new Error('OIDC consent: accountId is missing');
       }
 
-      if (
-        typeof clientId !== 'string' ||
-        !clientId
-      ) {
-        throw new Error(
-          'OIDC consent: client_id is missing',
-        );
+      if (typeof clientId !== 'string' || !clientId) {
+        throw new Error('OIDC consent: client_id is missing');
       }
 
       // --------------------------------------------------------
@@ -222,38 +172,27 @@ export class OidcInteractionController {
       // --------------------------------------------------------
 
       const requestedScopes =
-        details.params?.scope
-          ?.split(' ')
-          .filter(Boolean) ?? [];
+        details.params?.scope?.split(' ').filter(Boolean) ?? [];
 
       // --------------------------------------------------------
       // MISSING SCOPES
       // --------------------------------------------------------
 
-      const missingOIDCScope =
-        details.prompt?.details
-          ?.missingOIDCScope ?? [];
+      const missingOIDCScope = details.prompt?.details?.missingOIDCScope ?? [];
 
       // --------------------------------------------------------
       // MISSING CLAIMS
       // --------------------------------------------------------
 
       const missingOIDCClaims =
-        details.prompt?.details
-          ?.missingOIDCClaims ?? [];
+        details.prompt?.details?.missingOIDCClaims ?? [];
 
       // --------------------------------------------------------
       // LOAD CONSENT TEMPLATE
       // --------------------------------------------------------
 
       const template = await readFile(
-        join(
-          process.cwd(),
-          'src',
-          'oidc',
-          'views',
-          'consent.html',
-        ),
+        join(process.cwd(), 'src', 'oidc', 'views', 'consent.html'),
         'utf8',
       );
 
@@ -261,114 +200,70 @@ export class OidcInteractionController {
       // BUILD REQUESTED SCOPES HTML
       // --------------------------------------------------------
 
-      const scopesHtml =
-        requestedScopes
-          .map((scope) => {
-            const scopeInfo =
-              this.getScopeDescription(scope);
+      const scopesHtml = requestedScopes
+        .map((scope) => {
+          const scopeInfo = this.getScopeDescription(scope);
 
-            return `
+          return `
               <li class="scope-item">
                 <div class="scope-name">
                   ${this.escapeHtml(scopeInfo.name)}
                 </div>
                 <div class="scope-description">
-                  ${this.escapeHtml(
-                    scopeInfo.description,
-                  )}
+                  ${this.escapeHtml(scopeInfo.description)}
                 </div>
               </li>
             `;
-          })
-          .join('');
+        })
+        .join('');
 
       // --------------------------------------------------------
       // BUILD MISSING SCOPES HTML
       // --------------------------------------------------------
 
-      const missingScopesHtml =
-        Array.isArray(missingOIDCScope)
-          ? missingOIDCScope
-              .map((scope) => {
-                const scopeInfo =
-                  this.getScopeDescription(
-                    String(scope),
-                  );
+      const missingScopesHtml = Array.isArray(missingOIDCScope)
+        ? missingOIDCScope
+            .map((scope) => {
+              const scopeInfo = this.getScopeDescription(String(scope));
 
-                return `
+              return `
                   <li class="scope-item">
                     <div class="scope-name">
-                      ${this.escapeHtml(
-                        scopeInfo.name,
-                      )}
+                      ${this.escapeHtml(scopeInfo.name)}
                     </div>
                     <div class="scope-description">
-                      ${this.escapeHtml(
-                        scopeInfo.description,
-                      )}
+                      ${this.escapeHtml(scopeInfo.description)}
                     </div>
                   </li>
                 `;
-              })
-              .join('')
-          : '';
+            })
+            .join('')
+        : '';
 
       // --------------------------------------------------------
       // BUILD MISSING CLAIMS HTML
       // --------------------------------------------------------
 
-      const missingClaimsHtml =
-        Array.isArray(missingOIDCClaims)
-          ? missingOIDCClaims
-              .map(
-                (claim) =>
-                  `<li>${this.escapeHtml(
-                    String(claim),
-                  )}</li>`,
-              )
-              .join('')
-          : '';
+      const missingClaimsHtml = Array.isArray(missingOIDCClaims)
+        ? missingOIDCClaims
+            .map((claim) => `<li>${this.escapeHtml(String(claim))}</li>`)
+            .join('')
+        : '';
 
       // --------------------------------------------------------
       // RENDER CONSENT PAGE
       // --------------------------------------------------------
 
       const html = template
-        .replaceAll(
-          '{{UID}}',
-          encodeURIComponent(uid),
-        )
-        .replaceAll(
-          '{{clientName}}',
-          this.escapeHtml(
-            client?.name ?? clientId,
-          ),
-        )
-        .replaceAll(
-          '{{CLIENT_ID}}',
-          this.escapeHtml(clientId),
-        )
-        .replaceAll(
-          '{{scopes}}',
-          scopesHtml,
-        )
-        .replaceAll(
-          '{{MISSING_SCOPES}}',
-          missingScopesHtml,
-        )
-        .replaceAll(
-          '{{MISSING_CLAIMS}}',
-          missingClaimsHtml,
-        )
-        .replaceAll(
-          '{{ERROR}}',
-          '',
-        );
+        .replaceAll('{{UID}}', encodeURIComponent(uid))
+        .replaceAll('{{clientName}}', this.escapeHtml(client?.name ?? clientId))
+        .replaceAll('{{CLIENT_ID}}', this.escapeHtml(clientId))
+        .replaceAll('{{scopes}}', scopesHtml)
+        .replaceAll('{{MISSING_SCOPES}}', missingScopesHtml)
+        .replaceAll('{{MISSING_CLAIMS}}', missingClaimsHtml)
+        .replaceAll('{{ERROR}}', '');
 
-      response
-        .status(200)
-        .type('html')
-        .send(html);
+      response.status(200).type('html').send(html);
 
       return;
     }
@@ -377,9 +272,7 @@ export class OidcInteractionController {
     // UNSUPPORTED INTERACTION
     // ==========================================================
 
-    throw new Error(
-      `Unsupported OIDC interaction prompt: ${prompt}`,
-    );
+    throw new Error(`Unsupported OIDC interaction prompt: ${prompt}`);
   }
 
   // ============================================================
@@ -414,26 +307,20 @@ export class OidcInteractionController {
           description: 'User password.',
         },
       },
-      required: [
-        'username',
-        'password',
-      ],
+      required: ['username', 'password'],
     },
   })
   @ApiResponse({
     status: 200,
-    description:
-      'OIDC login interaction completed.',
+    description: 'OIDC login interaction completed.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'The endpoint is not handling a login interaction.',
+    description: 'The endpoint is not handling a login interaction.',
   })
   @ApiResponse({
     status: 401,
-    description:
-      'Authentication failed.',
+    description: 'Authentication failed.',
   })
   async login(
     @Param('uid') uid: string,
@@ -446,27 +333,21 @@ export class OidcInteractionController {
     @Res() response: Response,
   ): Promise<void> {
     try {
-      const details =
-        await interaction.details();
+      const details = await interaction.details();
 
-      if (
-        details.prompt?.name !== 'login'
-      ) {
+      if (details.prompt?.name !== 'login') {
         response
           .status(400)
-          .send(
-            'This endpoint is not handling a login interaction.',
-          );
+          .send('This endpoint is not handling a login interaction.');
 
         return;
       }
 
-      const user =
-        await this.authenticationService.authenticate(
-          dto.username,
-          dto.password,
-          details.params.client_id,
-        );
+      const user = await this.authenticationService.authenticate(
+        dto.username,
+        dto.password,
+        details.params.client_id,
+      );
 
       await interaction.finished({
         login: {
@@ -474,42 +355,23 @@ export class OidcInteractionController {
 
           remember: true,
 
-          ts: Math.floor(
-            Date.now() / 1000,
-          ),
+          ts: Math.floor(Date.now() / 1000),
         },
       });
     } catch (error) {
       const template = await readFile(
-        join(
-          process.cwd(),
-          'src',
-          'oidc',
-          'views',
-          'login.html',
-        ),
+        join(process.cwd(), 'src', 'oidc', 'views', 'login.html'),
         'utf8',
       );
 
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Authentication failed';
+        error instanceof Error ? error.message : 'Authentication failed';
 
       const html = template
-        .replaceAll(
-          '{{UID}}',
-          encodeURIComponent(uid),
-        )
-        .replaceAll(
-          '{{ERROR}}',
-          this.escapeHtml(message),
-        );
+        .replaceAll('{{UID}}', encodeURIComponent(uid))
+        .replaceAll('{{ERROR}}', this.escapeHtml(message));
 
-      response
-        .status(401)
-        .type('html')
-        .send(html);
+      response.status(401).type('html').send(html);
     }
   }
 
@@ -535,29 +397,21 @@ export class OidcInteractionController {
       properties: {
         decision: {
           type: 'string',
-          enum: [
-            'accept',
-            'reject',
-          ],
+          enum: ['accept', 'reject'],
           example: 'accept',
-          description:
-            'User consent decision.',
+          description: 'User consent decision.',
         },
       },
-      required: [
-        'decision',
-      ],
+      required: ['decision'],
     },
   })
   @ApiResponse({
     status: 200,
-    description:
-      'OIDC consent interaction completed.',
+    description: 'OIDC consent interaction completed.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid consent interaction or decision.',
+    description: 'Invalid consent interaction or decision.',
   })
   async consent(
     @Param('uid') uid: string,
@@ -569,21 +423,16 @@ export class OidcInteractionController {
 
     @Res() response: Response,
   ): Promise<void> {
-    const details =
-      await interaction.details();
+    const details = await interaction.details();
 
     // ==========================================================
     // VALIDATE INTERACTION
     // ==========================================================
 
-    if (
-      details.prompt?.name !== 'consent'
-    ) {
+    if (details.prompt?.name !== 'consent') {
       response
         .status(400)
-        .send(
-          'This endpoint is not handling a consent interaction.',
-        );
+        .send('This endpoint is not handling a consent interaction.');
 
       return;
     }
@@ -595,8 +444,7 @@ export class OidcInteractionController {
     if (dto.decision === 'reject') {
       await interaction.finished({
         error: 'access_denied',
-        error_description:
-          'User denied the consent request.',
+        error_description: 'User denied the consent request.',
       });
 
       return;
@@ -606,40 +454,22 @@ export class OidcInteractionController {
     // VALIDATE DECISION
     // ==========================================================
 
-    if (
-      dto.decision !== 'accept'
-    ) {
-      response
-        .status(400)
-        .send(
-          'Invalid consent decision.',
-        );
+    if (dto.decision !== 'accept') {
+      response.status(400).send('Invalid consent decision.');
 
       return;
     }
 
-    const accountId =
-      details.session?.accountId;
+    const accountId = details.session?.accountId;
 
-    const clientId =
-      details.params?.client_id;
+    const clientId = details.params?.client_id;
 
-    if (
-      typeof accountId !== 'string' ||
-      !accountId
-    ) {
-      throw new Error(
-        'OIDC consent: accountId is missing',
-      );
+    if (typeof accountId !== 'string' || !accountId) {
+      throw new Error('OIDC consent: accountId is missing');
     }
 
-    if (
-      typeof clientId !== 'string' ||
-      !clientId
-    ) {
-      throw new Error(
-        'OIDC consent: client_id is missing',
-      );
+    if (typeof clientId !== 'string' || !clientId) {
+      throw new Error('OIDC consent: client_id is missing');
     }
 
     // ==========================================================
@@ -649,60 +479,41 @@ export class OidcInteractionController {
     let grant;
 
     if (details.grantId) {
-      grant =
-        await this.oidcService.provider.Grant.find(
-          details.grantId,
-        );
+      grant = await this.oidcService.provider.Grant.find(details.grantId);
     }
 
     if (!grant) {
-      grant =
-        new this.oidcService.provider.Grant({
-          accountId,
-          clientId,
-        });
+      grant = new this.oidcService.provider.Grant({
+        accountId,
+        clientId,
+      });
     }
 
     // ==========================================================
     // ADD MISSING OIDC SCOPES
     // ==========================================================
 
-    const missingOIDCScope =
-      details.prompt?.details
-        ?.missingOIDCScope ?? [];
+    const missingOIDCScope = details.prompt?.details?.missingOIDCScope ?? [];
 
-    if (
-      Array.isArray(missingOIDCScope) &&
-      missingOIDCScope.length > 0
-    ) {
-      grant.addOIDCScope(
-        missingOIDCScope.join(' '),
-      );
+    if (Array.isArray(missingOIDCScope) && missingOIDCScope.length > 0) {
+      grant.addOIDCScope(missingOIDCScope.join(' '));
     }
 
     // ==========================================================
     // ADD MISSING OIDC CLAIMS
     // ==========================================================
 
-    const missingOIDCClaims =
-      details.prompt?.details
-        ?.missingOIDCClaims ?? [];
+    const missingOIDCClaims = details.prompt?.details?.missingOIDCClaims ?? [];
 
-    if (
-      Array.isArray(missingOIDCClaims) &&
-      missingOIDCClaims.length > 0
-    ) {
-      grant.addOIDCClaims(
-        missingOIDCClaims,
-      );
+    if (Array.isArray(missingOIDCClaims) && missingOIDCClaims.length > 0) {
+      grant.addOIDCClaims(missingOIDCClaims);
     }
 
     // ==========================================================
     // SAVE GRANT
     // ==========================================================
 
-    const grantId =
-      await grant.save();
+    const grantId = await grant.save();
 
     // ==========================================================
     // COMPLETE INTERACTION
@@ -719,17 +530,11 @@ export class OidcInteractionController {
   // SCOPE METADATA
   // ============================================================
 
-  private getScopeDescription(
-    scope: string,
-  ): ScopeInfo {
-    const scopes: Record<
-      string,
-      ScopeInfo
-    > = {
+  private getScopeDescription(scope: string): ScopeInfo {
+    const scopes: Record<string, ScopeInfo> = {
       openid: {
         name: 'OpenID',
-        description:
-          'Authenticate you and verify your identity.',
+        description: 'Authenticate you and verify your identity.',
       },
 
       profile: {
@@ -740,14 +545,12 @@ export class OidcInteractionController {
 
       email: {
         name: 'Email',
-        description:
-          'Access your email address and email verification status.',
+        description: 'Access your email address and email verification status.',
       },
 
       roles: {
         name: 'Roles',
-        description:
-          'Access your assigned roles and permissions.',
+        description: 'Access your assigned roles and permissions.',
       },
 
       offline_access: {
@@ -760,8 +563,7 @@ export class OidcInteractionController {
     return (
       scopes[scope] ?? {
         name: scope,
-        description:
-          `Access permission for ${scope}.`,
+        description: `Access permission for ${scope}.`,
       }
     );
   }
@@ -770,29 +572,12 @@ export class OidcInteractionController {
   // HTML ESCAPING
   // ============================================================
 
-  private escapeHtml(
-    value: string,
-  ): string {
+  private escapeHtml(value: string): string {
     return value
-      .replaceAll(
-        '&',
-        '&amp;',
-      )
-      .replaceAll(
-        '<',
-        '&lt;',
-      )
-      .replaceAll(
-        '>',
-        '&gt;',
-      )
-      .replaceAll(
-        '"',
-        '&quot;',
-      )
-      .replaceAll(
-        "'",
-        '&#039;',
-      );
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
   }
 }

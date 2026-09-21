@@ -6,12 +6,8 @@ export abstract class ClientRepository {
   abstract findAll(): Promise<Client[]>;
 
   abstract deleteByClientId(clientId: string): Promise<void>;
-  
-  abstract findByClientId(
-    clientId: string,
-  ): Promise<Client | null>;
 
-  abstract save(
-    client: Client,
-  ): Promise<Client>;
+  abstract findByClientId(clientId: string): Promise<Client | null>;
+
+  abstract save(client: Client): Promise<Client>;
 }

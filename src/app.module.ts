@@ -13,16 +13,13 @@ import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
-
     ScheduleModule.forRoot(),
 
     ConfigModule.forRoot({
       isGlobal: true,
     }),
 
-    TypeOrmModule.forRoot(
-      getDatabaseConfig(),
-    ),
+    TypeOrmModule.forRoot(getDatabaseConfig()),
 
     ApiModule,
 
@@ -30,9 +27,9 @@ import { AdminModule } from './admin/admin.module';
 
     SigningKeysModule,
 
-    AdminModule,    
+    AdminModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
 
-console.log('hi'+join(process.cwd(), 'public'));
+console.log('hi' + join(process.cwd(), 'public'));

@@ -8,9 +8,7 @@ import { SessionRepository } from './repositories/session.repository';
 import { TypeOrmSessionRepository } from './repositories/typeorm-session.repository';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Session]),
-  ],
+  imports: [TypeOrmModule.forFeature([Session])],
 
   providers: [
     SessionsService,
@@ -21,8 +19,6 @@ import { TypeOrmSessionRepository } from './repositories/typeorm-session.reposit
     },
   ],
 
-  exports: [
-    SessionsService,
-  ],
+  exports: [SessionsService],
 })
 export class SessionsModule {}

@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import {  
+import {
   ApiOperation,
   ApiBearerAuth,
   ApiParam,
@@ -20,17 +20,12 @@ import { Roles } from 'src/security/decorators/roles.decorator';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
 import { RolesGuard } from 'src/security/guards/roles.guard';
 
-
 @ApiTags('Initial Access Tokens')
 @Controller('admin/initial-access-tokens')
-@UseGuards(
-  OidcAuthGuard,
-  RolesGuard,
-)
+@UseGuards(OidcAuthGuard, RolesGuard)
 export class InitialAccessTokenController {
   constructor(
-    private readonly initialAccessTokenService:
-      InitialAccessTokenService,
+    private readonly initialAccessTokenService: InitialAccessTokenService,
   ) {}
 
   @Post()
@@ -42,18 +37,15 @@ export class InitialAccessTokenController {
   })
   @ApiResponse({
     status: 201,
-    description:
-      'Initial access token created successfully.',
+    description: 'Initial access token created successfully.',
   })
   @ApiResponse({
     status: 401,
-    description:
-      'Missing or invalid access token.',
+    description: 'Missing or invalid access token.',
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Authenticated user does not have the permission.',
+    description: 'Authenticated user does not have the permission.',
   })
   async create() {
     return this.initialAccessTokenService.create();
@@ -74,15 +66,12 @@ export class InitialAccessTokenController {
   })
   @ApiParam({
     name: 'id',
-    description:
-      'Identifier of the initial access token to revoke.',
-    example:
-      '8f7c2a31-5b64-4d91-9e3a-1c6f8b2d4a10',
+    description: 'Identifier of the initial access token to revoke.',
+    example: '8f7c2a31-5b64-4d91-9e3a-1c6f8b2d4a10',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Initial access token revoked successfully.',
+    description: 'Initial access token revoked successfully.',
     schema: {
       example: {
         success: true,
@@ -91,25 +80,18 @@ export class InitialAccessTokenController {
   })
   @ApiResponse({
     status: 401,
-    description:
-      'Missing or invalid access token.',
+    description: 'Missing or invalid access token.',
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Authenticated user does not have the permission.',
+    description: 'Authenticated user does not have the permission.',
   })
   @ApiResponse({
     status: 404,
-    description:
-      'Initial access token was not found.',
+    description: 'Initial access token was not found.',
   })
-  async revoke(
-    @Param('id') id: string,
-  ) {
-    await this.initialAccessTokenService.revoke(
-      id,
-    );
+  async revoke(@Param('id') id: string) {
+    await this.initialAccessTokenService.revoke(id);
 
     return {
       success: true,

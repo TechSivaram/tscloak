@@ -6,9 +6,7 @@ import { Role } from '../entities/role.entity';
 import { RoleRepository } from './role.repository';
 
 @Injectable()
-export class TypeOrmRoleRepository
-  implements RoleRepository
-{
+export class TypeOrmRoleRepository implements RoleRepository {
   constructor(
     @InjectRepository(Role)
     private readonly repository: Repository<Role>,
@@ -18,9 +16,7 @@ export class TypeOrmRoleRepository
     return this.repository.count();
   }
 
-  async findByName(
-    name: string,
-  ): Promise<Role | null> {
+  async findByName(name: string): Promise<Role | null> {
     return this.repository.findOne({
       where: { name },
     });
@@ -32,9 +28,7 @@ export class TypeOrmRoleRepository
     });
   }
 
-  async save(
-    role: Role,
-  ): Promise<Role> {
+  async save(role: Role): Promise<Role> {
     return this.repository.save(role);
   }
 

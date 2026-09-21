@@ -1,106 +1,82 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import {
-    DeepPartial,
-    LessThanOrEqual,
-    Repository,
-} from 'typeorm';
+import { DeepPartial, LessThanOrEqual, Repository } from 'typeorm';
 
 import { Oidc } from '../entities/oidc.entity';
 import { OidcRepository } from './oidc.repository';
 
 @Injectable()
-export class TypeOrmOidcRepository
-    implements OidcRepository {
-    constructor(
-        @InjectRepository(Oidc)
-        private readonly repository: Repository<Oidc>,
-    ) { }
+export class TypeOrmOidcRepository implements OidcRepository {
+  constructor(
+    @InjectRepository(Oidc)
+    private readonly repository: Repository<Oidc>,
+  ) {}
 
-    async countByModel(model: string): Promise<number> {
-        return this.repository.count({
-            where: { model },
-        });
-    }
+  async countByModel(model: string): Promise<number> {
+    return this.repository.count({
+      where: { model },
+    });
+  }
 
-    async findAllByModel(model: string): Promise<Oidc[]> {
-        return this.repository.find({
-            where: { model },
-            order: { createdAt: 'DESC' },
-        });
-    }
+  async findAllByModel(model: string): Promise<Oidc[]> {
+    return this.repository.find({
+      where: { model },
+      order: { createdAt: 'DESC' },
+    });
+  }
 
-    async find(
-        model: string,
-        id: string,
-    ): Promise<Oidc | null> {
-        return this.repository.findOne({
-            where: {
-                model,
-                id,
-            },
-        });
-    }
+  async find(model: string, id: string): Promise<Oidc | null> {
+    return this.repository.findOne({
+      where: {
+        model,
+        id,
+      },
+    });
+  }
 
-    async findByUid(
-        model: string,
-        uid: string,
-    ): Promise<Oidc | null> {
-        return this.repository.findOne({
-            where: {
-                model,
-                uid,
-            },
-        });
-    }
+  async findByUid(model: string, uid: string): Promise<Oidc | null> {
+    return this.repository.findOne({
+      where: {
+        model,
+        uid,
+      },
+    });
+  }
 
-    async findByUserCode(
-        model: string,
-        userCode: string,
-    ): Promise<Oidc | null> {
-        return this.repository.findOne({
-            where: {
-                model,
-                userCode,
-            },
-        });
-    }
+  async findByUserCode(model: string, userCode: string): Promise<Oidc | null> {
+    return this.repository.findOne({
+      where: {
+        model,
+        userCode,
+      },
+    });
+  }
 
-    async save(
-        oidc: DeepPartial<Oidc>,
-    ): Promise<Oidc> {
-        return this.repository.save(oidc);
-    }
+  async save(oidc: DeepPartial<Oidc>): Promise<Oidc> {
+    return this.repository.save(oidc);
+  }
 
-    async delete(
-        model: string,
-        id: string,
-    ): Promise<void> {
-        await this.repository.delete({
-            model,
-            id,
-        });
-    }
+  async delete(model: string, id: string): Promise<void> {
+    await this.repository.delete({
+      model,
+      id,
+    });
+  }
 
-    async findByGrantId(
-        grantId: string,
-    ): Promise<Oidc[]> {
-        return this.repository.find({
-            where: {
-                grantId,
-            },
-        });
-    }
+  async findByGrantId(grantId: string): Promise<Oidc[]> {
+    return this.repository.find({
+      where: {
+        grantId,
+      },
+    });
+  }
 
-    async deleteExpired(
-        now: Date,
-    ): Promise<number> {
-        const result =
-            await this.repository.delete({
-                expiresAt: LessThanOrEqual(now),
-            });
+  async deleteExpired(now: Date): Promise<number> {
+    const result = await this.repository.delete({
+      expiresAt: LessThanOrEqual(now),
+    });
 
-        return result.affected ?? 0;
-    }
+    return result.affected ?? 0;
+  }
 }

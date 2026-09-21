@@ -15,19 +15,14 @@ export class AdminDashboardService {
   ) {}
 
   async getDashboard() {
-    const [
-      clients,
-      users,
-      initialAccessTokens,
-      roles,
-      securityPolicy,
-    ] = await Promise.all([
-      this.clients.count(),
-      this.identity.countUsers(),
-      this.initialAccessTokens.count(),
-      this.identity.countRoles(),
-      this.securityPolicy.getPolicy(),
-    ]);
+    const [clients, users, initialAccessTokens, roles, securityPolicy] =
+      await Promise.all([
+        this.clients.count(),
+        this.identity.countUsers(),
+        this.initialAccessTokens.count(),
+        this.identity.countRoles(),
+        this.securityPolicy.getPolicy(),
+      ]);
 
     return {
       clients,
@@ -39,9 +34,7 @@ export class AdminDashboardService {
         oidcProvider: 'Operational',
         database: 'Connected',
         registration: 'Operational',
-        securityPolicy: securityPolicy
-          ? 'Active'
-          : 'Unavailable',
+        securityPolicy: securityPolicy ? 'Active' : 'Unavailable',
       },
     };
   }

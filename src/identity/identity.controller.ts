@@ -30,23 +30,17 @@ import { RolesGuard } from 'src/security/guards/roles.guard';
 import { Roles } from 'src/security/decorators/roles.decorator';
 import type { AuthenticatedRequest } from 'src/security/types/authenticated-request';
 
-@UseGuards(
-  OidcAuthGuard,
-  RolesGuard,
-)
+@UseGuards(OidcAuthGuard, RolesGuard)
 @ApiTags('Users')
 @Controller('users')
 export class IdentityController {
-  constructor(
-    private readonly identityService: IdentityService,
-  ) { }
+  constructor(private readonly identityService: IdentityService) {}
 
   @Post()
   @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({
     summary: 'Create a user',
-    description:
-      'Creates a new user and associates the user with a client.',
+    description: 'Creates a new user and associates the user with a client.',
   })
   @ApiResponse({
     status: 201,
@@ -65,11 +59,7 @@ export class IdentityController {
     @Req() request: AuthenticatedRequest,
     @Body() dto: CreateUserDto,
   ): Promise<UserResponseDto> {
-
-    dto.clientId = await this.resolveTargetClientId(
-      request,
-      dto.clientId,
-    );
+    dto.clientId = await this.resolveTargetClientId(request, dto.clientId);
     const user = request.user.roles.includes('IDP_CLIENT_ADMIN')
       ? await this.identityService.createClientUser(dto)
       : await this.identityService.createUser(dto);
@@ -80,25 +70,28 @@ export class IdentityController {
   @Get()
   @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'List users for the permitted client scope' })
-  @ApiResponse({ status: 200, description: 'Users returned.', type: [UserResponseDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Users returned.',
+    type: [UserResponseDto],
+  })
   async findUsers(
     @Req() request: AuthenticatedRequest,
     @Query('client_id') clientId?: string,
   ): Promise<UserResponseDto[]> {
-    const targetClientId = await this.resolveTargetClientId(
-      request,
-      clientId,
-    );
-    const users = await this.identityService.findUsers(
-      targetClientId,
-    );
+    const targetClientId = await this.resolveTargetClientId(request, clientId);
+    const users = await this.identityService.findUsers(targetClientId);
     return users.map(UserMapper.toResponse);
   }
 
   @Put(':id')
   @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'Update a user' })
-  @ApiResponse({ status: 200, description: 'User updated.', type: UserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated.',
+    type: UserResponseDto,
+  })
   async updateUser(
     @Param('id') userId: string,
     @Req() request: AuthenticatedRequest,
@@ -126,33 +119,26 @@ export class IdentityController {
   @Roles('IDP_ADMIN')
   @ApiOperation({ summary: 'Create a role' })
   @ApiResponse({ status: 201, description: 'Role created.' })
-  async createRole(
-    @Body() body: { name: string; description?: string },
-  ) {
-    return this.identityService.createRole(
-      body.name,
-      body.description,
-    );
+  async createRole(@Body() body: { name: string; description?: string }) {
+    return this.identityService.createRole(body.name, body.description);
   }
 
   @Put('roles/:id')
   @Roles('IDP_ADMIN')
   @ApiOperation({ summary: 'Update a role description' })
   @ApiResponse({ status: 200, description: 'Role updated.' })
-  async updateRole(
-    @Param('id') roleId: string,
-    @Body() dto: UpdateRoleDto,
-  ) {
-    return this.identityService.updateRole(
-      roleId,
-      dto.description,
-    );
+  async updateRole(@Param('id') roleId: string, @Body() dto: UpdateRoleDto) {
+    return this.identityService.updateRole(roleId, dto.description);
   }
 
   @Put(':id/roles')
   @Roles('IDP_ADMIN', 'IDP_CLIENT_ADMIN')
   @ApiOperation({ summary: 'Assign roles to a user' })
-  @ApiResponse({ status: 200, description: 'User roles updated.', type: UserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User roles updated.',
+    type: UserResponseDto,
+  })
   async assignRoles(
     @Param('id') userId: string,
     @Req() request: AuthenticatedRequest,
@@ -182,7 +168,7 @@ export class IdentityController {
       authenticatedClientId,
     );
     const isIdpAdmin = authenticatedUser?.roles?.some(
-      role => role.name === 'IDP_ADMIN',
+      (role) => role.name === 'IDP_ADMIN',
     );
 
     if (isIdpAdmin && requestedClientId) {

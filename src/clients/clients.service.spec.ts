@@ -16,7 +16,7 @@ describe('ClientsService', () => {
       count: jest.fn().mockResolvedValue(0),
       findByClientId: jest.fn().mockResolvedValue(null),
       deleteByClientId: jest.fn(),
-      save: jest.fn().mockImplementation(async client => ({
+      save: jest.fn().mockImplementation(async (client) => ({
         ...client,
         id: 'client-id',
       })),
@@ -46,9 +46,7 @@ describe('ClientsService', () => {
 
     await service.createClient({
       name: 'Example Client',
-      redirectUris: [
-        'https://client.example.com/callback',
-      ],
+      redirectUris: ['https://client.example.com/callback'],
       postLogoutRedirectUris,
       allowedScopes: ['openid'],
       grantTypes: ['authorization_code'],
@@ -66,9 +64,7 @@ describe('ClientsService', () => {
   it('defaults post-logout redirect URIs to an empty list', async () => {
     await service.createClient({
       name: 'Example Client',
-      redirectUris: [
-        'https://client.example.com/callback',
-      ],
+      redirectUris: ['https://client.example.com/callback'],
       allowedScopes: ['openid'],
       grantTypes: ['authorization_code'],
       responseTypes: ['code'],

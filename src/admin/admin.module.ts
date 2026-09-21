@@ -9,20 +9,10 @@ import { AdminClientConfigController } from './controllers/admin-client-config/a
 import { AdminDashboardService } from './services/admin-dashboard/admin-dashboard.service';
 
 @Module({
-  imports: [
-    ClientsModule,
-    IdentityModule,
-    RegistrationModule,
-    SecurityModule,
-  ],
+  imports: [ClientsModule, IdentityModule, RegistrationModule, SecurityModule],
 
-  controllers: [
-    AdminDashboardController,
-    AdminClientConfigController,
-  ],
+  controllers: [AdminDashboardController, AdminClientConfigController],
 
-  providers: [
-    AdminDashboardService,
-  ],
+  providers: [AdminDashboardService],
 })
 export class AdminModule {}

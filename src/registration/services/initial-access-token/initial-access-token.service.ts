@@ -13,14 +13,13 @@ export class InitialAccessTokenService {
   async create() {
     const provider = this.oidcService.provider;
 
-    const initialAccessToken =
-      new provider.InitialAccessToken({
-        policies: [
-          'allowed-grant-types',
-          'allowed-response-types',
-          'allowed-scopes',
-        ],
-      });
+    const initialAccessToken = new provider.InitialAccessToken({
+      policies: [
+        'allowed-grant-types',
+        'allowed-response-types',
+        'allowed-scopes',
+      ],
+    });
 
     const token = await initialAccessToken.save();
 
@@ -30,17 +29,14 @@ export class InitialAccessTokenService {
   }
 
   async count(): Promise<number> {
-    return this.oidcRepository.countByModel(
-      'InitialAccessToken',
-    );
+    return this.oidcRepository.countByModel('InitialAccessToken');
   }
 
   async findAll() {
-    const records = await this.oidcRepository.findAllByModel(
-      'InitialAccessToken',
-    );
+    const records =
+      await this.oidcRepository.findAllByModel('InitialAccessToken');
 
-    return records.map(record => ({
+    return records.map((record) => ({
       id: record.id,
       policies: Array.isArray(record.payload.policies)
         ? record.payload.policies
@@ -54,8 +50,7 @@ export class InitialAccessTokenService {
   async revoke(id: string): Promise<void> {
     const provider = this.oidcService.provider;
 
-    const initialAccessToken =
-      await provider.InitialAccessToken.find(id);
+    const initialAccessToken = await provider.InitialAccessToken.find(id);
 
     if (initialAccessToken) {
       await initialAccessToken.destroy();

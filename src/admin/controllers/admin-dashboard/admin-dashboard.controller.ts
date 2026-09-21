@@ -1,10 +1,6 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AdminDashboardService } from '../../services/admin-dashboard/admin-dashboard.service';
 
@@ -14,14 +10,9 @@ import { Roles } from 'src/security/decorators/roles.decorator';
 
 @ApiTags('Admin Dashboard')
 @Controller('admin/dashboard')
-@UseGuards(
-  OidcAuthGuard,
-  RolesGuard,
-)
+@UseGuards(OidcAuthGuard, RolesGuard)
 export class AdminDashboardController {
-  constructor(
-    private readonly adminDashboardService: AdminDashboardService,
-  ) {}
+  constructor(private readonly adminDashboardService: AdminDashboardService) {}
 
   @Get()
   @Roles('IDP_ADMIN')

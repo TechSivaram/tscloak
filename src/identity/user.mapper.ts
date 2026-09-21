@@ -9,7 +9,7 @@ export class UserMapper {
       email: user.email,
       enabled: user.enabled,
       createdAt: user.createdAt,
-      roles: user.roles?.map(role => role.name) ?? [],
+      roles: user.roles?.map((role) => role.name) ?? [],
     };
   }
 }

@@ -5,9 +5,7 @@ import { SessionRepository } from './repositories/session.repository';
 
 @Injectable()
 export class SessionsService {
-  constructor(
-    private readonly sessions: SessionRepository,
-  ) {}
+  constructor(private readonly sessions: SessionRepository) {}
 
   async createSession(
     userId: string,
@@ -15,10 +13,7 @@ export class SessionsService {
   ): Promise<Session> {
     const now = new Date();
 
-    const expiresAt = new Date(
-      now.getTime() +
-        lifetimeSeconds * 1000,
-    );
+    const expiresAt = new Date(now.getTime() + lifetimeSeconds * 1000);
 
     const session = new Session();
 
@@ -35,11 +30,8 @@ export class SessionsService {
     return this.sessions.create(session);
   }
 
-  async getValidSession(
-    sessionId: string,
-  ): Promise<Session | null> {
-    const session =
-      await this.sessions.findById(sessionId);
+  async getValidSession(sessionId: string): Promise<Session | null> {
+    const session = await this.sessions.findById(sessionId);
 
     if (!session) {
       return null;
@@ -49,10 +41,7 @@ export class SessionsService {
       return null;
     }
 
-    if (
-      session.expiresAt.getTime() <=
-      Date.now()
-    ) {
+    if (session.expiresAt.getTime() <= Date.now()) {
       return null;
     }
 
@@ -63,11 +52,8 @@ export class SessionsService {
     return session;
   }
 
-  async revokeSession(
-    sessionId: string,
-  ): Promise<void> {
-    const session =
-      await this.sessions.findById(sessionId);
+  async revokeSession(sessionId: string): Promise<void> {
+    const session = await this.sessions.findById(sessionId);
 
     if (!session) {
       return;

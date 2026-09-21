@@ -9,10 +9,7 @@ export class ClientRegistrationPolicyService {
         _ctx: unknown,
         properties: Record<string, unknown>,
       ) => {
-        const allowed = [
-          'authorization_code',
-          'refresh_token',
-        ];
+        const allowed = ['authorization_code', 'refresh_token'];
 
         const grantTypes = properties.grant_types;
 
@@ -23,9 +20,7 @@ export class ClientRegistrationPolicyService {
         }
 
         const invalid = grantTypes.filter(
-          (value) =>
-            typeof value !== 'string' ||
-            !allowed.includes(value),
+          (value) => typeof value !== 'string' || !allowed.includes(value),
         );
 
         if (invalid.length > 0) {
@@ -41,8 +36,7 @@ export class ClientRegistrationPolicyService {
       ) => {
         const allowed = ['code'];
 
-        const responseTypes =
-          properties.response_types;
+        const responseTypes = properties.response_types;
 
         if (!Array.isArray(responseTypes)) {
           throw new errors.InvalidClientMetadata(
@@ -51,9 +45,7 @@ export class ClientRegistrationPolicyService {
         }
 
         const invalid = responseTypes.filter(
-          (value) =>
-            typeof value !== 'string' ||
-            !allowed.includes(value),
+          (value) => typeof value !== 'string' || !allowed.includes(value),
         );
 
         if (invalid.length > 0) {
@@ -67,28 +59,17 @@ export class ClientRegistrationPolicyService {
         _ctx: unknown,
         properties: Record<string, unknown>,
       ) => {
-        const allowed = [
-          'openid',
-          'profile',
-          'email',
-          'offline_access',
-        ];
+        const allowed = ['openid', 'profile', 'email', 'offline_access'];
 
         const scope = properties.scope;
 
         if (typeof scope !== 'string') {
-          throw new errors.InvalidClientMetadata(
-            'scope must be a string',
-          );
+          throw new errors.InvalidClientMetadata('scope must be a string');
         }
 
-        const requested = scope
-          .split(' ')
-          .filter(Boolean);
+        const requested = scope.split(' ').filter(Boolean);
 
-        const invalid = requested.filter(
-          (value) => !allowed.includes(value),
-        );
+        const invalid = requested.filter((value) => !allowed.includes(value));
 
         if (invalid.length > 0) {
           throw new errors.InvalidClientMetadata(

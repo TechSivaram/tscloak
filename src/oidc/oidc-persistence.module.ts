@@ -7,11 +7,7 @@ import { TypeOrmOidcRepository } from './repositories/typeorm-oidc.repository';
 import { OidcCleanupService } from './oidc-cleanup.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Oidc,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([Oidc])],
 
   providers: [
     {
@@ -22,8 +18,6 @@ import { OidcCleanupService } from './oidc-cleanup.service';
     OidcCleanupService,
   ],
 
-  exports: [
-    OidcRepository,
-  ],
+  exports: [OidcRepository],
 })
-export class OidcPersistenceModule { }
+export class OidcPersistenceModule {}

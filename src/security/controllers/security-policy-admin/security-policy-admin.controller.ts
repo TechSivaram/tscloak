@@ -1,10 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 
 import {
   ApiBearerAuth,
@@ -25,9 +19,7 @@ import { Roles } from 'src/security/decorators/roles.decorator';
 @ApiTags('Security Policy')
 @Controller('admin/security-policy')
 export class SecurityPolicyAdminController {
-  constructor(
-    private readonly securityPolicyService: SecurityPolicyService,
-  ) {}
+  constructor(private readonly securityPolicyService: SecurityPolicyService) {}
 
   /**
    * Get the current server-level security policy.
@@ -43,8 +35,7 @@ export class SecurityPolicyAdminController {
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Current server-level security policy.',
+    description: 'Current server-level security policy.',
   })
   async getPolicy() {
     return this.securityPolicyService.getPolicy();
@@ -70,30 +61,24 @@ export class SecurityPolicyAdminController {
   })
   @ApiResponse({
     status: 200,
-    description:
-      'Security policy updated successfully.',
+    description: 'Security policy updated successfully.',
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid security policy values.',
+    description: 'Invalid security policy values.',
   })
   @ApiResponse({
     status: 401,
-    description:
-      'Missing or invalid access token.',
+    description: 'Missing or invalid access token.',
   })
   @ApiResponse({
     status: 403,
-    description:
-      'Authenticated user does not have the IDP_ADMIN role.',
+    description: 'Authenticated user does not have the IDP_ADMIN role.',
   })
   async updatePolicy(
     @Body()
     updateSecurityPolicyDto: UpdateSecurityPolicyDto,
   ) {
-    return this.securityPolicyService.updatePolicy(
-      updateSecurityPolicyDto,
-    );
+    return this.securityPolicyService.updatePolicy(updateSecurityPolicyDto);
   }
 }

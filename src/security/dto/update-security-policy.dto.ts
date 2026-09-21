@@ -1,14 +1,6 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, Max, Min } from 'class-validator';
 
-import {
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateSecurityPolicyDto {
   // =========================
@@ -17,8 +9,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 900,
-    description:
-      'Access token lifetime in seconds.',
+    description: 'Access token lifetime in seconds.',
     minimum: 60,
     maximum: 3600,
   })
@@ -30,8 +21,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 900,
-    description:
-      'ID token lifetime in seconds.',
+    description: 'ID token lifetime in seconds.',
     minimum: 60,
     maximum: 3600,
   })
@@ -43,8 +33,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 300,
-    description:
-      'Authorization code lifetime in seconds.',
+    description: 'Authorization code lifetime in seconds.',
     minimum: 60,
     maximum: 600,
   })
@@ -56,8 +45,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 2592000,
-    description:
-      'Refresh token lifetime in seconds.',
+    description: 'Refresh token lifetime in seconds.',
     minimum: 3600,
     maximum: 7776000,
   })
@@ -82,8 +70,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 86400,
-    description:
-      'Registration access token lifetime in seconds.',
+    description: 'Registration access token lifetime in seconds.',
     minimum: 60,
     maximum: 7776000,
   })
@@ -99,8 +86,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: true,
-    description:
-      'Controls whether refresh token rotation is enabled.',
+    description: 'Controls whether refresh token rotation is enabled.',
   })
   @IsOptional()
   @IsBoolean()
@@ -108,8 +94,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: true,
-    description:
-      'Controls whether refresh token reuse detection is enabled.',
+    description: 'Controls whether refresh token reuse detection is enabled.',
   })
   @IsOptional()
   @IsBoolean()
@@ -121,8 +106,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 604800,
-    description:
-      'User session lifetime in seconds.',
+    description: 'User session lifetime in seconds.',
     minimum: 300,
     maximum: 2592000,
   })
@@ -134,8 +118,7 @@ export class UpdateSecurityPolicyDto {
 
   @ApiPropertyOptional({
     example: 600,
-    description:
-      'OIDC interaction lifetime in seconds.',
+    description: 'OIDC interaction lifetime in seconds.',
     minimum: 60,
     maximum: 3600,
   })

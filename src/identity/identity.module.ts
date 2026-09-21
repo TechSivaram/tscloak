@@ -18,9 +18,7 @@ import { ClientsModule } from 'src/clients/clients.module';
     forwardRef(() => SecurityModule),
     TypeOrmModule.forFeature([User, Role]),
   ],
-  controllers: [
-    IdentityController,
-  ],
+  controllers: [IdentityController],
   providers: [
     IdentityService,
     {
@@ -34,10 +32,6 @@ import { ClientsModule } from 'src/clients/clients.module';
     },
   ],
 
-  exports: [
-    IdentityService,
-    UserRepository,
-    RoleRepository
-  ],
+  exports: [IdentityService, UserRepository, RoleRepository],
 })
-export class IdentityModule { }
+export class IdentityModule {}

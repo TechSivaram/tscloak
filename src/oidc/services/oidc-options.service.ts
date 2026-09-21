@@ -20,8 +20,7 @@ import { ClientRegistrationPolicyService } from './client-registration-policy/cl
 import { ClientsService } from 'src/clients/clients.service';
 
 @Injectable()
-export class OidcOptionsService
-  implements OidcModuleOptionsFactory {
+export class OidcOptionsService implements OidcModuleOptionsFactory {
   constructor(
     private readonly config: ConfigService,
     private readonly identityService: IdentityService,
@@ -30,7 +29,7 @@ export class OidcOptionsService
     private readonly securityPolicyService: SecurityPolicyService,
     private readonly clientRegistrationPolicyService: ClientRegistrationPolicyService,
     private readonly clientsService: ClientsService,
-  ) { }
+  ) {}
 
   /**
    * OIDC Provider configuration.
@@ -51,8 +50,7 @@ export class OidcOptionsService
      * getPolicy() automatically creates the default policy
      * if one does not already exist.
      */
-    const securityPolicy =
-      await this.securityPolicyService.getPolicy();
+    const securityPolicy = await this.securityPolicyService.getPolicy();
 
     /**
      * Get validated private JWKS.
@@ -63,15 +61,11 @@ export class OidcOptionsService
      * oidc-provider automatically exposes only the public
      * components through the JWKS endpoint.
      */
-    const jwks =
-      this.signingKeyService.getPrivateJwks();
+    const jwks = this.signingKeyService.getPrivateJwks();
 
     return {
       factory: ({ issuer, config, module }) => {
-        const provider = new module.Provider(
-          issuer,
-          config,
-        );
+        const provider = new module.Provider(issuer, config);
 
         /**
          * When a browser already has an authenticated OIDC
@@ -81,10 +75,7 @@ export class OidcOptionsService
          * Same-client requests continue to use normal OIDC SSO.
          */
         provider.use(async (ctx, next) => {
-          if (
-            ctx.method === 'GET' &&
-            ctx.path === '/auth'
-          ) {
+          if (ctx.method === 'GET' && ctx.path === '/auth') {
             const requestedClientId =
               typeof ctx.query.client_id === 'string'
                 ? ctx.query.client_id
@@ -92,25 +83,16 @@ export class OidcOptionsService
 
             if (requestedClientId) {
               try {
-                const session =
-                  await provider.Session.get(ctx);
+                const session = await provider.Session.get(ctx);
 
                 if (session?.accountId) {
-                  const clientSessionId =
-                    session.sidFor(
-                      requestedClientId,
-                    );
+                  const clientSessionId = session.sidFor(requestedClientId);
 
                   if (!clientSessionId) {
                     await session.destroy();
 
-                    const {
-                      maxAge,
-                      ...cookieOptions
-                    } =
-                      provider.configuration(
-                        'cookies.long',
-                      );
+                    const { maxAge, ...cookieOptions } =
+                      provider.configuration('cookies.long');
 
                     ctx.cookies.set(
                       provider.cookieName('session'),
@@ -118,9 +100,7 @@ export class OidcOptionsService
                       cookieOptions,
                     );
 
-                    ctx.redirect(
-                      ctx.originalUrl,
-                    );
+                    ctx.redirect(ctx.originalUrl);
 
                     return;
                   }
@@ -135,90 +115,42 @@ export class OidcOptionsService
           await next();
         });
 
-        provider.on(
-          'registration_create.success',
-          async (ctx) => {
-            const initialAccessToken =
-              ctx.oidc.entities.InitialAccessToken;
+        provider.on('registration_create.success', async (ctx) => {
+          const initialAccessToken = ctx.oidc.entities.InitialAccessToken;
 
-            if (initialAccessToken) {
-              await initialAccessToken.destroy();
-            }
-          },
-        );
-
-        provider.on('server_error', (ctx, error) => {
-          console.error(
-            '========== OIDC SERVER ERROR ==========',
-          );
-          console.error(
-            'URL:',
-            ctx?.request?.url,
-          );
-          console.error(
-            'Method:',
-            ctx?.request?.method,
-          );
-          console.error(
-            'Error:',
-            error,
-          );
-          console.error(
-            'Stack:',
-            error?.stack,
-          );
-          console.error(
-            '========================================',
-          );
+          if (initialAccessToken) {
+            await initialAccessToken.destroy();
+          }
         });
 
-        provider.on(
-          'authorization.error',
-          (ctx, error) => {
-            console.error(
-              '========== OIDC AUTHORIZATION ERROR ==========',
-            );
-            console.error(
-              'URL:',
-              ctx?.request?.url,
-            );
-            console.error(
-              'Error:',
-              error,
-            );
-            console.error(
-              'Stack:',
-              error?.stack,
-            );
-            console.error(
-              '==============================================',
-            );
-          },
-        );
+        provider.on('server_error', (ctx, error) => {
+          console.error('========== OIDC SERVER ERROR ==========');
+          console.error('URL:', ctx?.request?.url);
+          console.error('Method:', ctx?.request?.method);
+          console.error('Error:', error);
+          console.error('Stack:', error?.stack);
+          console.error('========================================');
+        });
+
+        provider.on('authorization.error', (ctx, error) => {
+          console.error('========== OIDC AUTHORIZATION ERROR ==========');
+          console.error('URL:', ctx?.request?.url);
+          console.error('Error:', error);
+          console.error('Stack:', error?.stack);
+          console.error('==============================================');
+        });
 
         provider.on('grant.error', (ctx, error) => {
-          console.error(
-            '========== OIDC GRANT ERROR ==========',
-          );
-          console.error(
-            'Error:',
-            error,
-          );
-          console.error(
-            'Stack:',
-            error?.stack,
-          );
-          console.error(
-            '======================================',
-          );
+          console.error('========== OIDC GRANT ERROR ==========');
+          console.error('Error:', error);
+          console.error('Stack:', error?.stack);
+          console.error('======================================');
         });
 
         return provider;
       },
 
-      issuer:
-        this.config.get<string>('OIDC_ISSUER') ??
-        'http://localhost:3000',
+      issuer: this.config.get<string>('OIDC_ISSUER') ?? 'http://localhost:3000',
 
       path: '',
 
@@ -259,41 +191,34 @@ export class OidcOptionsService
           /**
            * Access Token lifetime.
            */
-          AccessToken: () =>
-            securityPolicy.accessTokenTtl,
+          AccessToken: () => securityPolicy.accessTokenTtl,
 
           /**
            * ID Token lifetime.
            */
-          IdToken: () =>
-            securityPolicy.idTokenTtl,
+          IdToken: () => securityPolicy.idTokenTtl,
 
           /**
            * Authorization Code lifetime.
            */
-          AuthorizationCode: () =>
-            securityPolicy.authorizationCodeTtl,
+          AuthorizationCode: () => securityPolicy.authorizationCodeTtl,
 
           /**
            * Refresh Token lifetime.
            */
-          RefreshToken: () =>
-            securityPolicy.refreshTokenTtl,
+          RefreshToken: () => securityPolicy.refreshTokenTtl,
 
           /**
            * OIDC Session lifetime.
            */
-          Session: () =>
-            securityPolicy.sessionTtl,
+          Session: () => securityPolicy.sessionTtl,
 
           /**
            * Login / Consent interaction lifetime.
            */
-          Interaction: () =>
-            securityPolicy.interactionTtl,
+          Interaction: () => securityPolicy.interactionTtl,
 
-          InitialAccessToken: () =>
-            securityPolicy.initialAccessTokenTtl,
+          InitialAccessToken: () => securityPolicy.initialAccessTokenTtl,
 
           RegistrationAccessToken: () =>
             securityPolicy.registrationAccessTokenTtl,
@@ -319,44 +244,26 @@ export class OidcOptionsService
          * Called by oidc-provider when it needs
          * account claims for a subject.
          */
-        findAccount: async (
-          ctx,
-          accountId,
-        ) => {
-          if (
-            typeof accountId !== 'string' ||
-            !accountId
-          ) {
-            throw new Error(
-              `Invalid OIDC accountId: ${accountId}`,
-            );
+        findAccount: async (ctx, accountId) => {
+          if (typeof accountId !== 'string' || !accountId) {
+            throw new Error(`Invalid OIDC accountId: ${accountId}`);
           }
 
           const clientId =
-            ctx.oidc.params.client_id ??
-            ctx.oidc.accessToken?.clientId;
+            ctx.oidc.params.client_id ?? ctx.oidc.accessToken?.clientId;
 
-          const user =
-            await this.identityService.findByIdForOidc(
-              accountId,
-            );
+          const user = await this.identityService.findByIdForOidc(accountId);
 
           if (!user) {
-            throw new Error(
-              `OIDC account not found: ${accountId}`,
-            );
+            throw new Error(`OIDC account not found: ${accountId}`);
           }
 
           const requiredRole =
-            await this.clientsService.requiredRoleForClient(
-              clientId,
-            );
+            await this.clientsService.requiredRoleForClient(clientId);
 
           if (
             requiredRole &&
-            !user.roles?.some(
-              role => role.name === requiredRole,
-            )
+            !user.roles?.some((role) => role.name === requiredRole)
           ) {
             throw new Error(
               'OIDC account is not allowed to access this portal',
@@ -371,16 +278,13 @@ export class OidcOptionsService
 
               name: user.username,
 
-              preferred_username:
-                user.username,
+              preferred_username: user.username,
 
               email: user.email,
 
               email_verified: true,
 
-              roles: user.roles.map(
-                role => role.name,
-              ),
+              roles: user.roles.map((role) => role.name),
             }),
           };
         },
@@ -420,38 +324,22 @@ export class OidcOptionsService
             enabled: true,
 
             logoutSource: async (ctx, form) => {
-              const clientId =
-                ctx.oidc.params?.client_id;
+              const clientId = ctx.oidc.params?.client_id;
 
               const client = clientId
-                ? await this.clientsService.findByClientId(
-                  clientId,
-                )
+                ? await this.clientsService.findByClientId(clientId)
                 : null;
 
-              const applicationName =
-                client?.name ?? 'TSCloak';
+              const applicationName = client?.name ?? 'TSCloak';
 
               const template = await readFile(
-                join(
-                  process.cwd(),
-                  'src',
-                  'oidc',
-                  'views',
-                  'logout.html',
-                ),
+                join(process.cwd(), 'src', 'oidc', 'views', 'logout.html'),
                 'utf8',
               );
 
               ctx.body = template
-                .replace(
-                  '{{APPLICATION_NAME}}',
-                  applicationName,
-                )
-                .replace(
-                  '{{LOGOUT_FORM}}',
-                  form,
-                );
+                .replace('{{APPLICATION_NAME}}', applicationName)
+                .replace('{{LOGOUT_FORM}}', form);
             },
           },
 
@@ -462,8 +350,7 @@ export class OidcOptionsService
             enabled: true,
             initialAccessToken: true,
 
-            policies:
-              this.clientRegistrationPolicyService.getPolicies(),
+            policies: this.clientRegistrationPolicyService.getPolicies(),
           },
 
           registrationManagement: {
@@ -480,10 +367,7 @@ export class OidcOptionsService
         interactions: {
           policy: this.createInteractionPolicy(),
 
-          url(
-            ctx,
-            interaction,
-          ) {
+          url(ctx, interaction) {
             return `/interaction/${interaction.uid}`;
           },
         },
@@ -494,13 +378,7 @@ export class OidcOptionsService
          * Client-specific permissions are validated
          * from the dynamically loaded client.
          */
-        scopes: [
-          'openid',
-          'profile',
-          'email',
-          'offline_access',
-          'roles',
-        ],
+        scopes: ['openid', 'profile', 'email', 'offline_access', 'roles'],
 
         /**
          * CLAIMS ASSOCIATED WITH SCOPES
@@ -509,29 +387,19 @@ export class OidcOptionsService
           /**
            * OpenID Connect subject identifier.
            */
-          openid: [
-            'sub',
-          ],
+          openid: ['sub'],
 
           /**
            * Basic user profile information.
            */
-          profile: [
-            'name',
-            'preferred_username',
-          ],
+          profile: ['name', 'preferred_username'],
 
           /**
            * User email information.
            */
-          email: [
-            'email',
-            'email_verified',
-          ],
+          email: ['email', 'email_verified'],
 
-          roles: [
-            'roles',
-          ],
+          roles: ['roles'],
         },
       },
     };
@@ -558,9 +426,7 @@ export class OidcOptionsService
    *   Persisted through OidcRepository.
    */
   createAdapterFactory() {
-    return (
-      modelName: string,
-    ) => {
+    return (modelName: string) => {
       /**
        * Dynamic client resolution.
        *
@@ -575,10 +441,7 @@ export class OidcOptionsService
        * ClientsService
        */
       if (modelName === 'Client') {
-        return new OidcClientAdapter(
-          this.clientsService,
-          this.config,
-        );
+        return new OidcClientAdapter(this.clientsService, this.config);
       }
 
       /**
@@ -595,10 +458,7 @@ export class OidcOptionsService
        *
        * All persisted through OidcRepository.
        */
-      return new OidcAdapter(
-        modelName,
-        this.oidcRepository,
-      );
+      return new OidcAdapter(modelName, this.oidcRepository);
     };
   }
 }

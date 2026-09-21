@@ -28,20 +28,24 @@ import { Roles } from 'src/security/decorators/roles.decorator';
 @Controller('admin/clients')
 @UseGuards(OidcAuthGuard, RolesGuard)
 export class ClientsController {
-  constructor(
-    private readonly clientsService:
-      ClientsService,
-  ) {}
+  constructor(private readonly clientsService: ClientsService) {}
 
   @Get()
   @Roles('IDP_ADMIN')
   @ApiOperation({ summary: 'List registered clients' })
-  @ApiResponse({ status: 200, description: 'Registered clients returned.', type: [ClientResponseDto] })
-  @ApiResponse({ status: 403, description: 'Caller is not an IDP administrator.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Registered clients returned.',
+    type: [ClientResponseDto],
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Caller is not an IDP administrator.',
+  })
   async findAll(): Promise<ClientResponseDto[]> {
     const clients = await this.clientsService.findAll();
 
-    return clients.map(client => ({
+    return clients.map((client) => ({
       id: client.id,
       clientId: client.clientId,
       name: client.name,
@@ -67,68 +71,46 @@ export class ClientsController {
   })
   @ApiResponse({
     status: 201,
-    description:
-      'OAuth/OIDC client registered successfully.',
+    description: 'OAuth/OIDC client registered successfully.',
     type: ClientResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Invalid client registration data.',
+    description: 'Invalid client registration data.',
   })
   @ApiResponse({
     status: 409,
-    description:
-      'A client with the same client ID or name already exists.',
+    description: 'A client with the same client ID or name already exists.',
   })
-  async createClient(
-    @Body() dto: CreateClientDto,
-  ): Promise<ClientResponseDto> {
-    const result =
-      await this.clientsService.createClient(
-        dto,
-      );
+  async createClient(@Body() dto: CreateClientDto): Promise<ClientResponseDto> {
+    const result = await this.clientsService.createClient(dto);
 
     return {
       id: result.client.id,
 
-      clientId:
-        result.client.clientId,
+      clientId: result.client.clientId,
 
-      name:
-        result.client.name,
+      name: result.client.name,
 
-      redirectUris:
-        result.client.redirectUris,
+      redirectUris: result.client.redirectUris,
 
-      postLogoutRedirectUris:
-        result.client.postLogoutRedirectUris ?? [],
+      postLogoutRedirectUris: result.client.postLogoutRedirectUris ?? [],
 
-      allowedScopes:
-        result.client.allowedScopes,
+      allowedScopes: result.client.allowedScopes,
 
-      grantTypes:
-        result.client.grantTypes,
+      grantTypes: result.client.grantTypes,
 
-      responseTypes:
-        result.client.responseTypes,
+      responseTypes: result.client.responseTypes,
 
-      tokenEndpointAuthMethod:
-        result.client.tokenEndpointAuthMethod,
+      tokenEndpointAuthMethod: result.client.tokenEndpointAuthMethod,
 
-      interactionMode:
-        result.client.interactionMode,
+      interactionMode: result.client.interactionMode,
 
-      interactionLoginUrl:
-        result.client.interactionLoginUrl ??
-        undefined,
+      interactionLoginUrl: result.client.interactionLoginUrl ?? undefined,
 
-      interactionConsentUrl:
-        result.client.interactionConsentUrl ??
-        undefined,
+      interactionConsentUrl: result.client.interactionConsentUrl ?? undefined,
 
-      enabled:
-        result.client.enabled,
+      enabled: result.client.enabled,
     };
   }
 
@@ -146,15 +128,16 @@ export class ClientsController {
   @Put(':clientId')
   @Roles('IDP_ADMIN')
   @ApiOperation({ summary: 'Update a client' })
-  @ApiResponse({ status: 200, description: 'Client updated.', type: ClientResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Client updated.',
+    type: ClientResponseDto,
+  })
   async updateClient(
     @Param('clientId') clientId: string,
     @Body() dto: UpdateClientDto,
   ): Promise<ClientResponseDto> {
-    const client = await this.clientsService.updateClient(
-      clientId,
-      dto,
-    );
+    const client = await this.clientsService.updateClient(clientId, dto);
 
     return {
       id: client.id,
@@ -172,5 +155,4 @@ export class ClientsController {
       enabled: client.enabled,
     };
   }
-
 }

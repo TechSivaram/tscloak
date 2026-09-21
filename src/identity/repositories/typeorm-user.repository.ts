@@ -10,8 +10,7 @@ export class TypeOrmUserRepository implements UserRepository {
   constructor(
     @InjectRepository(User)
     private readonly repository: Repository<User>,
-  ) {
-  }
+  ) {}
 
   async count(): Promise<number> {
     return this.repository.count();
@@ -19,9 +18,7 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async findAll(clientId?: string): Promise<User[]> {
     return this.repository.find({
-      where: clientId
-        ? { client: { clientId } }
-        : undefined,
+      where: clientId ? { client: { clientId } } : undefined,
       select: {
         id: true,
         username: true,
@@ -42,7 +39,8 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async findById(id: string, client_id: any): Promise<User | null> {
     return this.repository.findOne({
-      where: { id, client: { clientId: client_id } }, relations: {
+      where: { id, client: { clientId: client_id } },
+      relations: {
         roles: true,
       },
     });
@@ -59,7 +57,8 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async findByUsername(username: string, client_id: any): Promise<User | null> {
     return this.repository.findOne({
-      where: { username, client: { clientId: client_id } }, relations: {
+      where: { username, client: { clientId: client_id } },
+      relations: {
         roles: true,
       },
     });

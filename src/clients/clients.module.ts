@@ -19,10 +19,7 @@ import { ClientAdminSettingsController } from './client-admin-settings.controlle
     forwardRef(() => IdentityModule),
   ],
 
-  controllers: [
-    ClientsController,
-    ClientAdminSettingsController,
-  ],
+  controllers: [ClientsController, ClientAdminSettingsController],
 
   providers: [
     ClientsService,
@@ -33,9 +30,6 @@ import { ClientAdminSettingsController } from './client-admin-settings.controlle
     },
   ],
 
-  exports: [
-    ClientsService,
-    ClientRepository,
-  ],
+  exports: [ClientsService, ClientRepository],
 })
 export class ClientsModule {}

@@ -8,22 +8,12 @@ import { SessionsModule } from 'src/sessions/sessions.module';
 import { ClientsModule } from 'src/clients/clients.module';
 
 @Module({
-  imports: [
-    IdentityModule,
-    SessionsModule,
-    ClientsModule,
-  ],
+  imports: [IdentityModule, SessionsModule, ClientsModule],
 
-  controllers: [
-    AuthenticationController,
-  ],
+  controllers: [AuthenticationController],
 
-  providers: [
-    AuthenticationService,
-  ],
+  providers: [AuthenticationService],
 
-  exports: [
-    AuthenticationService,
-  ],
+  exports: [AuthenticationService],
 })
 export class AuthenticationModule {}

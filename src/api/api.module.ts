@@ -21,16 +21,16 @@ import { AdminModule } from 'src/admin/admin.module';
       {
         path: 'api', // Common prefix applied to ALL children below
         children: [
-          IdentityModule,       // Resolves to: /api + /users = /api/users
+          IdentityModule, // Resolves to: /api + /users = /api/users
           AuthenticationModule, // Resolves to: /api + /auth  = /api/auth/login
-          SessionsModule,       // Resolves to: /api + /sessions
-          ClientsModule,        // Resolves to: /api + /clients
-          SecurityModule,       // Resolves to: /api + /security
-          RegistrationModule,   // Resolves to: /api + /registration
-          AdminModule,          // Resolves to: /api + /admin
+          SessionsModule, // Resolves to: /api + /sessions
+          ClientsModule, // Resolves to: /api + /clients
+          SecurityModule, // Resolves to: /api + /security
+          RegistrationModule, // Resolves to: /api + /registration
+          AdminModule, // Resolves to: /api + /admin
         ],
       },
     ]),
   ],
 })
-export class ApiModule { }
+export class ApiModule {}

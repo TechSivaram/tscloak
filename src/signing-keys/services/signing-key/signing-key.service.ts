@@ -1,7 +1,4 @@
-import {
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { SIGNING_KEY_PROVIDER } from '../../providers/signing-key.provider';
 
@@ -32,8 +29,7 @@ export class SigningKeyService {
    * through an API.
    */
   getPrivateJwks(): PrivateJwks {
-    const jwks =
-      this.signingKeyProvider.getPrivateJwks();
+    const jwks = this.signingKeyProvider.getPrivateJwks();
 
     this.validatePrivateJwks(jwks);
 
@@ -48,66 +44,45 @@ export class SigningKeyService {
    * Safe for exposure through public JWKS endpoints.
    */
   getPublicJwks(): PublicJwks {
-    const privateJwks =
-      this.getPrivateJwks();
+    const privateJwks = this.getPrivateJwks();
 
     return {
-      keys: privateJwks.keys.map(
-        (key): RsaPublicJwk => ({
-          kty: key.kty,
-          kid: key.kid,
-          use: key.use ?? 'sig',
-          alg: key.alg ?? 'RS256',
-          n: key.n,
-          e: key.e,
-        }),
-      ),
+      keys: privateJwks.keys.map((key): RsaPublicJwk => ({
+        kty: key.kty,
+        kid: key.kid,
+        use: key.use ?? 'sig',
+        alg: key.alg ?? 'RS256',
+        n: key.n,
+        e: key.e,
+      })),
     };
   }
 
   /**
    * Validates the complete private JWKS.
    */
-  private validatePrivateJwks(
-    jwks: PrivateJwks,
-  ): void {
-    if (
-      !jwks ||
-      !Array.isArray(jwks.keys) ||
-      jwks.keys.length === 0
-    ) {
-      throw new Error(
-        'JWKS must contain at least one signing key',
-      );
+  private validatePrivateJwks(jwks: PrivateJwks): void {
+    if (!jwks || !Array.isArray(jwks.keys) || jwks.keys.length === 0) {
+      throw new Error('JWKS must contain at least one signing key');
     }
 
     const kids = new Set<string>();
 
     for (const key of jwks.keys) {
-      this.validatePrivateKey(
-        key,
-        kids,
-      );
+      this.validatePrivateKey(key, kids);
     }
   }
 
   /**
    * Validates a single RSA private JWK.
    */
-  private validatePrivateKey(
-    key: RsaPrivateJwk,
-    kids: Set<string>,
-  ): void {
+  private validatePrivateKey(key: RsaPrivateJwk, kids: Set<string>): void {
     if (!key.kid) {
-      throw new Error(
-        'Every signing key must contain a kid',
-      );
+      throw new Error('Every signing key must contain a kid');
     }
 
     if (kids.has(key.kid)) {
-      throw new Error(
-        `Duplicate signing key kid: ${key.kid}`,
-      );
+      throw new Error(`Duplicate signing key kid: ${key.kid}`);
     }
 
     kids.add(key.kid);
@@ -119,27 +94,19 @@ export class SigningKeyService {
     }
 
     if (!key.n) {
-      throw new Error(
-        `Signing key ${key.kid} is missing public modulus n`,
-      );
+      throw new Error(`Signing key ${key.kid} is missing public modulus n`);
     }
 
     if (!key.e) {
-      throw new Error(
-        `Signing key ${key.kid} is missing public exponent e`,
-      );
+      throw new Error(`Signing key ${key.kid} is missing public exponent e`);
     }
 
     if (!key.d) {
-      throw new Error(
-        `Signing key ${key.kid} is missing private exponent d`,
-      );
+      throw new Error(`Signing key ${key.kid} is missing private exponent d`);
     }
 
     if (key.use && key.use !== 'sig') {
-      throw new Error(
-        `Signing key ${key.kid} must have use=sig`,
-      );
+      throw new Error(`Signing key ${key.kid} must have use=sig`);
     }
 
     if (key.alg && key.alg !== 'RS256') {

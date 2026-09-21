@@ -7,71 +7,66 @@ import { SecurityPolicy } from '../../entities/security-policy.entity';
 
 @Injectable()
 export class SecurityPolicyService {
-    private readonly defaultPolicy: Partial<SecurityPolicy> = {
-        // =========================
-        // Token Policy
-        // =========================
+  private readonly defaultPolicy: Partial<SecurityPolicy> = {
+    // =========================
+    // Token Policy
+    // =========================
 
-        accessTokenTtl: 15 * 60, // 15 minutes
-        idTokenTtl: 15 * 60, // 15 minutes
-        authorizationCodeTtl: 5 * 60, // 5 minutes
-        refreshTokenTtl: 30 * 24 * 60 * 60, // 30 days
+    accessTokenTtl: 15 * 60, // 15 minutes
+    idTokenTtl: 15 * 60, // 15 minutes
+    authorizationCodeTtl: 5 * 60, // 5 minutes
+    refreshTokenTtl: 30 * 24 * 60 * 60, // 30 days
 
-        // =========================
-        // Refresh Token Policy
-        // =========================
+    // =========================
+    // Refresh Token Policy
+    // =========================
 
-        refreshTokenRotationEnabled: true,
-        refreshTokenReuseDetectionEnabled: true,
+    refreshTokenRotationEnabled: true,
+    refreshTokenReuseDetectionEnabled: true,
 
-        // =========================
-        // Session Policy
-        // =========================
+    // =========================
+    // Session Policy
+    // =========================
 
-        sessionTtl: 7 * 24 * 60 * 60, // 7 days
-        interactionTtl: 10 * 60, // 10 minutes
-    };
+    sessionTtl: 7 * 24 * 60 * 60, // 7 days
+    interactionTtl: 10 * 60, // 10 minutes
+  };
 
-    constructor(
-        @InjectRepository(SecurityPolicy)
-        private readonly securityPolicyRepository: Repository<SecurityPolicy>,
-    ) { }
+  constructor(
+    @InjectRepository(SecurityPolicy)
+    private readonly securityPolicyRepository: Repository<SecurityPolicy>,
+  ) {}
 
-    /**
-     * Gets the server-level security policy.
-     *
-     * Creates the default policy automatically if one
-     * does not already exist.
-     */
-    async getPolicy(): Promise<SecurityPolicy> {
-        let policy = await this.securityPolicyRepository.findOne({
-            where: {},
-        });
+  /**
+   * Gets the server-level security policy.
+   *
+   * Creates the default policy automatically if one
+   * does not already exist.
+   */
+  async getPolicy(): Promise<SecurityPolicy> {
+    let policy = await this.securityPolicyRepository.findOne({
+      where: {},
+    });
 
-        if (!policy) {
-            policy = this.securityPolicyRepository.create(
-                this.defaultPolicy,
-            );
+    if (!policy) {
+      policy = this.securityPolicyRepository.create(this.defaultPolicy);
 
-            policy = await this.securityPolicyRepository.save(policy);
-        }
-
-        return policy;
+      policy = await this.securityPolicyRepository.save(policy);
     }
 
-    /**
-     * Updates the server-level security policy.
-     */
-    async updatePolicy(
-        updateSecurityPolicyDto: UpdateSecurityPolicyDto,
-    ): Promise<SecurityPolicy> {
-        const policy = await this.getPolicy();
+    return policy;
+  }
 
-        Object.assign(
-            policy,
-            updateSecurityPolicyDto,
-        );
+  /**
+   * Updates the server-level security policy.
+   */
+  async updatePolicy(
+    updateSecurityPolicyDto: UpdateSecurityPolicyDto,
+  ): Promise<SecurityPolicy> {
+    const policy = await this.getPolicy();
 
-        return this.securityPolicyRepository.save(policy);
-    }
+    Object.assign(policy, updateSecurityPolicyDto);
+
+    return this.securityPolicyRepository.save(policy);
+  }
 }

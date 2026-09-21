@@ -31,7 +31,7 @@ export class IdentityService {
     private readonly users: UserRepository,
     private readonly roles: RoleRepository,
     private readonly clients: ClientsService,
-  ) { }
+  ) {}
 
   async countUsers(): Promise<number> {
     return this.users.count();
@@ -57,42 +57,35 @@ export class IdentityService {
     input: CreateUserInput,
     roleNames: string[] = ['USER'],
   ): Promise<User> {
-
-    if(!input.clientId) {
-      throw new BadRequestException(
-        'Client ID is required',
-      );
+    if (!input.clientId) {
+      throw new BadRequestException('Client ID is required');
     }
 
     const clnt = await this.clients.findByClientId(input.clientId);
-    if(clnt === null) {
-      throw new ConflictException(
-        'Client does not exist',
-      );
+    if (clnt === null) {
+      throw new ConflictException('Client does not exist');
     }
 
     input.clientId = clnt.id;
-    const existingUsername =
-      await this.users.findByUsername(input.username, input.clientId);
+    const existingUsername = await this.users.findByUsername(
+      input.username,
+      input.clientId,
+    );
 
     if (existingUsername) {
-      throw new ConflictException(
-        'Username already exists',
-      );
+      throw new ConflictException('Username already exists');
     }
 
-    const existingEmail =
-      await this.users.findByEmail(input.email, input.clientId);
+    const existingEmail = await this.users.findByEmail(
+      input.email,
+      input.clientId,
+    );
 
     if (existingEmail) {
-      throw new ConflictException(
-        'Email already exists',
-      );
+      throw new ConflictException('Email already exists');
     }
 
-    const passwordHash = await argon2.hash(
-      input.password,
-    );
+    const passwordHash = await argon2.hash(input.password);
 
     const user = new User();
 
@@ -104,39 +97,28 @@ export class IdentityService {
 
     if (roleNames.length > 0) {
       const assignedRoles = await Promise.all(
-        roleNames.map(roleName => this.roles.findByName(roleName)),
+        roleNames.map((roleName) => this.roles.findByName(roleName)),
       );
 
-      if (assignedRoles.some(role => !role)) {
-        throw new ConflictException(
-          'Required user role is not configured',
-        );
+      if (assignedRoles.some((role) => !role)) {
+        throw new ConflictException('Required user role is not configured');
       }
 
-      user.roles = assignedRoles.filter(
-        (role): role is Role => role !== null,
-      );
+      user.roles = assignedRoles.filter((role): role is Role => role !== null);
     }
 
     return this.users.save(user);
   }
 
-  async findByUsername(
-    username: string, client_id: any,
-  ): Promise<User | null> {
+  async findByUsername(username: string, client_id: any): Promise<User | null> {
     return this.users.findByUsername(username, client_id);
   }
 
-  async findById(
-    id: string,
-    client_id: any,
-  ): Promise<User | null> {
+  async findById(id: string, client_id: any): Promise<User | null> {
     return this.users.findById(id, client_id);
   }
 
-  async findByIdForOidc(
-    id: string,
-  ): Promise<User | null> {
+  async findByIdForOidc(id: string): Promise<User | null> {
     return this.users.findByIdForOidc(id);
   }
 
@@ -157,18 +139,11 @@ export class IdentityService {
     return this.users.save(user);
   }
 
-
-  async createRole(
-    name: string,
-    description?: string,
-  ): Promise<Role> {
-    const existingRole =
-      await this.roles.findByName(name);
+  async createRole(name: string, description?: string): Promise<Role> {
+    const existingRole = await this.roles.findByName(name);
 
     if (existingRole) {
-      throw new ConflictException(
-        'Role already exists',
-      );
+      throw new ConflictException('Role already exists');
     }
 
     const role = new Role();
@@ -183,10 +158,7 @@ export class IdentityService {
     return this.roles.findAll();
   }
 
-  async updateRole(
-    roleId: string,
-    description?: string,
-  ): Promise<Role> {
+  async updateRole(roleId: string, description?: string): Promise<Role> {
     const role = await this.roles.findById(roleId);
 
     if (!role) {
@@ -209,17 +181,15 @@ export class IdentityService {
     }
 
     const roles = await Promise.all(
-      roleNames.map(roleName => this.roles.findByName(roleName)),
+      roleNames.map((roleName) => this.roles.findByName(roleName)),
     );
 
-    const missingRole = roles.find(role => !role);
+    const missingRole = roles.find((role) => !role);
     if (missingRole) {
       throw new NotFoundException('One or more roles were not found');
     }
 
-    user.roles = roles.filter(
-      (role): role is Role => role !== null,
-    );
+    user.roles = roles.filter((role): role is Role => role !== null);
 
     return this.users.save(user);
   }

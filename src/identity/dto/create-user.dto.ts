@@ -1,14 +1,6 @@
-import {
-  IsEmail,
-  IsOptional,
-  IsString,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
-import {
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -35,7 +27,7 @@ export class CreateUserDto {
   @IsString()
   @MinLength(8)
   password: string;
-  
+
   @ApiPropertyOptional({
     description:
       'Resolved from the authenticated client context by the server.',
