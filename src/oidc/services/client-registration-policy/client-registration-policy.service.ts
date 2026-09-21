@@ -59,7 +59,13 @@ export class ClientRegistrationPolicyService {
         _ctx: unknown,
         properties: Record<string, unknown>,
       ) => {
-        const allowed = ['openid', 'profile', 'email', 'offline_access'];
+        const allowed = [
+          'openid',
+          'profile',
+          'email',
+          'offline_access',
+          'roles',
+        ];
 
         const scope = properties.scope;
 
