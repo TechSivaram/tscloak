@@ -1,5 +1,5 @@
 const oidc = {
-  clientId: null,
+  clientId: '04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363',
 
   redirectUri:
     `${window.location.origin}/idp-admin/callback.html`,
@@ -64,7 +64,7 @@ async function login() {
 
   const clientResponse =
     await fetch(
-      '/api/admin/config/oidc?portal=idp-admin',
+      `/api/admin/config/oidc?portal=idp-admin&clientId=${oidc.clientId}`,
     );
 
   if (!clientResponse.ok) {
