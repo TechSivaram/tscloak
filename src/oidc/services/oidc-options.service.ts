@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { interactionPolicy } from 'oidc-provider';
 import { readFile } from 'fs/promises';
+import { interactionPolicy } from 'oidc-provider';
 import { join } from 'path';
 
 import {
@@ -10,14 +10,14 @@ import {
 } from 'nest-oidc-provider';
 
 import { IdentityService } from 'src/identity/identity.service';
-import { SigningKeyService } from 'src/signing-keys/services/signing-key/signing-key.service';
 import { SecurityPolicyService } from 'src/security/services/security-policy/security-policy.service';
+import { SigningKeyService } from 'src/signing-keys/services/signing-key/signing-key.service';
 
+import { ClientsService } from 'src/clients/clients.service';
 import { OidcClientAdapter } from '../adapters/oidc-client.adapter/oidc-client.adapter';
 import { OidcAdapter } from '../adapters/oidc.adapter/oidc.adapter';
 import { OidcRepository } from '../repositories/oidc.repository';
 import { ClientRegistrationPolicyService } from './client-registration-policy/client-registration-policy.service';
-import { ClientsService } from 'src/clients/clients.service';
 
 @Injectable()
 export class OidcOptionsService implements OidcModuleOptionsFactory {
@@ -258,8 +258,10 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
             throw new Error(`OIDC account not found: ${accountId}`);
           }
 
-          const requiredRole =
-            await this.clientsService.requiredRoleForClient(clientId);
+          const requiredRole = await this.clientsService.requiredRoleForClient(
+            clientId,
+            ctx.oidc.params?.redirect_uri,
+          );
 
           if (
             requiredRole &&

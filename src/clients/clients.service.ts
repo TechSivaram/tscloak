@@ -6,10 +6,10 @@ import {
 
 import { randomBytes } from 'crypto';
 
+import { ConfigService } from '@nestjs/config';
 import { Client } from './entities/client.entity';
 import { InteractionMode } from './enums/interaction-mode.enum';
 import { ClientRepository } from './repositories/client.repository';
-import { ConfigService } from '@nestjs/config';
 
 export interface CreateClientInput {
   name: string;
@@ -71,7 +71,10 @@ export class ClientsService {
     );
   }
 
-  async requiredRoleForClient(clientId: string): Promise<string | null> {
+  async requiredRoleForClient(
+    clientId: string,
+    redirectUri?: string,
+  ): Promise<string | null> {
     const client = await this.findByClientId(clientId);
 
     if (!client) {
@@ -86,11 +89,11 @@ export class ClientsService {
       }
     });
 
-    if (paths.includes('/idp-admin/callback.html')) {
+    if (redirectUri?.includes('/idp-admin/callback.html')) {
       return 'IDP_ADMIN';
     }
 
-    if (paths.includes('/idp-client-admin/callback.html')) {
+    if (redirectUri?.includes('/idp-client-admin/callback.html')) {
       return 'IDP_CLIENT_ADMIN';
     }
 

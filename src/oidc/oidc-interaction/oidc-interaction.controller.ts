@@ -347,6 +347,7 @@ export class OidcInteractionController {
         dto.username,
         dto.password,
         details.params.client_id,
+        details.params.redirect_uri,
       );
 
       await interaction.finished({
@@ -463,6 +464,8 @@ export class OidcInteractionController {
     const accountId = details.session?.accountId;
 
     const clientId = details.params?.client_id;
+
+    const redirectUri = details.params?.redirect_uri;
 
     if (typeof accountId !== 'string' || !accountId) {
       throw new Error('OIDC consent: accountId is missing');
