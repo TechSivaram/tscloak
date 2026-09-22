@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import request from 'supertest';
 
-describe('OIDC Refresh Token endpoint (e2e)', () => {
+describe('OIDC Token Revocation endpoint (e2e)', () => {
   jest.setTimeout(30_000);
 
   const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
@@ -21,14 +21,13 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
   // Redirect URI registered for the dynamically created refresh client.
   // The E2E test stops when this URL is reached and reads the authorization
   // code from the Location header; it does not GET this callback page.
-  const refreshRedirectUriBase =
+  const refreshRedirectUri =
     process.env.E2E_REFRESH_REDIRECT_URI ??
     'http://localhost:3000/refresh/callback.html';
 
   interface RegisteredClient {
     clientId: string;
     clientSecret?: string;
-    redirectUri: string;
     username: string;
     password: string;
   }
@@ -249,13 +248,6 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
 
     expect(registrationEndpoint).toBeDefined();
 
-    const refreshRedirectUri = refreshRedirectUriBase.endsWith('.html')
-      ? refreshRedirectUriBase.replace(
-          /\.html$/,
-          `-${randomBytes(8).toString('hex')}.html`,
-        )
-      : `${refreshRedirectUriBase}/${randomBytes(8).toString('hex')}`;
-
     const registration = await agent
       .post(new URL(registrationEndpoint).pathname)
       .set('Authorization', `Bearer ${initialTokenResponse.body.token}`)
@@ -311,7 +303,6 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
     return {
       clientId: registration.body.client_id,
       clientSecret: registration.body.client_secret,
-      redirectUri: refreshRedirectUri,
       username,
       password,
     };
@@ -340,7 +331,7 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
     const authorizationUrl = new URL(authorizationEndpoint);
 
     authorizationUrl.searchParams.set('client_id', client.clientId);
-    authorizationUrl.searchParams.set('redirect_uri', client.redirectUri);
+    authorizationUrl.searchParams.set('redirect_uri', refreshRedirectUri);
     authorizationUrl.searchParams.set('response_type', 'code');
     authorizationUrl.searchParams.set('scope', scope);
     authorizationUrl.searchParams.set('prompt', 'consent');
@@ -434,7 +425,7 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
     for (let i = 0; i < 10; i += 1) {
       if (
         authorizationContinuation.toString().split('?')[0] ===
-        client.redirectUri
+        refreshRedirectUri
       ) {
         callback = authorizationContinuation;
         break;
@@ -497,7 +488,7 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
       .send({
         grant_type: 'authorization_code',
         code: authorization.code,
-        redirect_uri: authorization.client.redirectUri,
+        redirect_uri: refreshRedirectUri,
         client_id: authorization.client.clientId,
         code_verifier: authorization.codeVerifier,
       })
@@ -514,49 +505,105 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
     };
   }
 
-  it('issues a refresh token when offline_access is requested', async () => {
-    const result = await obtainRefreshToken();
+  async function obtainTokensForRevocation(): Promise<TokenResult> {
+    return obtainRefreshToken();
+  }
 
-    expect(result.refreshToken).toEqual(expect.any(String));
-    expect(result.refreshToken.length).toBeGreaterThan(0);
-  });
-
-  it('exchanges a valid refresh token for a new access token', async () => {
-    const result = await obtainRefreshToken();
-
-    const response = await result.agent
-      .post(new URL(result.tokenEndpoint).pathname)
-      .type('form')
-      .send({
-        grant_type: 'refresh_token',
-        refresh_token: result.refreshToken,
-        client_id: result.client.clientId,
-      })
+  async function getRevocationEndpoint(
+    agent: request.SuperAgentTest,
+  ): Promise<string> {
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
       .expect(200);
 
-    expect(response.body.access_token).toBeDefined();
-    expect(response.body.token_type).toBe('Bearer');
-    expect(response.body.expires_in).toBeDefined();
-  });
+    expect(discovery.body.revocation_endpoint).toBeDefined();
 
-  it('rejects an invalid refresh token', async () => {
-    const result = await obtainRefreshToken();
+    return new URL(discovery.body.revocation_endpoint).pathname;
+  }
 
-    await result.agent
-      .post(new URL(result.tokenEndpoint).pathname)
+  it('revokes an access token successfully', async () => {
+    const result = await obtainTokensForRevocation();
+    const revocationEndpoint = await getRevocationEndpoint(result.agent);
+
+    const response = await result.agent
+      .post(revocationEndpoint)
       .type('form')
       .send({
-        grant_type: 'refresh_token',
-        refresh_token: 'invalid-refresh-token',
+        token: result.accessToken,
+        token_type_hint: 'access_token',
+        client_id: result.client.clientId,
+      });
+
+    expect([200, 204]).toContain(response.status);
+  });
+
+  it('makes a revoked access token inactive in introspection', async () => {
+    const result = await obtainTokensForRevocation();
+    const revocationEndpoint = await getRevocationEndpoint(result.agent);
+
+    await result.agent
+      .post(revocationEndpoint)
+      .type('form')
+      .send({
+        token: result.accessToken,
+        token_type_hint: 'access_token',
         client_id: result.client.clientId,
       })
       .expect((response) => {
-        expect([400, 401]).toContain(response.status);
+        expect([200, 204]).toContain(response.status);
       });
+
+    const discovery = await result.agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
+
+    const introspectionEndpoint = new URL(discovery.body.introspection_endpoint)
+      .pathname;
+
+    const introspection = await result.agent
+      .post(introspectionEndpoint)
+      .type('form')
+      .send({
+        token: result.accessToken,
+        token_type_hint: 'access_token',
+        client_id: result.client.clientId,
+      })
+      .expect(200);
+
+    expect(introspection.body.active).toBe(false);
   });
 
-  it('accepts the refresh token for the registered client', async () => {
-    const result = await obtainRefreshToken();
+  it('revokes a refresh token successfully', async () => {
+    const result = await obtainTokensForRevocation();
+    const revocationEndpoint = await getRevocationEndpoint(result.agent);
+
+    const response = await result.agent
+      .post(revocationEndpoint)
+      .type('form')
+      .send({
+        token: result.refreshToken,
+        token_type_hint: 'refresh_token',
+        client_id: result.client.clientId,
+      });
+
+    expect([200, 204]).toContain(response.status);
+  });
+
+  it('rejects a revoked refresh token at the token endpoint', async () => {
+    const result = await obtainTokensForRevocation();
+    const revocationEndpoint = await getRevocationEndpoint(result.agent);
+
+    await result.agent
+      .post(revocationEndpoint)
+      .type('form')
+      .send({
+        token: result.refreshToken,
+        token_type_hint: 'refresh_token',
+        client_id: result.client.clientId,
+      })
+      .expect((response) => {
+        expect([200, 204]).toContain(response.status);
+      });
 
     const response = await result.agent
       .post(new URL(result.tokenEndpoint).pathname)
@@ -565,15 +612,9 @@ describe('OIDC Refresh Token endpoint (e2e)', () => {
         grant_type: 'refresh_token',
         refresh_token: result.refreshToken,
         client_id: result.client.clientId,
-      })
-      .expect(200);
+      });
 
-    expect(response.body.access_token).toBeDefined();
-    expect(response.body.token_type).toBe('Bearer');
-
-    if (response.body.refresh_token) {
-      expect(response.body.refresh_token).toEqual(expect.any(String));
-      expect(response.body.refresh_token.length).toBeGreaterThan(0);
-    }
+    expect([400, 401]).toContain(response.status);
+    expect(response.body.error).toBeTruthy();
   });
 });
