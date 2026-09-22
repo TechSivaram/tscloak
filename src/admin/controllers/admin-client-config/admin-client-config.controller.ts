@@ -2,7 +2,7 @@ import { Controller, Get, NotFoundException, Query } from '@nestjs/common';
 
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { ClientsService } from 'src/clients/clients.service';
+import { ClientsService } from '../../../clients/clients.service';
 
 @Controller('admin/config')
 @ApiTags('Portal Configuration')

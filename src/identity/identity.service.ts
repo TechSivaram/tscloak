@@ -7,11 +7,11 @@ import {
 
 import * as argon2 from 'argon2';
 
-import { User } from './entities/user.entity';
-import { UserRepository } from './repositories/user.repository';
-import { RoleRepository } from './repositories/role.repository';
+import { ClientsService } from '../clients/clients.service';
 import { Role } from './entities/role.entity';
-import { ClientsService } from 'src/clients/clients.service';
+import { User } from './entities/user.entity';
+import { RoleRepository } from './repositories/role.repository';
+import { UserRepository } from './repositories/user.repository';
 
 export interface CreateUserInput {
   username: string;

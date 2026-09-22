@@ -13,7 +13,7 @@ import { IdentityService } from 'src/identity/identity.service';
 import { SecurityPolicyService } from 'src/security/services/security-policy/security-policy.service';
 import { SigningKeyService } from 'src/signing-keys/services/signing-key/signing-key.service';
 
-import { ClientsService } from 'src/clients/clients.service';
+import { ClientsService } from '../../clients/clients.service';
 import { OidcClientAdapter } from '../adapters/oidc-client.adapter/oidc-client.adapter';
 import { OidcAdapter } from '../adapters/oidc.adapter/oidc.adapter';
 import { OidcRepository } from '../repositories/oidc.repository';

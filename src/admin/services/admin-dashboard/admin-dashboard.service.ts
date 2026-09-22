@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { ClientsService } from 'src/clients/clients.service';
-import { IdentityService } from 'src/identity/identity.service';
-import { InitialAccessTokenService } from 'src/registration/services/initial-access-token/initial-access-token.service';
-import { SecurityPolicyService } from 'src/security/services/security-policy/security-policy.service';
+import { ClientsService } from '../../../clients/clients.service';
+import { IdentityService } from '../../../identity/identity.service';
+import { InitialAccessTokenService } from '../../../registration/services/initial-access-token/initial-access-token.service';
+import { SecurityPolicyService } from '../../../security/services/security-policy/security-policy.service';
 
 @Injectable()
 export class AdminDashboardService {
