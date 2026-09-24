@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createLocalJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
-import { OidcAdapter } from '../../oidc/adapters/oidc.adapter/oidc.adapter';
-import { OidcRepository } from '../../oidc/repositories/oidc.repository';
+import { SigningKeyService } from '../../signing-keys/services/signing-key/signing-key.service';
 
 export interface ValidatedAccessToken {
   sub: string;
@@ -11,40 +12,62 @@ export interface ValidatedAccessToken {
 
 @Injectable()
 export class OidcTokenService {
-  private readonly accessTokenAdapter: OidcAdapter;
-
-  constructor(private readonly oidcRepository: OidcRepository) {
-    this.accessTokenAdapter = new OidcAdapter(
-      'AccessToken',
-      this.oidcRepository,
-    );
-  }
+  constructor(
+    private readonly signingKeyService: SigningKeyService,
+    private readonly config: ConfigService,
+  ) {}
 
   async validate(accessToken: string): Promise<ValidatedAccessToken> {
     if (!accessToken) {
       throw new UnauthorizedException('Access token is required');
     }
 
-    const payload = await this.accessTokenAdapter.find(accessToken);
+    let jwtPayload: JWTPayload;
 
-    if (!payload) {
+    try {
+      const issuer =
+        this.config.get<string>('OIDC_ISSUER') ?? 'http://localhost:3000';
+      const jwks = createLocalJWKSet(this.signingKeyService.getPublicJwks());
+      const verified = await jwtVerify(accessToken, jwks, {
+        algorithms: ['RS256'],
+        issuer,
+        requiredClaims: ['exp', 'iat', 'jti', 'sub', 'client_id'],
+      });
+
+      if (verified.protectedHeader.typ !== 'at+jwt') {
+        throw new Error('Unexpected JWT type');
+      }
+
+      jwtPayload = verified.payload;
+    } catch {
       throw new UnauthorizedException('Invalid or expired access token');
     }
 
-    const sub =
-      typeof payload.accountId === 'string' ? payload.accountId : undefined;
+    const sub = typeof jwtPayload.sub === 'string' ? jwtPayload.sub : undefined;
+    const signedClientId =
+      typeof jwtPayload.client_id === 'string'
+        ? jwtPayload.client_id
+        : undefined;
+    const audiences = Array.isArray(jwtPayload.aud)
+      ? jwtPayload.aud
+      : typeof jwtPayload.aud === 'string'
+        ? [jwtPayload.aud]
+        : [];
 
-    if (!sub) {
+    if (!sub || !signedClientId) {
       throw new UnauthorizedException('Access token has no account');
+    }
+
+    if (!audiences.includes(signedClientId)) {
+      throw new UnauthorizedException('Access token has an invalid audience');
     }
 
     return {
       sub,
 
-      clientId:
-        typeof payload.clientId === 'string' ? payload.clientId : undefined,
+      clientId: signedClientId,
 
-      scope: typeof payload.scope === 'string' ? payload.scope : undefined,
+      scope: typeof jwtPayload.scope === 'string' ? jwtPayload.scope : undefined,
     };
   }
 }

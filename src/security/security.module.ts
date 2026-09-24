@@ -9,10 +9,12 @@ import { OidcTokenService } from './services/oidc-token.service';
 import { OidcPersistenceModule } from 'src/oidc/oidc-persistence.module';
 import { RolesGuard } from './guards/roles.guard';
 import { IdentityModule } from 'src/identity/identity.module';
+import { SigningKeysModule } from 'src/signing-keys/signing-keys.module';
 
 @Module({
   imports: [
     OidcPersistenceModule,
+    SigningKeysModule,
     forwardRef(() => IdentityModule),
     TypeOrmModule.forFeature([SecurityPolicy]),
   ],

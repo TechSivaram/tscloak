@@ -10,6 +10,7 @@ import {
 } from 'nest-oidc-provider';
 
 import { IdentityService } from 'src/identity/identity.service';
+import { OidcTokenService } from 'src/security/services/oidc-token.service';
 import { SecurityPolicyService } from 'src/security/services/security-policy/security-policy.service';
 import { SigningKeyService } from 'src/signing-keys/services/signing-key/signing-key.service';
 
@@ -24,6 +25,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
   constructor(
     private readonly config: ConfigService,
     private readonly identityService: IdentityService,
+    private readonly oidcTokenService: OidcTokenService,
     private readonly oidcRepository: OidcRepository,
     private readonly signingKeyService: SigningKeyService,
     private readonly securityPolicyService: SecurityPolicyService,
@@ -66,6 +68,83 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
     return {
       factory: ({ issuer, config, module }) => {
         const provider = new module.Provider(issuer, config);
+
+        /**
+         * oidc-provider's built-in UserInfo endpoint rejects every access
+         * token with an audience. Our JWT access tokens are audience-bound,
+         * so validate them here and return the same scope-filtered UserInfo
+         * claims from the enabled account record.
+         */
+        provider.use(async (ctx, next) => {
+          if (
+            !['GET', 'POST'].includes(ctx.method) ||
+            ctx.path !== '/me'
+          ) {
+            return next();
+          }
+
+          const authorization = ctx.get('authorization');
+          const match = /^Bearer\s+(.+)$/i.exec(authorization);
+          const accessToken = match?.[1];
+
+          // Preserve the provider's standard UserInfo behavior for opaque
+          // access tokens and malformed/non-bearer requests.
+          if (!accessToken || !accessToken.includes('.')) {
+            return next();
+          }
+
+          const unauthorized = (error: string) => {
+            ctx.status = 401;
+            ctx.set('WWW-Authenticate', 'Bearer error="invalid_token"');
+            ctx.body = { error };
+          };
+
+          let tokenInfo;
+          try {
+            tokenInfo = await this.oidcTokenService.validate(accessToken);
+          } catch {
+            unauthorized('invalid_token');
+            return;
+          }
+
+          const scopes = new Set(tokenInfo.scope?.split(' ').filter(Boolean));
+          if (!scopes.has('openid')) {
+            ctx.status = 403;
+            ctx.set(
+              'WWW-Authenticate',
+              'Bearer error="insufficient_scope", scope="openid"',
+            );
+            ctx.body = { error: 'insufficient_scope' };
+            return;
+          }
+
+          const user = await this.identityService.findById(
+            tokenInfo.sub,
+            tokenInfo.clientId ?? '',
+          );
+
+          if (!user) {
+            unauthorized('invalid_token');
+            return;
+          }
+
+          const claims: Record<string, unknown> = { sub: user.id };
+          if (scopes.has('profile')) {
+            claims.name = user.username;
+            claims.preferred_username = user.username;
+          }
+          if (scopes.has('email')) {
+            claims.email = user.email;
+            claims.email_verified = true;
+          }
+          if (scopes.has('roles')) {
+            claims.roles = user.roles?.map((role) => role.name) ?? [];
+          }
+
+          ctx.status = 200;
+          ctx.type = 'application/json';
+          ctx.body = claims;
+        });
 
         /**
          * When a browser already has an authenticated OIDC
@@ -174,7 +253,34 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
 
         formats: {
           default: 'opaque',
-          AccessToken: 'jwt',
+          customizers: {
+            jwt: async (_ctx, token, structuredToken) => {
+              const scopes = new Set(
+                (typeof structuredToken.payload.scope === 'string'
+                  ? structuredToken.payload.scope
+                  : ''
+                )
+                  .split(' ')
+                  .filter(Boolean),
+              );
+
+              if (
+                !scopes.has('roles') ||
+                typeof token.accountId !== 'string'
+              ) {
+                return;
+              }
+
+              const user = await this.identityService.findByIdForOidc(
+                token.accountId,
+              );
+
+              if (user) {
+                structuredToken.payload.roles =
+                  user.roles?.map((role) => role.name) ?? [];
+              }
+            },
+          },
         },
 
         conformIdTokenClaims: false,
@@ -295,6 +401,37 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
          * OIDC FEATURES
          */
         features: {
+          /**
+           * Issue JWT access tokens for the provider's default API resource.
+           * oidc-provider 9 selects token format through ResourceServer
+           * metadata rather than the legacy formats.AccessToken option.
+           */
+          resourceIndicators: {
+            enabled: true,
+            defaultResource: async (_ctx, client) =>
+              `urn:tscloak:client:${encodeURIComponent(client.clientId)}`,
+            // Carry the default resource from the authorization request into
+            // the code-exchange access token, including OpenID scope requests.
+            useGrantedResource: async () => true,
+            getResourceServerInfo: async (_ctx, resourceIndicator, client) => {
+              const registeredClient =
+                await this.clientsService.findByClientId(client.clientId);
+              const clientResource =
+                `urn:tscloak:client:${encodeURIComponent(client.clientId)}`;
+
+              return {
+                audience:
+                  resourceIndicator === clientResource
+                    ? client.clientId
+                    : resourceIndicator,
+                scope:
+                  registeredClient?.allowedScopes.join(' ') ??
+                  'openid profile email offline_access roles',
+                accessTokenFormat: 'jwt',
+              };
+            },
+          },
+
           /**
            * Token revocation endpoint.
            */

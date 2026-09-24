@@ -180,8 +180,11 @@ if (!expectedNonce) {
   });
 
   if (!response.ok) {
+    const errorBody = await response.text();
     throw new Error(
-      'Authorization code exchange failed',
+      `Authorization code exchange failed (${response.status})${
+        errorBody ? `: ${errorBody.slice(0, 240)}` : ''
+      }`,
     );
   }
 
@@ -276,8 +279,11 @@ if (!expectedNonce) {
   });
 
   if (!profileResponse.ok) {
+    const errorBody = await profileResponse.text();
     throw new Error(
-      'Unable to retrieve authenticated user profile',
+      `Profile request failed (${profileResponse.status})${
+        errorBody ? `: ${errorBody.slice(0, 240)}` : ''
+      }`,
     );
   }
 
@@ -348,6 +354,7 @@ if (!expectedNonce) {
 
   console.error(error);
 
-  status.textContent =
-    'Unable to complete authentication.';
+  status.textContent = error instanceof Error
+    ? error.message
+    : 'Unable to complete authentication.';
 });

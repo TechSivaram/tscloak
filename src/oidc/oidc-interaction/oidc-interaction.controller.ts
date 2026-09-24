@@ -512,6 +512,24 @@ export class OidcInteractionController {
       grant.addOIDCClaims(missingOIDCClaims);
     }
 
+    // Grant resource server scopes reported by oidc-provider's consent policy.
+    // Without these, JWT resource access remains unconsented and the provider
+    // sends the user back to this consent interaction again.
+    const missingResourceScopes =
+      details.prompt?.details?.missingResourceScopes ?? {};
+
+    if (
+      missingResourceScopes &&
+      typeof missingResourceScopes === 'object' &&
+      !Array.isArray(missingResourceScopes)
+    ) {
+      for (const [resource, scopes] of Object.entries(missingResourceScopes)) {
+        if (Array.isArray(scopes) && scopes.length > 0) {
+          grant.addResourceScope(resource, scopes.map(String));
+        }
+      }
+    }
+
     // ==========================================================
     // SAVE GRANT
     // ==========================================================
