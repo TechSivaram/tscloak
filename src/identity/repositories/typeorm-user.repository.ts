@@ -18,7 +18,13 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async findAll(clientId?: string): Promise<User[]> {
     return this.repository.find({
-      where: clientId ? { client: { clientId } } : undefined,
+      where: clientId
+        ? {
+            client: {
+              clientId,
+            },
+          }
+        : undefined,
       select: {
         id: true,
         username: true,
@@ -37,9 +43,14 @@ export class TypeOrmUserRepository implements UserRepository {
     });
   }
 
-  async findById(id: string, client_id: any): Promise<User | null> {
+  async findById(id: string, clientId: string): Promise<User | null> {
     return this.repository.findOne({
-      where: { id, client: { clientId: client_id } },
+      where: {
+        id,
+        client: {
+          clientId,
+        },
+      },
       relations: {
         roles: true,
       },
@@ -48,25 +59,40 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async findByIdForOidc(id: string): Promise<User | null> {
     return this.repository.findOne({
-      where: { id },
+      where: {
+        id,
+      },
       relations: {
         roles: true,
       },
     });
   }
 
-  async findByUsername(username: string, client_id: any): Promise<User | null> {
+  async findByUsername(
+    username: string,
+    clientId: string,
+  ): Promise<User | null> {
     return this.repository.findOne({
-      where: { username, client: { clientId: client_id } },
+      where: {
+        username,
+        client: {
+          clientId,
+        },
+      },
       relations: {
         roles: true,
       },
     });
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string, clientId: string): Promise<User | null> {
     return this.repository.findOne({
-      where: { email },
+      where: {
+        email,
+        client: {
+          clientId,
+        },
+      },
     });
   }
 

@@ -61,25 +61,23 @@ export class IdentityService {
       throw new BadRequestException('Client ID is required');
     }
 
-    const clnt = await this.clients.findByClientId(input.clientId);
-    if (clnt === null) {
+    const client = await this.clients.findByClientId(input.clientId);
+
+    if (!client) {
       throw new ConflictException('Client does not exist');
     }
 
-    input.clientId = clnt.id;
+    const clientId = client.id;
     const existingUsername = await this.users.findByUsername(
       input.username,
-      input.clientId,
+      clientId,
     );
 
     if (existingUsername) {
       throw new ConflictException('Username already exists');
     }
 
-    const existingEmail = await this.users.findByEmail(
-      input.email,
-      input.clientId,
-    );
+    const existingEmail = await this.users.findByEmail(input.email, clientId);
 
     if (existingEmail) {
       throw new ConflictException('Email already exists');
@@ -93,7 +91,7 @@ export class IdentityService {
     user.email = input.email;
     user.passwordHash = passwordHash;
     user.enabled = true;
-    user.clientId = input.clientId;
+    user.clientId = clientId;
 
     if (roleNames.length > 0) {
       const assignedRoles = await Promise.all(
