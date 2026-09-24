@@ -302,6 +302,10 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
             enabled: true,
           },
 
+          clientCredentials: {
+            enabled: true,
+          },
+
           /**
            * Disable oidc-provider's built-in
            * development interaction pages.

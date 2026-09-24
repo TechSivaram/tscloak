@@ -5,16 +5,16 @@
       "type": "node",
       "request": "attach",
       "name": "Attach to NestJS",
+      "address": "127.0.0.1",
       "port": 9229,
-      "restart": true,
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "restart": false,
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Refresh Token E2E",
+      "name": "Debug E2E",
       "runtimeExecutable": "node",
       "runtimeArgs": [
         "--experimental-vm-modules",
@@ -23,15 +23,12 @@
         "./test/jest-e2e.json",
         "--runInBand"
       ],
-      "args": [
-        "test/e2e/refresh-token.e2e-spec.ts"
-      ],
+      "args": ["test/e2e/token-client-authentication.e2e-spec.ts"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

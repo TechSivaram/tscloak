@@ -140,9 +140,11 @@ export class IdentityController {
     @Query('client_id') clientId: string | undefined,
     @Body() dto: AssignUserRolesDto,
   ): Promise<UserResponseDto> {
-    const requestedRoles = request.user.roles.includes('IDP_CLIENT_ADMIN')
-      ? ['USER']
-      : dto.roles;
+    const isIdpAdmin = request.user.roles.includes('IDP_ADMIN');
+    const isClientAdminOnly =
+      request.user.roles.includes('IDP_CLIENT_ADMIN') && !isIdpAdmin;
+
+    const requestedRoles = isClientAdminOnly ? ['USER'] : dto.roles;
 
     const user = await this.identityService.assignRoles(
       userId,
