@@ -1,40 +1,27 @@
-const params = new URLSearchParams(
-  window.location.search,
-);
+const params = new URLSearchParams(window.location.search);
 
 const status = document.getElementById('status');
 
-const redirectUri = sessionStorage.getItem(
-  'tscloak_client_admin_redirect_uri',
-);
+const redirectUri = sessionStorage.getItem('tscloak_client_admin_redirect_uri');
 
 const code = params.get('code');
 
 const state = params.get('state');
 
-const expectedState = sessionStorage.getItem(
-  'tscloak_client_admin_state',
-);
+const expectedState = sessionStorage.getItem('tscloak_client_admin_state');
 
-const expectedNonce = sessionStorage.getItem(
-  'tscloak_client_admin_nonce',
-);
+const expectedNonce = sessionStorage.getItem('tscloak_client_admin_nonce');
 
-const clientId = sessionStorage.getItem(
-  'tscloak_client_admin_client_id',
-);
+const clientId = sessionStorage.getItem('tscloak_client_admin_client_id');
 
 const codeVerifier = sessionStorage.getItem(
   'tscloak_client_admin_code_verifier',
 );
 
 function decodeBase64Url(value) {
-  const normalized = value
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
 
-  const padding =
-    '='.repeat((4 - (normalized.length % 4)) % 4);
+  const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
 
   return atob(normalized + padding);
 }
@@ -53,22 +40,13 @@ function decodeJwtPayload(token) {
   let payload;
 
   try {
-    payload = JSON.parse(
-      decodeBase64Url(parts[1]),
-    );
+    payload = JSON.parse(decodeBase64Url(parts[1]));
   } catch {
-    throw new Error(
-      'Invalid ID token payload',
-    );
+    throw new Error('Invalid ID token payload');
   }
 
-  if (
-    !payload ||
-    typeof payload !== 'object'
-  ) {
-    throw new Error(
-      'Invalid ID token payload',
-    );
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Invalid ID token payload');
   }
 
   return payload;
@@ -76,9 +54,8 @@ function decodeJwtPayload(token) {
 
 function getConfiguredIssuer() {
   return (
-    sessionStorage.getItem(
-      'tscloak_client_admin_issuer',
-    ) || window.location.origin
+    sessionStorage.getItem('tscloak_client_admin_issuer') ||
+    window.location.origin
   );
 }
 
@@ -103,58 +80,38 @@ if (!code) {
   status.textContent =
     'Authentication failed. Authorization code was not returned.';
 
-  throw new Error(
-    'Missing authorization code',
-  );
+  throw new Error('Missing authorization code');
 }
 
-if (
-  !state ||
-  !expectedState ||
-  state !== expectedState
-) {
-  status.textContent =
-    'Authentication failed. Invalid callback state.';
+if (!state || !expectedState || state !== expectedState) {
+  status.textContent = 'Authentication failed. Invalid callback state.';
 
-  throw new Error(
-    'Invalid client admin callback state',
-  );
+  throw new Error('Invalid client admin callback state');
 }
 
 if (!clientId) {
   status.textContent =
     'Authentication failed. OIDC client configuration is missing.';
 
-  throw new Error(
-    'Missing client admin OIDC client ID',
-  );
+  throw new Error('Missing client admin OIDC client ID');
 }
 
 if (!redirectUri) {
-  status.textContent =
-    'Authentication failed. Redirect URI is missing.';
+  status.textContent = 'Authentication failed. Redirect URI is missing.';
 
-  throw new Error(
-    'Missing client admin redirect URI',
-  );
+  throw new Error('Missing client admin redirect URI');
 }
 
 if (!codeVerifier) {
-  status.textContent =
-    'Authentication failed. PKCE verifier is missing.';
+  status.textContent = 'Authentication failed. PKCE verifier is missing.';
 
-  throw new Error(
-    'Missing client admin PKCE verifier',
-  );
+  throw new Error('Missing client admin PKCE verifier');
 }
 
 if (!expectedNonce) {
-  status.textContent =
-    'Authentication failed. OIDC nonce is missing.';
+  status.textContent = 'Authentication failed. OIDC nonce is missing.';
 
-  throw new Error(
-    'Missing client admin OIDC nonce',
-  );
+  throw new Error('Missing client admin OIDC nonce');
 }
 
 (async () => {
@@ -162,8 +119,7 @@ if (!expectedNonce) {
     method: 'POST',
 
     headers: {
-      'Content-Type':
-        'application/x-www-form-urlencoded',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
 
     body: new URLSearchParams({
@@ -195,9 +151,7 @@ if (!expectedNonce) {
     typeof tokens.access_token !== 'string' ||
     !tokens.access_token
   ) {
-    throw new Error(
-      'Access token was not returned',
-    );
+    throw new Error('Access token was not returned');
   }
 
   /*
@@ -205,17 +159,11 @@ if (!expectedNonce) {
    * The nonce from the authorization request must match the
    * nonce contained in the returned ID token.
    */
-  if (
-    typeof tokens.id_token !== 'string' ||
-    !tokens.id_token
-  ) {
-    throw new Error(
-      'ID token was not returned',
-    );
+  if (typeof tokens.id_token !== 'string' || !tokens.id_token) {
+    throw new Error('ID token was not returned');
   }
 
-  const idTokenPayload =
-    decodeJwtPayload(tokens.id_token);
+  const idTokenPayload = decodeJwtPayload(tokens.id_token);
 
   /*
    * OIDC nonce validation.
@@ -223,26 +171,17 @@ if (!expectedNonce) {
    * This binds the returned ID token to the authentication
    * transaction initiated by this browser.
    */
-  if (
-    idTokenPayload.nonce !== expectedNonce
-  ) {
-    throw new Error(
-      'OIDC nonce mismatch',
-    );
+  if (idTokenPayload.nonce !== expectedNonce) {
+    throw new Error('OIDC nonce mismatch');
   }
 
   /*
    * Validate issuer.
    */
-  const expectedIssuer =
-    getConfiguredIssuer();
+  const expectedIssuer = getConfiguredIssuer();
 
-  if (
-    idTokenPayload.iss !== expectedIssuer
-  ) {
-    throw new Error(
-      'OIDC issuer mismatch',
-    );
+  if (idTokenPayload.iss !== expectedIssuer) {
+    throw new Error('OIDC issuer mismatch');
   }
 
   /*
@@ -256,13 +195,10 @@ if (!expectedNonce) {
   const validAudience =
     typeof audience === 'string'
       ? audience === clientId
-      : Array.isArray(audience) &&
-        audience.includes(clientId);
+      : Array.isArray(audience) && audience.includes(clientId);
 
   if (!validAudience) {
-    throw new Error(
-      'OIDC audience mismatch',
-    );
+    throw new Error('OIDC audience mismatch');
   }
 
   /*
@@ -271,8 +207,7 @@ if (!expectedNonce) {
    */
   const profileResponse = await fetch('/me', {
     headers: {
-      Authorization:
-        `Bearer ${tokens.access_token}`,
+      Authorization: `Bearer ${tokens.access_token}`,
 
       Accept: 'application/json',
     },
@@ -287,18 +222,13 @@ if (!expectedNonce) {
     );
   }
 
-  const profile =
-    await profileResponse.json();
+  const profile = await profileResponse.json();
 
   /*
    * Client-admin access requires the explicit
    * IDP_CLIENT_ADMIN role.
    */
-  if (
-    !profile?.roles?.includes(
-      'IDP_CLIENT_ADMIN',
-    )
-  ) {
+  if (!profile?.roles?.includes('IDP_CLIENT_ADMIN')) {
     throw new Error(
       'Access denied: IDP_CLIENT_ADMIN role is required for this portal',
     );
@@ -320,10 +250,7 @@ if (!expectedNonce) {
     tokens.access_token,
   );
 
-  sessionStorage.setItem(
-    'tscloak_client_admin_id_token',
-    tokens.id_token,
-  );
+  sessionStorage.setItem('tscloak_client_admin_id_token', tokens.id_token);
 
   if (tokens.refresh_token) {
     sessionStorage.setItem(
@@ -335,26 +262,20 @@ if (!expectedNonce) {
   /*
    * Authentication transaction values are single-use.
    */
-  sessionStorage.removeItem(
-    'tscloak_client_admin_state',
-  );
+  sessionStorage.removeItem('tscloak_client_admin_state');
 
-  sessionStorage.removeItem(
-    'tscloak_client_admin_code_verifier',
-  );
+  sessionStorage.removeItem('tscloak_client_admin_code_verifier');
 
-  sessionStorage.removeItem(
-    'tscloak_client_admin_nonce',
-  );
+  sessionStorage.removeItem('tscloak_client_admin_nonce');
 
-  window.location.href =
-    './dashboard.html';
+  window.location.href = './dashboard.html';
 })().catch((error) => {
   clearAuthenticationState();
 
   console.error(error);
 
-  status.textContent = error instanceof Error
-    ? error.message
-    : 'Unable to complete authentication.';
+  status.textContent =
+    error instanceof Error
+      ? error.message
+      : 'Unable to complete authentication.';
 });

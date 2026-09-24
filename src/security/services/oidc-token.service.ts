@@ -67,7 +67,8 @@ export class OidcTokenService {
 
       clientId: signedClientId,
 
-      scope: typeof jwtPayload.scope === 'string' ? jwtPayload.scope : undefined,
+      scope:
+        typeof jwtPayload.scope === 'string' ? jwtPayload.scope : undefined,
     };
   }
 }

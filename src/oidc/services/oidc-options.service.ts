@@ -76,10 +76,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
          * claims from the enabled account record.
          */
         provider.use(async (ctx, next) => {
-          if (
-            !['GET', 'POST'].includes(ctx.method) ||
-            ctx.path !== '/me'
-          ) {
+          if (!['GET', 'POST'].includes(ctx.method) || ctx.path !== '/me') {
             return next();
           }
 
@@ -264,10 +261,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
                   .filter(Boolean),
               );
 
-              if (
-                !scopes.has('roles') ||
-                typeof token.accountId !== 'string'
-              ) {
+              if (!scopes.has('roles') || typeof token.accountId !== 'string') {
                 return;
               }
 
@@ -414,10 +408,10 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
             // the code-exchange access token, including OpenID scope requests.
             useGrantedResource: async () => true,
             getResourceServerInfo: async (_ctx, resourceIndicator, client) => {
-              const registeredClient =
-                await this.clientsService.findByClientId(client.clientId);
-              const clientResource =
-                `urn:tscloak:client:${encodeURIComponent(client.clientId)}`;
+              const registeredClient = await this.clientsService.findByClientId(
+                client.clientId,
+              );
+              const clientResource = `urn:tscloak:client:${encodeURIComponent(client.clientId)}`;
 
               return {
                 audience:
