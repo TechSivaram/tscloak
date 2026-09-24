@@ -115,10 +115,14 @@ export class TypeOrmUserRepository implements UserRepository {
     return this.repository.findOne({
       where: {
         email,
+        enabled: true,
         client: {
           clientId,
           enabled: true,
         },
+      },
+      relations: {
+        roles: true,
       },
     });
   }
