@@ -9,20 +9,18 @@ import { OidcInteractionController } from './oidc-interaction/oidc-interaction.c
 import { OidcPersistenceModule } from './oidc-persistence.module';
 
 import { AuthenticationModule } from 'src/authentication/authentication.module';
-import { SessionsModule } from 'src/sessions/sessions.module';
 import { ClientsModule } from 'src/clients/clients.module';
 import { IdentityModule } from 'src/identity/identity.module';
-import { SigningKeysModule } from 'src/signing-keys/signing-keys.module';
-import { OidcOptionsService } from './services/oidc-options.service';
 import { SecurityModule } from 'src/security/security.module';
+import { SigningKeysModule } from 'src/signing-keys/signing-keys.module';
 import { ClientRegistrationPolicyModule } from './services/client-registration-policy/client-registration-policy.module';
+import { OidcOptionsService } from './services/oidc-options.service';
 
 @Module({
   imports: [
     ConfigModule,
 
     AuthenticationModule,
-    SessionsModule,
     ClientsModule,
     IdentityModule,
     SecurityModule,

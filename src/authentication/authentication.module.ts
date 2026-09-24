@@ -1,16 +1,13 @@
 import { Module } from '@nestjs/common';
 
-import { AuthenticationController } from './authentication.controller';
+//import { AuthenticationController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 
-import { IdentityModule } from '../identity/identity.module';
-import { SessionsModule } from 'src/sessions/sessions.module';
 import { ClientsModule } from 'src/clients/clients.module';
+import { IdentityModule } from '../identity/identity.module';
 
 @Module({
-  imports: [IdentityModule, SessionsModule, ClientsModule],
-
-  controllers: [AuthenticationController],
+  imports: [IdentityModule, ClientsModule],
 
   providers: [AuthenticationService],
 
