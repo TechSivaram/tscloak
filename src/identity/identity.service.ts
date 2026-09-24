@@ -67,6 +67,10 @@ export class IdentityService {
       throw new ConflictException('Client does not exist');
     }
 
+    if (!client.enabled) {
+      throw new ConflictException('Client is disabled');
+    }
+
     const clientId = client.id;
     const existingUsername = await this.users.findByUsername(
       input.username,
@@ -112,7 +116,7 @@ export class IdentityService {
     return this.users.findByUsername(username, client_id);
   }
 
-  async findById(id: string, client_id: any): Promise<User | null> {
+  async findById(id: string, client_id: string): Promise<User | null> {
     return this.users.findById(id, client_id);
   }
 
@@ -125,7 +129,7 @@ export class IdentityService {
     clientId: string,
     input: UpdateUserInput,
   ): Promise<User> {
-    const user = await this.users.findById(userId, clientId);
+    const user = await this.users.findByIdForAdministration(userId, clientId);
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -172,7 +176,7 @@ export class IdentityService {
     clientId: string,
     roleNames: string[],
   ): Promise<User> {
-    const user = await this.users.findById(userId, clientId);
+    const user = await this.users.findByIdForAdministration(userId, clientId);
 
     if (!user) {
       throw new NotFoundException('User not found');

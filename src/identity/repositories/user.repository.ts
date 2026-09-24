@@ -7,6 +7,12 @@ export abstract class UserRepository {
 
   abstract findById(id: string, clientId: string): Promise<User | null>;
 
+  /** Admin lookup that permits disabled users to be re-enabled. */
+  abstract findByIdForAdministration(
+    id: string,
+    clientId: string,
+  ): Promise<User | null>;
+
   abstract findByIdForOidc(id: string): Promise<User | null>;
 
   abstract findByUsername(

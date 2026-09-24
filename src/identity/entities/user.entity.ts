@@ -37,7 +37,7 @@ export class User {
 
   @Column({
     type: 'uuid',
-    nullable: true,
+    nullable: false,
   })
   clientId: string;
 

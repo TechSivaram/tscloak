@@ -47,8 +47,28 @@ export class TypeOrmUserRepository implements UserRepository {
     return this.repository.findOne({
       where: {
         id,
+        enabled: true,
         client: {
           clientId,
+          enabled: true,
+        },
+      },
+      relations: {
+        roles: true,
+      },
+    });
+  }
+
+  async findByIdForAdministration(
+    id: string,
+    clientId: string,
+  ): Promise<User | null> {
+    return this.repository.findOne({
+      where: {
+        id,
+        client: {
+          clientId,
+          enabled: true,
         },
       },
       relations: {
@@ -61,6 +81,10 @@ export class TypeOrmUserRepository implements UserRepository {
     return this.repository.findOne({
       where: {
         id,
+        enabled: true,
+        client: {
+          enabled: true,
+        },
       },
       relations: {
         roles: true,
@@ -75,8 +99,10 @@ export class TypeOrmUserRepository implements UserRepository {
     return this.repository.findOne({
       where: {
         username,
+        enabled: true,
         client: {
           clientId,
+          enabled: true,
         },
       },
       relations: {
@@ -91,6 +117,7 @@ export class TypeOrmUserRepository implements UserRepository {
         email,
         client: {
           clientId,
+          enabled: true,
         },
       },
     });
