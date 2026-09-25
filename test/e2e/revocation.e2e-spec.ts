@@ -521,7 +521,7 @@ describe('OIDC Token Revocation endpoint (e2e)', () => {
     return new URL(discovery.body.revocation_endpoint).pathname;
   }
 
-  it('revokes an access token successfully', async () => {
+  it('rejects revocation of a structured JWT access token', async () => {
     const result = await obtainTokensForRevocation();
     const revocationEndpoint = await getRevocationEndpoint(result.agent);
 
@@ -534,24 +534,15 @@ describe('OIDC Token Revocation endpoint (e2e)', () => {
         client_id: result.client.clientId,
       });
 
-    expect([200, 204]).toContain(response.status);
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('unsupported_token_type');
+    expect(response.body.error_description).toContain(
+      'Structured JWT Tokens cannot be revoked',
+    );
   });
 
-  it('makes a revoked access token inactive in introspection', async () => {
+  it('rejects introspection of a structured JWT access token', async () => {
     const result = await obtainTokensForRevocation();
-    const revocationEndpoint = await getRevocationEndpoint(result.agent);
-
-    await result.agent
-      .post(revocationEndpoint)
-      .type('form')
-      .send({
-        token: result.accessToken,
-        token_type_hint: 'access_token',
-        client_id: result.client.clientId,
-      })
-      .expect((response) => {
-        expect([200, 204]).toContain(response.status);
-      });
 
     const discovery = await result.agent
       .get('/.well-known/openid-configuration')
@@ -567,10 +558,13 @@ describe('OIDC Token Revocation endpoint (e2e)', () => {
         token: result.accessToken,
         token_type_hint: 'access_token',
         client_id: result.client.clientId,
-      })
-      .expect(200);
+      });
 
-    expect(introspection.body.active).toBe(false);
+    expect(introspection.status).toBe(400);
+    expect(introspection.body.error).toBe('unsupported_token_type');
+    expect(introspection.body.error_description).toContain(
+      'Structured JWT Tokens cannot be introspected',
+    );
   });
 
   it('revokes a refresh token successfully', async () => {

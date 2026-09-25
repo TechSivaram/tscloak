@@ -20,6 +20,7 @@ describe('OIDC Token Introspection endpoint (e2e)', () => {
 
   function createPkce() {
     const codeVerifier = randomBytes(32).toString('base64url');
+
     const codeChallenge = createHash('sha256')
       .update(codeVerifier)
       .digest('base64url');
@@ -43,6 +44,7 @@ describe('OIDC Token Introspection endpoint (e2e)', () => {
       }
 
       expect(response.headers.location).toBeDefined();
+
       url = new URL(response.headers.location, url);
     }
 
@@ -63,16 +65,19 @@ describe('OIDC Token Introspection endpoint (e2e)', () => {
     expect(tokenEndpoint).toBeDefined();
 
     const { codeVerifier, codeChallenge } = createPkce();
+
     const authorizationUrl = new URL(authorizationEndpoint);
 
     authorizationUrl.searchParams.set('client_id', adminClientId);
     authorizationUrl.searchParams.set('redirect_uri', adminRedirectUri);
     authorizationUrl.searchParams.set('response_type', 'code');
     authorizationUrl.searchParams.set('scope', 'openid profile email');
+
     authorizationUrl.searchParams.set(
       'state',
       `e2e-introspection-${Date.now()}`,
     );
+
     authorizationUrl.searchParams.set('code_challenge', codeChallenge);
     authorizationUrl.searchParams.set('code_challenge_method', 'S256');
 
@@ -166,6 +171,7 @@ describe('OIDC Token Introspection endpoint (e2e)', () => {
         expect(response.headers.location).toBeDefined();
 
         callbackUrl = new URL(response.headers.location, callbackUrl);
+
         continue;
       }
 
@@ -188,6 +194,7 @@ describe('OIDC Token Introspection endpoint (e2e)', () => {
     }
 
     const code = callback!.searchParams.get('code');
+
     expect(code).toBeDefined();
 
     const token = await agent
@@ -226,17 +233,16 @@ describe('OIDC Token Introspection endpoint (e2e)', () => {
     });
   }
 
-  it('introspects a valid access token as active', async () => {
+  it('rejects introspection of a structured JWT access token', async () => {
     const accessToken = await obtainAdminAccessToken();
+
     const response = await introspect(accessToken);
 
-    expect(response.status).toBe(200);
-    expect(response.body.active).toBe(true);
-    expect(response.body.client_id).toBe(adminClientId);
-    expect(response.body.token_type).toBeDefined();
-    expect(response.body.exp).toBeDefined();
-    expect(response.body.iat).toBeDefined();
-    expect(response.body.sub).toBeDefined();
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('unsupported_token_type');
+    expect(response.body.error_description).toContain(
+      'Structured JWT Tokens cannot be introspected',
+    );
   });
 
   it('returns active=false for an invalid access token', async () => {

@@ -207,7 +207,7 @@ describe('OIDC UserInfo Security Edge Cases (e2e)', () => {
     expect(response.body.sub).toBeTruthy();
   });
 
-  it('rejects an access token after it has been revoked', async () => {
+  it('rejects revocation of a structured JWT access token', async () => {
     const accessToken = await issueAccessToken();
 
     const before = await request(baseUrl)
@@ -226,13 +226,17 @@ describe('OIDC UserInfo Security Edge Cases (e2e)', () => {
         client_id: clientId,
       });
 
-    expect([200, 204]).toContain(revoked.status);
+    expect(revoked.status).toBe(400);
+    expect(revoked.body.error).toBe('unsupported_token_type');
+    expect(revoked.body.error_description).toContain(
+      'Structured JWT Tokens cannot be revoked',
+    );
 
     const after = await request(baseUrl)
       .get('/me')
       .set('Authorization', `Bearer ${accessToken}`)
       .set('Accept', 'application/json');
 
-    expect(after.status).toBe(401);
+    expect(after.status).toBe(200);
   });
 });
