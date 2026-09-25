@@ -30,7 +30,9 @@ export class User {
   @Column()
   passwordHash: string;
 
-  @Column({ default: true })
+  @Column({
+    default: true,
+  })
   enabled: boolean;
 
   @CreateDateColumn()
@@ -45,7 +47,9 @@ export class User {
   })
   clientId: string;
 
-  @ManyToOne(() => Client)
+  @ManyToOne(() => Client, (client) => client.users, {
+    onDelete: 'RESTRICT',
+  })
   @JoinColumn({
     name: 'clientId',
     referencedColumnName: 'id',
@@ -55,6 +59,14 @@ export class User {
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
+    joinColumn: {
+      name: 'usersId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'rolesId',
+      referencedColumnName: 'id',
+    },
   })
   roles: Role[];
 }
