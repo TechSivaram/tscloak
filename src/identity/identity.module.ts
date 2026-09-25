@@ -1,16 +1,17 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { User } from './entities/user.entity';
-import { UserRepository } from './repositories/user.repository';
-import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
-import { IdentityService } from './identity.service';
-import { IdentityController } from './identity.controller';
+import { ClientsModule } from 'src/clients/clients.module';
+import { SecurityModule } from 'src/security/security.module';
+import { ClientUserController } from './client-user.controller';
 import { Role } from './entities/role.entity';
+import { User } from './entities/user.entity';
+import { IdentityController } from './identity.controller';
+import { IdentityService } from './identity.service';
 import { RoleRepository } from './repositories/role.repository';
 import { TypeOrmRoleRepository } from './repositories/typeorm-role.repository';
-import { SecurityModule } from 'src/security/security.module';
-import { ClientsModule } from 'src/clients/clients.module';
+import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
+import { UserRepository } from './repositories/user.repository';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { ClientsModule } from 'src/clients/clients.module';
     forwardRef(() => SecurityModule),
     TypeOrmModule.forFeature([User, Role]),
   ],
-  controllers: [IdentityController],
+  controllers: [IdentityController, ClientUserController],
   providers: [
     IdentityService,
     {

@@ -350,7 +350,13 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
           }
 
           const clientId =
-            ctx.oidc.params.client_id ?? ctx.oidc.accessToken?.clientId;
+            ctx.oidc.client?.clientId ?? ctx.oidc.params?.client_id;
+
+          if (!clientId) {
+            throw new Error(
+              'Unable to determine the OIDC client for account lookup',
+            );
+          }
 
           const user = await this.identityService.findByIdForOidc(accountId);
 
@@ -377,20 +383,14 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
 
             claims: async () => ({
               sub: user.id,
-
               name: user.username,
-
               preferred_username: user.username,
-
               email: user.email,
-
               email_verified: true,
-
               roles: user.roles.map((role) => role.name),
             }),
           };
         },
-
         /**
          * OIDC FEATURES
          */

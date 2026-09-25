@@ -7,20 +7,24 @@ import {
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { Client } from '../../clients/entities/client.entity';
 import { Role } from './role.entity';
 
 @Entity('users')
+@Unique('UQ_users_username_client', ['username', 'clientId'])
+@Unique('UQ_users_email_client', ['email', 'clientId'])
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column()
   username: string;
 
-  @Column({ unique: true })
+  @Column()
   email: string;
 
   @Column()
