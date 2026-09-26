@@ -6,7 +6,7 @@ import { SigningKeyService } from '../../signing-keys/services/signing-key/signi
 
 export interface ValidatedAccessToken {
   sub: string;
-  clientId?: string;
+  clientId: string;
   scope?: string;
 }
 

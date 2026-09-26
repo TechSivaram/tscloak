@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/common';
 
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateInitialAccessTokenDto } from 'src/registration/dto/create-initial-access-token.dto';
 
 import { InitialAccessTokenService } from 'src/registration/services/initial-access-token/initial-access-token.service';
 import { Roles } from 'src/security/decorators/roles.decorator';
@@ -27,11 +29,15 @@ export class InitialAccessTokenController {
   @ApiOperation({
     summary: 'Create an initial access token',
     description:
-      'Creates an initial access token that can be used for controlled OAuth/OIDC client registration. Requires the IDP_ADMIN role.',
+      'Creates an initial access token that can be used for controlled OAuth/OIDC client registration. An email address may optionally be provided to send the generated token by email.',
   })
   @ApiResponse({
     status: 201,
     description: 'Initial access token created successfully.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid email address.',
   })
   @ApiResponse({
     status: 401,
@@ -41,8 +47,8 @@ export class InitialAccessTokenController {
     status: 403,
     description: 'Authenticated user does not have the permission.',
   })
-  async create() {
-    return this.initialAccessTokenService.create();
+  async create(@Body() dto: CreateInitialAccessTokenDto) {
+    return this.initialAccessTokenService.create(dto.email);
   }
 
   @Get()

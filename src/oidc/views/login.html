@@ -3,15 +3,15 @@
 
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Sign in - TSCloak</title>
 
-  <link rel="icon" type="image/png" href="/assets/tscloak-icon.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    href="/assets/tscloak-icon.png"
+  />
 
   <style>
     :root {
@@ -28,6 +28,10 @@
       --error-bg: #fff0f0;
       --error-border: #ffcccc;
       --error-text: #c00;
+
+      --success-bg: #ecfdf3;
+      --success-border: #abefc6;
+      --success-text: #067647;
     }
 
     * {
@@ -44,11 +48,7 @@
 
       padding: 20px;
 
-      font-family:
-        Inter,
-        Arial,
-        Helvetica,
-        sans-serif;
+      font-family: Inter, Arial, Helvetica, sans-serif;
 
       background:
         radial-gradient(
@@ -68,20 +68,14 @@
       background: white;
 
       border: 1px solid rgba(31, 63, 130, 0.08);
-
       border-radius: 16px;
 
       box-shadow:
         0 12px 40px rgba(31, 63, 130, 0.10);
     }
 
-    /* =============================================
-       TSCloak Branding
-    ============================================== */
-
     .logo {
       text-align: center;
-
       margin-bottom: 30px;
     }
 
@@ -102,7 +96,6 @@
       color: var(--tscloak-blue);
 
       font-size: 30px;
-
       font-weight: 700;
 
       letter-spacing: -0.5px;
@@ -114,13 +107,8 @@
       color: var(--text-muted);
 
       font-size: 13px;
-
       font-weight: 500;
     }
-
-    /* =============================================
-       Form
-    ============================================== */
 
     .form-group {
       margin-bottom: 20px;
@@ -134,7 +122,6 @@
       color: var(--text-primary);
 
       font-size: 14px;
-
       font-weight: 600;
     }
 
@@ -144,11 +131,9 @@
       padding: 12px 13px;
 
       border: 1px solid var(--border);
-
       border-radius: 8px;
 
       color: var(--text-primary);
-
       background: white;
 
       font-size: 15px;
@@ -167,25 +152,18 @@
         0 0 0 3px rgba(31, 63, 130, 0.12);
     }
 
-    /* =============================================
-       Sign In Button
-    ============================================== */
-
     button {
       width: 100%;
 
       padding: 13px;
 
       border: none;
-
       border-radius: 8px;
 
       background: var(--tscloak-blue);
-
       color: white;
 
       font-size: 15px;
-
       font-weight: 600;
 
       cursor: pointer;
@@ -210,9 +188,13 @@
       transform: translateY(1px);
     }
 
-    /* =============================================
-       Error
-    ============================================== */
+    button:disabled {
+      opacity: 0.65;
+
+      cursor: not-allowed;
+
+      box-shadow: none;
+    }
 
     .error {
       margin-bottom: 20px;
@@ -230,9 +212,100 @@
       font-size: 14px;
     }
 
-    /* =============================================
-       Footer Branding
-    ============================================== */
+    .forgot-password {
+      margin-top: 14px;
+
+      text-align: center;
+    }
+
+    .forgot-password a {
+      color: var(--tscloak-blue);
+
+      font-size: 13px;
+      font-weight: 500;
+
+      text-decoration: none;
+    }
+
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+
+    .forgot-password-panel {
+      margin-top: 4px;
+    }
+
+    .forgot-password-header {
+      margin-bottom: 24px;
+
+      text-align: center;
+    }
+
+    .forgot-password-header h2 {
+      margin: 0 0 8px;
+
+      color: var(--text-primary);
+
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .forgot-password-header p {
+      margin: 0;
+
+      color: var(--text-muted);
+
+      font-size: 13px;
+
+      line-height: 1.6;
+    }
+
+    .forgot-password-message {
+      margin-bottom: 20px;
+
+      padding: 12px;
+
+      border-radius: 8px;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+    }
+
+    .forgot-password-message.error {
+      background: var(--error-bg);
+
+      border: 1px solid var(--error-border);
+
+      color: var(--error-text);
+    }
+
+    .forgot-password-message.success {
+      background: var(--success-bg);
+
+      border: 1px solid var(--success-border);
+
+      color: var(--success-text);
+    }
+
+    .back-to-login {
+      margin-top: 18px;
+
+      text-align: center;
+    }
+
+    .back-to-login a {
+      color: var(--tscloak-blue);
+
+      font-size: 13px;
+      font-weight: 500;
+
+      text-decoration: none;
+    }
+
+    .back-to-login a:hover {
+      text-decoration: underline;
+    }
 
     .footer {
       margin-top: 26px;
@@ -247,10 +320,6 @@
     .footer strong {
       color: var(--tscloak-blue);
     }
-
-    /* =============================================
-       Mobile
-    ============================================== */
 
     @media (max-width: 480px) {
       body {
@@ -273,12 +342,7 @@
 
   <div class="login-container">
 
-    <!-- =============================================
-         TSCloak Branding
-    ============================================== -->
-
     <div class="logo">
-
       <img
         src="/assets/tscloak-icon.png"
         alt="TSCloak"
@@ -290,75 +354,352 @@
       <p>
         Secure Identities. Trusted Access.
       </p>
-
     </div>
-
-
-    <!-- Error Placeholder -->
 
     {{ERROR}}
 
+    <!-- ========================================================
+         LOGIN
+         ======================================================== -->
 
-    <!-- =============================================
-         Login Form
-    ============================================== -->
+    <div id="loginSection">
 
-    <form
-      method="POST"
-      action="/interaction/{{UID}}/login"
+      <form
+        id="loginForm"
+        method="POST"
+        action="/interaction/{{UID}}/login"
+      >
+
+        <div class="form-group">
+
+          <label for="username">
+            Username
+          </label>
+
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            required
+            autofocus
+          />
+
+        </div>
+
+        <div class="form-group">
+
+          <label for="password">
+            Password
+          </label>
+
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+
+        </div>
+
+        <button type="submit">
+          Sign in
+        </button>
+
+      </form>
+
+      <div class="forgot-password">
+
+        <a
+          href="#"
+          id="forgotPasswordLink"
+        >
+          Forgot your password?
+        </a>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================
+         FORGOT PASSWORD
+         ======================================================== -->
+
+    <div
+      id="forgotPasswordPanel"
+      class="forgot-password-panel"
+      hidden
     >
 
-      <div class="form-group">
+      <div class="forgot-password-header">
 
-        <label for="username">
-          Username
-        </label>
+        <h2>
+          Reset your password
+        </h2>
 
-        <input
-          id="username"
-          name="username"
-          type="text"
-          autocomplete="username"
-          required
-          autofocus
-        />
+        <p>
+          Enter the email address associated with your account.
+          If an account exists, we'll send you a password reset link.
+        </p>
 
       </div>
 
+      <div
+        id="forgotPasswordMessage"
+        class="forgot-password-message"
+        hidden
+      ></div>
 
-      <div class="form-group">
+      <form id="forgotPasswordForm">
 
-        <label for="password">
-          Password
-        </label>
+        <div class="form-group">
 
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autocomplete="current-password"
-          required
-        />
+          <label for="forgotEmail">
+            Email
+          </label>
+
+          <input
+            id="forgotEmail"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+          />
+
+        </div>
+
+        <button
+          id="forgotPasswordButton"
+          type="submit"
+        >
+          Send reset link
+        </button>
+
+      </form>
+
+      <div class="back-to-login">
+
+        <a
+          href="#"
+          id="backToLogin"
+        >
+          Back to sign in
+        </a>
 
       </div>
 
-
-      <button type="submit">
-        Sign in
-      </button>
-
-    </form>
-
-
-    <!-- =============================================
-         Footer
-    ============================================== -->
+    </div>
 
     <div class="footer">
       Secured by <strong>TSCloak</strong>
     </div>
 
   </div>
+
+  <script>
+    /*
+     * This value comes directly from the current OIDC interaction.
+     *
+     * The server replaces:
+     *
+     *   {{CLIENT_ID}}
+     *
+     * with details.params.client_id before sending this page.
+     *
+     * The user therefore does not need to enter the Client ID.
+     */
+    const clientId = '{{CLIENT_ID}}';
+
+    const loginSection =
+      document.getElementById('loginSection');
+
+    const forgotPasswordLink =
+      document.getElementById('forgotPasswordLink');
+
+    const forgotPasswordPanel =
+      document.getElementById('forgotPasswordPanel');
+
+    const backToLogin =
+      document.getElementById('backToLogin');
+
+    const forgotPasswordForm =
+      document.getElementById('forgotPasswordForm');
+
+    const forgotPasswordMessage =
+      document.getElementById('forgotPasswordMessage');
+
+    const forgotPasswordButton =
+      document.getElementById('forgotPasswordButton');
+
+    function showForgotPasswordMessage(
+      message,
+      error = false,
+    ) {
+      forgotPasswordMessage.textContent = message;
+
+      forgotPasswordMessage.className =
+        error
+          ? 'forgot-password-message error'
+          : 'forgot-password-message success';
+
+      forgotPasswordMessage.hidden = false;
+    }
+
+    function clearForgotPasswordMessage() {
+      forgotPasswordMessage.textContent = '';
+
+      forgotPasswordMessage.className =
+        'forgot-password-message';
+
+      forgotPasswordMessage.hidden = true;
+    }
+
+    forgotPasswordLink.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+
+        clearForgotPasswordMessage();
+
+        loginSection.hidden = true;
+
+        forgotPasswordPanel.hidden = false;
+
+        document
+          .getElementById('forgotEmail')
+          .focus();
+      },
+    );
+
+    backToLogin.addEventListener(
+      'click',
+      event => {
+        event.preventDefault();
+
+        clearForgotPasswordMessage();
+
+        forgotPasswordPanel.hidden = true;
+
+        loginSection.hidden = false;
+
+        document
+          .getElementById('username')
+          .focus();
+      },
+    );
+
+    forgotPasswordForm.addEventListener(
+      'submit',
+      async event => {
+        event.preventDefault();
+
+        clearForgotPasswordMessage();
+
+        const email =
+          document
+            .getElementById('forgotEmail')
+            .value
+            .trim();
+
+        if (!clientId) {
+          showForgotPasswordMessage(
+            'Unable to determine the application client.',
+            true,
+          );
+
+          return;
+        }
+
+        if (!email) {
+          showForgotPasswordMessage(
+            'Email address is required.',
+            true,
+          );
+
+          document
+            .getElementById('forgotEmail')
+            .focus();
+
+          return;
+        }
+
+        const emailInput =
+          document.getElementById('forgotEmail');
+
+        if (!emailInput.checkValidity()) {
+          showForgotPasswordMessage(
+            'Enter a valid email address.',
+            true,
+          );
+
+          emailInput.focus();
+
+          return;
+        }
+
+        forgotPasswordButton.disabled = true;
+
+        forgotPasswordButton.textContent =
+          'Sending...';
+
+        try {
+          const response =
+            await fetch(
+              '/api/account/forgot-password',
+              {
+                method: 'POST',
+
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                },
+
+                body: JSON.stringify({
+                  clientId,
+                  email,
+                }),
+              },
+            );
+
+          const data =
+            await response
+              .json()
+              .catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(
+              data.message ||
+              'Unable to process the password reset request.',
+            );
+          }
+
+          showForgotPasswordMessage(
+            data.message ||
+            'If an account exists, a password reset link has been sent.',
+          );
+
+          forgotPasswordForm.reset();
+
+        } catch (error) {
+
+          showForgotPasswordMessage(
+            error instanceof Error
+              ? error.message
+              : 'Unable to process the password reset request.',
+            true,
+          );
+
+        } finally {
+
+          forgotPasswordButton.disabled = false;
+
+          forgotPasswordButton.textContent =
+            'Send reset link';
+        }
+      },
+    );
+  </script>
 
 </body>
 

@@ -1,7 +1,5 @@
 import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
 
-import type { Response } from 'express';
-
 import {
   ApiBody,
   ApiOperation,
@@ -20,6 +18,7 @@ import { AuthenticationService } from '../../authentication/authentication.servi
 import { ClientsService } from '../../clients/clients.service';
 import { InteractionMode } from '../../clients/enums/interaction-mode.enum';
 
+import type { Response } from 'express';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -43,7 +42,6 @@ export class OidcInteractionController {
   constructor(
     private readonly authenticationService: AuthenticationService,
     private readonly oidcService: OidcService,
-
     private readonly clientsService: ClientsService,
   ) {}
 
@@ -99,15 +97,6 @@ export class OidcInteractionController {
     // ==========================================================
     // EXTERNAL INTERACTION UI
     // ==========================================================
-    //
-    // EXTERNAL mode:
-    //
-    // login   -> interactionLoginUrl
-    // consent -> interactionConsentUrl
-    //
-    // If the corresponding URL is not configured,
-    // fall back to the hosted TSCloak UI.
-    // ==========================================================
 
     if (client?.interactionMode === InteractionMode.EXTERNAL) {
       let externalInteractionUrl: string | null = null;
@@ -125,7 +114,7 @@ export class OidcInteractionController {
 
         interactionUrl.searchParams.set('prompt', prompt ?? '');
 
-        interactionUrl.searchParams.set('client_id', clientId);
+        interactionUrl.searchParams.set('client_id', String(clientId ?? ''));
 
         response.redirect(interactionUrl.toString());
 
@@ -145,6 +134,7 @@ export class OidcInteractionController {
 
       const html = template
         .replaceAll('{{UID}}', encodeURIComponent(uid))
+        .replaceAll('{{CLIENT_ID}}', this.escapeHtml(String(clientId ?? '')))
         .replaceAll('{{ERROR}}', '');
 
       response.status(200).type('html').send(html);
@@ -268,9 +258,9 @@ export class OidcInteractionController {
       return;
     }
 
-    // ==========================================================
+    // ============================================================
     // UNSUPPORTED INTERACTION
-    // ==========================================================
+    // ============================================================
 
     throw new Error(`Unsupported OIDC interaction prompt: ${prompt}`);
   }
@@ -353,9 +343,7 @@ export class OidcInteractionController {
       await interaction.finished({
         login: {
           accountId: user.id,
-
           remember: true,
-
           ts: Math.floor(Date.now() / 1000),
         },
       });
@@ -368,8 +356,16 @@ export class OidcInteractionController {
       const message =
         error instanceof Error ? error.message : 'Authentication failed';
 
+      const details = await interaction.details();
+
+      const clientId =
+        typeof details.params?.client_id === 'string'
+          ? details.params.client_id
+          : '';
+
       const html = template
         .replaceAll('{{UID}}', encodeURIComponent(uid))
+        .replaceAll('{{CLIENT_ID}}', this.escapeHtml(clientId))
         .replaceAll('{{ERROR}}', this.escapeHtml(message));
 
       response.status(401).type('html').send(html);
@@ -512,9 +508,8 @@ export class OidcInteractionController {
       grant.addOIDCClaims(missingOIDCClaims);
     }
 
-    // Grant resource server scopes reported by oidc-provider's consent policy.
-    // Without these, JWT resource access remains unconsented and the provider
-    // sends the user back to this consent interaction again.
+    // Grant resource server scopes reported by oidc-provider's
+    // consent policy.
     const missingResourceScopes =
       details.prompt?.details?.missingResourceScopes ?? {};
 

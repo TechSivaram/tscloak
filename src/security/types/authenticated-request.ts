@@ -6,7 +6,7 @@ export type AuthenticatedRequest = Request & {
 
 export interface AuthenticatedUser {
   id: string;
-  clientId?: string;
+  clientId: string;
   roles: string[];
   scope?: string;
   accessToken: string;

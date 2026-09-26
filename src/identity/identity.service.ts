@@ -3,13 +3,17 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import * as argon2 from 'argon2';
+import { createHash, randomBytes } from 'crypto';
 
 import { ClientsService } from '../clients/clients.service';
+import { MailService } from '../providers/mail/mail.service';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
+import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
 import { RoleRepository } from './repositories/role.repository';
 import { UserRepository } from './repositories/user.repository';
 
@@ -31,6 +35,8 @@ export class IdentityService {
     private readonly users: UserRepository,
     private readonly roles: RoleRepository,
     private readonly clients: ClientsService,
+    private readonly passwordResetTokens: PasswordResetTokenRepository,
+    private readonly mailService: MailService,
   ) {}
 
   async countUsers(): Promise<number> {
@@ -72,6 +78,7 @@ export class IdentityService {
     }
 
     const clientId = client.id;
+
     const existingUsername = await this.users.findByUsername(
       input.username,
       clientId,
@@ -112,12 +119,15 @@ export class IdentityService {
     return this.users.save(user);
   }
 
-  async findByUsername(username: string, client_id: any): Promise<User | null> {
-    return this.users.findByUsername(username, client_id);
+  async findByUsername(
+    username: string,
+    clientId: string,
+  ): Promise<User | null> {
+    return this.users.findByUsername(username, clientId);
   }
 
-  async findById(id: string, client_id: string): Promise<User | null> {
-    return this.users.findById(id, client_id);
+  async findById(id: string, clientId: string): Promise<User | null> {
+    return this.users.findById(id, clientId);
   }
 
   async findByIdForOidc(id: string): Promise<User | null> {
@@ -135,8 +145,13 @@ export class IdentityService {
       throw new NotFoundException('User not found');
     }
 
-    if (input.email !== undefined) user.email = input.email;
-    if (input.enabled !== undefined) user.enabled = input.enabled;
+    if (input.email !== undefined) {
+      user.email = input.email;
+    }
+
+    if (input.enabled !== undefined) {
+      user.enabled = input.enabled;
+    }
 
     return this.users.save(user);
   }
@@ -168,6 +183,7 @@ export class IdentityService {
     }
 
     role.description = description;
+
     return this.roles.save(role);
   }
 
@@ -187,6 +203,7 @@ export class IdentityService {
     );
 
     const missingRole = roles.find((role) => !role);
+
     if (missingRole) {
       throw new NotFoundException('One or more roles were not found');
     }
@@ -194,5 +211,152 @@ export class IdentityService {
     user.roles = roles.filter((role): role is Role => role !== null);
 
     return this.users.save(user);
+  }
+
+  async changePassword(
+    userId: string,
+    clientId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const user = await this.users.findById(userId, clientId);
+
+    if (!user || !user.enabled) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isCurrentPasswordValid = await argon2.verify(
+      user.passwordHash,
+      currentPassword,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (currentPassword === newPassword) {
+      throw new BadRequestException(
+        'New password must be different from the current password',
+      );
+    }
+
+    user.passwordHash = await argon2.hash(newPassword);
+
+    await this.users.save(user);
+  }
+
+  /**
+   * Starts the self-service forgot-password flow.
+   *
+   * The method intentionally does not throw when the user does not
+   * exist. The controller always returns the same generic response
+   * to prevent account enumeration.
+   */
+  async requestPasswordReset(clientId: string, email: string): Promise<void> {
+    const client = await this.clients.findByClientId(clientId);
+
+    if (!client || !client.enabled) {
+      return;
+    }
+
+    const user = await this.users.findByEmail(email, clientId);
+
+    if (!user || !user.enabled) {
+      return;
+    }
+
+    /**
+     * Invalidate previously active reset tokens for this user.
+     * Only the newest reset request should remain usable.
+     */
+    await this.passwordResetTokens.invalidateForUser(user.id, clientId);
+
+    /**
+     * Generate a cryptographically secure random token.
+     *
+     * The raw token is returned to the caller of this method
+     * internally later for email delivery.
+     *
+     * It is never stored in the database.
+     */
+    const rawToken = randomBytes(32).toString('hex');
+
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+
+    /**
+     * Reset token expires after 30 minutes.
+     */
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+    const resetToken = this.passwordResetTokens.create({
+      tokenHash,
+      userId: user.id,
+      clientId: client.id,
+      expiresAt,
+      usedAt: null,
+    });
+
+    await this.passwordResetTokens.save(resetToken);
+
+    /**
+     * Email delivery will be connected here.
+     *
+     * The rawToken must be used to construct the reset URL:
+     *
+     * https://your-ui.example.com/reset-password?token=<rawToken>
+     *
+     * Do NOT store rawToken in the database.
+     */
+
+    const resetUrl =
+      `${process.env.PASSWORD_RESET_UI_URL}` +
+      `?token=${encodeURIComponent(rawToken)}`;
+
+    await this.mailService.sendPasswordResetEmail(user.email, resetUrl);
+    void rawToken;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (!token) {
+      throw new BadRequestException('Reset token is required');
+    }
+
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    const resetToken =
+      await this.passwordResetTokens.findByTokenHash(tokenHash);
+
+    if (!resetToken) {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    if (resetToken.usedAt) {
+      throw new BadRequestException(
+        'Password reset token has already been used',
+      );
+    }
+
+    if (resetToken.expiresAt.getTime() <= Date.now()) {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    const user = await this.users.findById(
+      resetToken.userId,
+      resetToken.client.clientId,
+    );
+
+    if (!user || !user.enabled) {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    const passwordHash = await argon2.hash(newPassword);
+
+    user.passwordHash = passwordHash;
+
+    await this.users.save(user);
+
+    resetToken.usedAt = new Date();
+
+    await this.passwordResetTokens.save(resetToken);
   }
 }

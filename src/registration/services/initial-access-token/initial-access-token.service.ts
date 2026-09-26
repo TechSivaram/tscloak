@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { OidcService } from 'nest-oidc-provider';
-
 import { OidcRepository } from 'src/oidc/repositories/oidc.repository';
+import { MailService } from 'src/providers/mail/mail.service';
 
 @Injectable()
 export class InitialAccessTokenService {
   constructor(
     private readonly oidcService: OidcService,
     private readonly oidcRepository: OidcRepository,
+    private readonly mailService: MailService,
   ) {}
 
-  async create() {
+  async create(email?: string) {
     const provider = this.oidcService.provider;
 
     const initialAccessToken = new provider.InitialAccessToken({
@@ -22,6 +23,10 @@ export class InitialAccessTokenService {
     });
 
     const token = await initialAccessToken.save();
+
+    if (email) {
+      await this.mailService.sendInitialAccessTokenEmail(email, token);
+    }
 
     return {
       token,

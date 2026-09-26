@@ -11,48 +11,106 @@
 
 <body class="page-initial-access-tokens">
     <div class="app-shell">
+
         <aside class="sidebar">
             <div class="brand">
-                <div class="brand-mark"><img src="../assets/tscloak-icon.png" alt="TSCloak"></div>
+                <div class="brand-mark">
+                    <img src="../assets/tscloak-icon.png" alt="TSCloak">
+                </div>
+
                 <div>
                     <div class="brand-name">TSCloak</div>
                     <div class="brand-subtitle">Administration</div>
                 </div>
             </div>
-            <nav class="navigation"><a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a><a
-                    class="nav-item" href="./clients.html"><span>▣</span>Clients</a><a class="nav-item"
-                    href="./users.html"><span>♙</span>Users</a><a class="nav-item"
-                    href="./roles.html"><span>◆</span>Roles</a>
-                <div class="nav-section-title">Registration</div><a class="nav-item active"
-                    href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a>
-                <div class="nav-section-title">Configuration</div><a class="nav-item"
-                    href="./security-policy.html"><span>⚙</span>Security Policy</a>
+
+            <nav class="navigation">
+                <a class="nav-item" href="./dashboard.html">
+                    <span>⌂</span>Dashboard
+                </a>
+
+                <a class="nav-item" href="./clients.html">
+                    <span>▣</span>Clients
+                </a>
+
+                <a class="nav-item" href="./users.html">
+                    <span>♙</span>Users
+                </a>
+
+                <a class="nav-item" href="./roles.html">
+                    <span>◆</span>Roles
+                </a>
+
+                <div class="nav-section-title">Registration</div>
+
+                <a class="nav-item active" href="./initial-access-tokens.html">
+                    <span>⌁</span>Initial Access Tokens
+                </a>
+
+                <div class="nav-section-title">Configuration</div>
+
+                <a class="nav-item" href="./security-policy.html">
+                    <span>⚙</span>Security Policy
+                </a>
             </nav>
         </aside>
+
         <div class="main-area">
+
             <header class="topbar">
-                <div class="page-heading"><span class="breadcrumb">TSCloak / Registration</span>
+                <div class="page-heading">
+                    <span class="breadcrumb">TSCloak / Registration</span>
                     <h1>Initial Access Tokens</h1>
                 </div>
-                <div class="topbar-actions"><span data-user-name>Administrator</span><button class="text-button"
-                        data-logout>Sign out</button></div>
+
+                <div class="topbar-actions">
+                    <span data-user-name>Administrator</span>
+                    <button class="text-button" data-logout>
+                        Sign out
+                    </button>
+                </div>
             </header>
+
             <main class="content">
+
                 <section class="management-intro">
                     <div>
                         <p class="eyebrow">OIDC registration</p>
+
                         <h2>Initial access tokens</h2>
-                        <p>Manage the provider-issued credentials used for dynamic client registration.</p>
-                    </div><button class="button primary" id="createToken">Create token</button>
+
+                        <p>
+                            Manage the provider-issued credentials used
+                            for dynamic client registration.
+                        </p>
+                    </div>
+
+                    <button
+                        class="button primary"
+                        id="createToken"
+                    >
+                        Create token
+                    </button>
                 </section>
+
                 <section class="panel">
+
                     <div class="panel-header">
                         <div>
                             <p class="eyebrow">Provider storage</p>
                             <h3>Issued tokens</h3>
-                        </div><span class="record-count" id="tokenCount">— tokens</span>
+                        </div>
+
+                        <span
+                            class="record-count"
+                            id="tokenCount"
+                        >
+                            — tokens
+                        </span>
                     </div>
+
                     <p data-message></p>
+
                     <div class="table-wrap">
                         <table>
                             <thead>
@@ -64,18 +122,127 @@
                                     <th></th>
                                 </tr>
                             </thead>
+
                             <tbody id="tokenRows">
                                 <tr>
-                                    <td colspan="5">Loading tokens...</td>
+                                    <td colspan="5">
+                                        Loading tokens...
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
                     <pre id="tokenResult" hidden></pre>
+
                 </section>
+
             </main>
         </div>
     </div>
+
+    <!-- Create token modal -->
+    <div
+        class="token-modal"
+        id="createTokenModal"
+        hidden
+    >
+        <div
+            class="token-modal-backdrop"
+            data-close-token-modal
+        ></div>
+
+        <div
+            class="token-modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="createTokenModalTitle"
+        >
+
+            <div class="token-modal-header">
+
+                <div>
+                    <p class="eyebrow">
+                        OIDC registration
+                    </p>
+
+                    <h2 id="createTokenModalTitle">
+                        Create initial access token
+                    </h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="token-modal-close"
+                    data-close-token-modal
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div class="token-modal-body">
+
+                <p class="token-modal-description">
+                    You can optionally send the generated initial
+                    access token to an email address.
+                </p>
+
+                <div class="form-group">
+
+                    <label for="tokenEmail">
+                        Email address
+                        <span class="optional-label">
+                            Optional
+                        </span>
+                    </label>
+
+                    <input
+                        id="tokenEmail"
+                        type="email"
+                        placeholder="client-admin@example.com"
+                        autocomplete="email"
+                    >
+
+                    <p class="field-help">
+                        Leave this empty to create the token
+                        without sending an email.
+                    </p>
+
+                </div>
+
+                <p
+                    id="tokenModalMessage"
+                    class="token-modal-message"
+                    hidden
+                ></p>
+
+            </div>
+
+            <div class="token-modal-actions">
+
+                <button
+                    type="button"
+                    class="button secondary"
+                    id="skipCreateToken"
+                >
+                    Skip &amp; Create
+                </button>
+
+                <button
+                    type="button"
+                    class="button primary"
+                    id="createAndSendToken"
+                >
+                    Create &amp; Send
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
     <script src="./js/admin-common.js"></script>
 </body>
 
