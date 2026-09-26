@@ -49,7 +49,8 @@ export class ClientsController {
       allowedScopes: client.allowedScopes,
       grantTypes: client.grantTypes,
       responseTypes: client.responseTypes,
-      tokenEndpointAuthMethod: client.tokenEndpointAuthMethod,
+      tokenEndpointAuthMethods: client.tokenEndpointAuthMethods,
+      jwksUri: client.jwksUri ?? undefined,
       interactionMode: client.interactionMode,
       interactionLoginUrl: client.interactionLoginUrl ?? undefined,
       interactionConsentUrl: client.interactionConsentUrl ?? undefined,
@@ -97,7 +98,8 @@ export class ClientsController {
 
       responseTypes: result.client.responseTypes,
 
-      tokenEndpointAuthMethod: result.client.tokenEndpointAuthMethod,
+      tokenEndpointAuthMethods: result.client.tokenEndpointAuthMethods,
+      jwksUri: result.client.jwksUri ?? undefined,
 
       interactionMode: result.client.interactionMode,
 
@@ -143,7 +145,8 @@ export class ClientsController {
       allowedScopes: client.allowedScopes,
       grantTypes: client.grantTypes,
       responseTypes: client.responseTypes,
-      tokenEndpointAuthMethod: client.tokenEndpointAuthMethod,
+      tokenEndpointAuthMethods: client.tokenEndpointAuthMethods,
+      jwksUri: client.jwksUri ?? undefined,
       interactionMode: client.interactionMode,
       interactionLoginUrl: client.interactionLoginUrl ?? undefined,
       interactionConsentUrl: client.interactionConsentUrl ?? undefined,

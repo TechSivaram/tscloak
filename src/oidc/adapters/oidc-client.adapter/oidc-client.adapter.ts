@@ -1,7 +1,8 @@
+import { ConfigService } from '@nestjs/config';
+import { ClientsService } from '../../../clients/clients.service';
 import { Client } from '../../../clients/entities/client.entity';
 import { InteractionMode } from '../../../clients/enums/interaction-mode.enum';
-import { ClientsService } from '../../../clients/clients.service';
-import { ConfigService } from '@nestjs/config';
+import { oidcRequestContext } from '../../oidc-request-context';
 
 export class OidcClientAdapter {
   constructor(
@@ -82,10 +83,14 @@ export class OidcClientAdapter {
       ? payload.response_types.map(String)
       : ['code'];
 
-    client.tokenEndpointAuthMethod =
-      typeof payload.token_endpoint_auth_method === 'string'
-        ? payload.token_endpoint_auth_method
-        : 'none';
+    const authMethods = Array.isArray(payload.token_endpoint_auth_methods)
+      ? payload.token_endpoint_auth_methods.map(String)
+      : typeof payload.token_endpoint_auth_method === 'string'
+        ? [payload.token_endpoint_auth_method]
+        : ['none'];
+    client.tokenEndpointAuthMethods = authMethods;
+    client.jwksUri =
+      typeof payload.jwks_uri === 'string' ? payload.jwks_uri : null;
 
     /**
      * TSCloak-specific interaction configuration
@@ -149,7 +154,11 @@ export class OidcClientAdapter {
 
       response_types: client.responseTypes,
 
-      token_endpoint_auth_method: client.tokenEndpointAuthMethod,
+      token_endpoint_auth_methods: client.tokenEndpointAuthMethods ?? ['none'],
+
+      token_endpoint_auth_method: this.resolveTokenEndpointAuthMethod(client),
+
+      ...(client.jwksUri ? { jwks_uri: client.jwksUri } : {}),
 
       /**
        * TSCloak-specific metadata
@@ -168,5 +177,93 @@ export class OidcClientAdapter {
           }
         : {}),
     };
+  }
+
+  private resolveTokenEndpointAuthMethod(client: Client): string {
+    const methods = client.tokenEndpointAuthMethods ?? ['none'];
+    const requestMethod = this.requestedTokenEndpointAuthMethod();
+
+    if (requestMethod) {
+      if (
+        methods.includes(requestMethod) &&
+        (requestMethod !== 'private_key_jwt' || client.jwksUri)
+      ) {
+        return requestMethod;
+      }
+
+      // Make the provider's built-in method check reject this request. The
+      // methods offered by the request and this sentinel cannot match.
+      return requestMethod === 'none' ? 'client_secret_basic' : 'none';
+    }
+
+    // A client that allows the public method must retain public-client
+    // protections during authorization, including PKCE requirements.
+    if (methods.includes('none')) return 'none';
+
+    if (methods.includes('private_key_jwt') && client.jwksUri) {
+      return 'private_key_jwt';
+    }
+    if (methods.includes('client_secret_basic')) return 'client_secret_basic';
+    if (methods.includes('client_secret_post')) return 'client_secret_post';
+    return 'none';
+  }
+
+  private requestedTokenEndpointAuthMethod(): string | undefined {
+    const request = oidcRequestContext.getStore();
+
+    if (request?.oidc?.route !== 'token') {
+      return undefined;
+    }
+
+    const authorization = request.headers?.authorization;
+
+    if (typeof authorization === 'string' && /^Basic\s/i.test(authorization)) {
+      return 'client_secret_basic';
+    }
+
+    const params = request.oidc.params ?? {};
+
+    if (typeof params.client_secret === 'string' && params.client_secret) {
+      return 'client_secret_post';
+    }
+
+    if (typeof params.client_assertion === 'string') {
+      try {
+        const encodedHeader = params.client_assertion.split('.')[0];
+
+        if (!encodedHeader) {
+          return undefined;
+        }
+
+        const header = JSON.parse(
+          Buffer.from(encodedHeader, 'base64url').toString('utf8'),
+        ) as { alg?: string };
+
+        const alg = header.alg;
+
+        if (!alg) {
+          return undefined;
+        }
+
+        if (alg.startsWith('HS')) {
+          return 'client_secret_jwt';
+        }
+
+        if (
+          alg.startsWith('RS') ||
+          alg.startsWith('PS') ||
+          alg.startsWith('ES') ||
+          alg.startsWith('Ed')
+        ) {
+          return 'private_key_jwt';
+        }
+
+        return undefined;
+      } catch {
+        return undefined;
+      }
+    }
+
+    return 'none';
   }
 }

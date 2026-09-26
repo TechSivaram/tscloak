@@ -29,11 +29,13 @@
         <label>Allowed scopes<input name="scope" value="openid profile email roles"></label>
         <label>Grant types<input name="grant_types" value="authorization_code refresh_token"></label>
         <label>Response types<input name="response_types" value="code"></label>
-        <label>Token endpoint authentication<select name="token_endpoint_auth_method">
-            <option value="none">None (public client)</option>
-            <option value="client_secret_basic">Client secret basic</option>
-            <option value="client_secret_post">Client secret post</option>
-          </select></label>
+        <fieldset class="auth-methods"><legend>Token endpoint authentication</legend>
+          <label><input type="checkbox" name="token_endpoint_auth_methods" value="none" checked> None (public client)</label>
+          <label><input type="checkbox" name="token_endpoint_auth_methods" value="client_secret_basic"> Client secret basic</label>
+          <label><input type="checkbox" name="token_endpoint_auth_methods" value="client_secret_post"> Client secret post</label>
+          <label><input type="checkbox" name="token_endpoint_auth_methods" value="private_key_jwt"> Private key JWT</label>
+        </fieldset>
+        <label>Public JWKS URL (needed to use private key JWT)<input name="jwks_uri" type="url" placeholder="https://app.example.com/.well-known/jwks.json"></label>
         <label>Interaction mode<select name="interaction_mode">
             <option value="hosted">Hosted TSCloak pages</option>
             <option value="external">External application pages</option>

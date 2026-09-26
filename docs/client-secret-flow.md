@@ -97,7 +97,7 @@ Conceptually:
 Client
  ├── clientId
  ├── clientSecret
- ├── tokenEndpointAuthMethod
+ ├── tokenEndpointAuthMethods
  ├── grantTypes
  ├── responseTypes
  ├── redirectUris

@@ -103,6 +103,37 @@ button {
     grid-column: 1 / -1;
 }
 
+.auth-methods {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.auth-methods legend {
+    padding: 0 5px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.auth-methods label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.auth-methods input[type="checkbox"] {
+    width: 16px;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+}
+
 input,
 textarea,
 select {

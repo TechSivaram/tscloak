@@ -1753,7 +1753,7 @@ TSCloak maps standard Dynamic Client Registration metadata to its internal clien
 | `scope` | `allowedScopes` |
 | `grant_types` | `grantTypes` |
 | `response_types` | `responseTypes` |
-| `token_endpoint_auth_method` | `tokenEndpointAuthMethod` |
+| `token_endpoint_auth_method` | `tokenEndpointAuthMethods` (array in the client API; OIDC registration remains singular) |
 | `interaction_mode` | `interactionMode` |
 | `interaction_login_url` | `interactionLoginUrl` |
 | `interaction_consent_url` | `interactionConsentUrl` |
@@ -2850,4 +2850,3 @@ This project is licensed under the **MIT License**.
 Built with ❤️ using NestJS, TypeScript, and OpenID Connect
 
 </div>
-

@@ -80,6 +80,27 @@
       /*
        * Build Dynamic Client Registration payload
        */
+      const selectedAuthMethods = new FormData(form).getAll('token_endpoint_auth_methods');
+      if (
+        selectedAuthMethods.length === 1 &&
+        selectedAuthMethods[0] === 'private_key_jwt' &&
+        !values('jwks_uri')
+      ) {
+        result.hidden = false;
+        result.classList.add('error');
+        result.textContent = 'Enter a public JWKS URL to use private key JWT.';
+        submit.disabled = false;
+        return;
+      }
+
+      const activeAuthMethod = selectedAuthMethods.includes('private_key_jwt') && values('jwks_uri')
+        ? 'private_key_jwt'
+        : selectedAuthMethods.includes('client_secret_basic')
+          ? 'client_secret_basic'
+          : selectedAuthMethods.includes('client_secret_post')
+            ? 'client_secret_post'
+            : 'none';
+
       const payload = {
 
         client_name:
@@ -100,10 +121,14 @@
         response_types:
           list('response_types'),
 
+        token_endpoint_auth_methods:
+          selectedAuthMethods,
+
         token_endpoint_auth_method:
-          values(
-            'token_endpoint_auth_method'
-          ),
+          activeAuthMethod,
+
+        jwks_uri:
+          values('jwks_uri') || undefined,
 
         interaction_mode:
           values('interaction_mode'),

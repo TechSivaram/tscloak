@@ -1431,6 +1431,37 @@ td code {
     font-weight: 700;
 }
 
+.admin-form .auth-methods {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.admin-form .auth-methods legend {
+    padding: 0 5px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-form .auth-methods label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.admin-form .auth-methods input[type="checkbox"] {
+    width: 16px;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+}
+
 .admin-form input,
 .admin-form select {
     width: 100%;

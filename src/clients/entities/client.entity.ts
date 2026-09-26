@@ -50,9 +50,14 @@ export class Client {
   responseTypes: string[];
 
   @Column({
-    default: 'none',
+    type: 'simple-json',
+    nullable: false,
+    default: '["none"]',
   })
-  tokenEndpointAuthMethod: string;
+  tokenEndpointAuthMethods: string[];
+
+  @Column({ type: 'varchar', nullable: true })
+  jwksUri: string | null;
 
   @Column({
     type: 'varchar',

@@ -14,7 +14,9 @@
     form.elements.allowedScopes.value = client.allowedScopes.join(' ');
     form.elements.grantTypes.value = client.grantTypes.join(' ');
     form.elements.responseTypes.value = client.responseTypes.join(' ');
-    form.elements.tokenEndpointAuthMethod.value = client.tokenEndpointAuthMethod;
+    form.elements.jwksUri.value = client.jwksUri || '';
+    const authMethods = new Set(client.tokenEndpointAuthMethods || ['none']);
+    form.querySelectorAll('[name="tokenEndpointAuthMethods"]').forEach(checkbox => { checkbox.checked = authMethods.has(checkbox.value); });
     form.elements.interactionMode.value = client.interactionMode;
     form.elements.interactionLoginUrl.value = client.interactionLoginUrl || '';
     form.elements.interactionConsentUrl.value = client.interactionConsentUrl || '';
@@ -34,7 +36,8 @@
         allowedScopes: list('allowedScopes'),
         grantTypes: list('grantTypes'),
         responseTypes: list('responseTypes'),
-        tokenEndpointAuthMethod: values.tokenEndpointAuthMethod,
+        tokenEndpointAuthMethods: new FormData(form).getAll('tokenEndpointAuthMethods'),
+        jwksUri: values.jwksUri || undefined,
         interactionMode: values.interactionMode,
         interactionLoginUrl: values.interactionLoginUrl || undefined,
         interactionConsentUrl: values.interactionConsentUrl || undefined,

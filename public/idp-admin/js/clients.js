@@ -149,8 +149,11 @@
         form.elements.grantTypes.value = client.grantTypes.join(' ');
         form.elements.responseTypes.value =
           client.responseTypes.join(' ');
-        form.elements.tokenEndpointAuthMethod.value =
-          client.tokenEndpointAuthMethod;
+        form.elements.jwksUri.value = client.jwksUri || '';
+        const authMethods = new Set(client.tokenEndpointAuthMethods || ['none']);
+        form.querySelectorAll('[name="tokenEndpointAuthMethods"]').forEach(
+          (checkbox) => { checkbox.checked = authMethods.has(checkbox.value); },
+        );
         form.elements.interactionMode.value =
           client.interactionMode;
         form.elements.interactionLoginUrl.value =
@@ -244,9 +247,9 @@
           .split(/\s+/)
           .filter(Boolean),
 
-        tokenEndpointAuthMethod: get(
-          'tokenEndpointAuthMethod',
-        ),
+        tokenEndpointAuthMethods: formData.getAll('tokenEndpointAuthMethods'),
+
+        jwksUri: get('jwksUri') || undefined,
 
         interactionMode: get('interactionMode'),
 

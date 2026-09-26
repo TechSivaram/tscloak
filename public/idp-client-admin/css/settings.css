@@ -20,6 +20,10 @@ body.settings-page .main-area main { max-width: 1180px; }
 .field-grid textarea { min-height: 86px; resize: vertical; }
 .field-grid input:focus, .field-grid textarea:focus, .field-grid select:focus { outline: 2px solid rgba(20,123,55,.15); border-color: var(--green); }
 .field-grid small { color: var(--muted); font-size: 10px; font-weight: 500; }
+.field-grid .auth-methods { display: flex; flex-wrap: wrap; align-content: start; gap: 12px 16px; margin: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; }
+.field-grid .auth-methods legend { padding: 0 4px; color: var(--ink-soft); font-size: 11px; font-weight: 800; }
+.field-grid .auth-methods label { display: flex; align-items: center; gap: 6px; }
+.field-grid .auth-methods input[type="checkbox"] { width: 16px; min-height: auto; margin: 0; padding: 0; }
 .settings-actions { min-height: 62px; padding: 10px 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .settings-actions #message { flex: 1; margin: 0; color: var(--green); font-size: 12px; font-weight: 750; }
 @media (max-width: 760px) { .settings-intro { align-items: flex-start; flex-direction: column; padding: 23px; } .protected-note { width: 100%; } .settings-section { padding: 21px 17px; } .field-grid { grid-template-columns: 1fr; } .field-grid label:nth-child(3) { grid-column: auto; } .settings-actions { align-items: stretch; flex-wrap: wrap; } .settings-actions #message { flex-basis: 100%; } .settings-actions button { flex: 1; } }

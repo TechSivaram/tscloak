@@ -18,6 +18,7 @@ import { ClientsService } from '../../clients/clients.service';
 import { OidcClientAdapter } from '../adapters/oidc-client.adapter/oidc-client.adapter';
 import { OidcAdapter } from '../adapters/oidc.adapter/oidc.adapter';
 import { OidcRepository } from '../repositories/oidc.repository';
+import { oidcRequestContext } from '../oidc-request-context';
 import { ClientRegistrationPolicyService } from './client-registration-policy/client-registration-policy.service';
 
 @Injectable()
@@ -68,6 +69,13 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
     return {
       factory: ({ issuer, config, module }) => {
         const provider = new module.Provider(issuer, config);
+
+        // Keep the current request available to the client adapter. The
+        // provider parses token endpoint auth parameters before it loads the
+        // client, so the adapter can choose the matching registered method.
+        provider.use((ctx, next) =>
+          oidcRequestContext.run(ctx, () => next()),
+        );
 
         /**
          * oidc-provider's built-in UserInfo endpoint rejects every access
@@ -248,6 +256,14 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
          */
         jwks,
 
+        tokenEndpointAuthMethods: [
+          'none',
+          'client_secret_basic',
+          'client_secret_post',
+          'client_secret_jwt',
+          'private_key_jwt',
+        ],
+
         formats: {
           default: 'opaque',
           customizers: {
@@ -335,6 +351,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
             'interaction_mode',
             'interaction_login_url',
             'interaction_consent_url',
+            'token_endpoint_auth_methods',
           ],
         },
 

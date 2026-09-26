@@ -7,6 +7,7 @@ import {
   IsString,
   IsUrl,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -81,13 +82,31 @@ export class CreateClientDto {
   responseTypes: string[];
 
   @ApiProperty({
-    example: 'none',
-    enum: ['none', 'client_secret_basic', 'client_secret_post'],
-    description: 'Client authentication method used at the token endpoint.',
+    example: ['none'],
+    enum: ['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'],
+    isArray: true,
+    description: 'Client authentication methods accepted at the token endpoint.',
   })
-  @IsString()
-  @IsIn(['none', 'client_secret_basic', 'client_secret_post'])
-  tokenEndpointAuthMethod: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  @IsIn(
+    ['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'],
+    { each: true },
+  )
+  tokenEndpointAuthMethods: string[];
+
+  @ApiPropertyOptional({
+    example: 'https://app.example.com/.well-known/jwks.json',
+    description: 'Public JWKS URL required when private_key_jwt is the sole selected method.',
+  })
+  @ValidateIf(
+    (client) =>
+      client.tokenEndpointAuthMethods?.length === 1 &&
+      client.tokenEndpointAuthMethods.includes('private_key_jwt'),
+  )
+  @IsUrl({ require_tld: false })
+  jwksUri?: string;
 
   @ApiProperty({
     example: InteractionMode.HOSTED,

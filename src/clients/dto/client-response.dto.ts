@@ -55,11 +55,18 @@ export class ClientResponseDto {
   responseTypes: string[];
 
   @ApiProperty({
-    example: 'none',
-    enum: ['none', 'client_secret_basic', 'client_secret_post'],
-    description: 'Client authentication method used at the token endpoint.',
+    example: ['none'],
+    enum: ['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'],
+    description: 'Client authentication methods used at the token endpoint.',
+    type: [String],
   })
-  tokenEndpointAuthMethod: string;
+  tokenEndpointAuthMethods: string[];
+
+  @ApiPropertyOptional({
+    example: 'https://app.example.com/.well-known/jwks.json',
+    description: 'Public JWKS URL used for private_key_jwt client authentication.',
+  })
+  jwksUri?: string;
 
   @ApiProperty({
     example: 'HOSTED',

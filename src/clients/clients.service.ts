@@ -27,7 +27,9 @@ export interface CreateClientInput {
 
   responseTypes: string[];
 
-  tokenEndpointAuthMethod: string;
+  tokenEndpointAuthMethods: string[];
+
+  jwksUri?: string;
 
   interactionMode?: InteractionMode;
 
@@ -171,8 +173,9 @@ export class ClientsService {
     if (input.grantTypes !== undefined) client.grantTypes = input.grantTypes;
     if (input.responseTypes !== undefined)
       client.responseTypes = input.responseTypes;
-    if (input.tokenEndpointAuthMethod !== undefined)
-      client.tokenEndpointAuthMethod = input.tokenEndpointAuthMethod;
+    if (input.tokenEndpointAuthMethods !== undefined)
+      client.tokenEndpointAuthMethods = input.tokenEndpointAuthMethods;
+    if (input.jwksUri !== undefined) client.jwksUri = input.jwksUri || null;
     if (input.interactionMode !== undefined)
       client.interactionMode = input.interactionMode;
     if (input.interactionLoginUrl !== undefined)
@@ -199,7 +202,10 @@ export class ClientsService {
 
     let clientSecret: string | null = null;
 
-    if (input.tokenEndpointAuthMethod !== 'none') {
+    if (
+      input.tokenEndpointAuthMethods?.includes('client_secret_basic') ||
+      input.tokenEndpointAuthMethods?.includes('client_secret_post')
+    ) {
       clientSecret = randomBytes(48).toString('base64url');
     }
 
@@ -224,7 +230,9 @@ export class ClientsService {
 
     client.responseTypes = input.responseTypes;
 
-    client.tokenEndpointAuthMethod = input.tokenEndpointAuthMethod;
+    client.tokenEndpointAuthMethods = input.tokenEndpointAuthMethods;
+
+    client.jwksUri = input.jwksUri ?? null;
 
     client.interactionMode = input.interactionMode ?? InteractionMode.HOSTED;
 
