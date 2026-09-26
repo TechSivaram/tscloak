@@ -374,6 +374,214 @@ Authentication establishes that the request is associated with the client. Autho
 
 ---
 
+<a id="application-user-provisioning"></a>
+## 👤 Application User Creation in Application DB and TSCloak
+
+The Client Credentials flow can be used by an application when it needs to
+provision a new application user in **both the application's own database and
+TSCloak**.
+
+The application remains responsible for its own user/business data. TSCloak
+is responsible for the corresponding identity and credentials.
+
+The TSCloak API used for identity creation is:
+
+```http
+POST /api/client/users
+```
+
+The application authenticates to TSCloak using its registered client
+credentials and sends the resulting access token when creating the IdP user.
+
+### Provisioning Flow
+
+```mermaid
+sequenceDiagram
+    participant A as Application
+    participant DB as Application Database
+    participant T as TSCloak
+    participant API as TSCloak Client User API
+
+    A->>DB: Create application user
+    DB-->>A: Application user created
+
+    A->>T: POST /token
+    Note over A,T: grant_type=client_credentials
+    T-->>A: Client Credentials Access Token
+
+    A->>API: POST /api/client/users
+    Note over A,API: Authorization: Bearer <access_token>
+    API->>T: Resolve clientId from token
+    T-->>API: Authenticated client
+    API-->>A: 201 Created
+```
+
+This allows the application to keep its application-specific user record while
+also creating the corresponding identity in TSCloak.
+
+### Example Application Workflow
+
+Suppose an application receives a request to create:
+
+```text
+john@example.com
+```
+
+The application can perform the following steps:
+
+```text
+Application
+    |
+    | 1. Create user in application DB
+    v
+Application Database
+    |
+    | User:
+    |   id
+    |   email
+    |   role
+    |   application-specific data
+    |
+    | 2. Obtain client-credentials access token
+    v
+TSCloak /token
+    |
+    | 3. Create corresponding IdP user
+    v
+POST /api/client/users
+    |
+    v
+TSCloak Identity
+    |
+    | username
+    | email
+    | password / credentials
+    | client association
+```
+
+The application's database can therefore contain application-specific
+authorization information such as roles and permissions, while TSCloak stores
+the identity and authentication credentials.
+
+### Create the TSCloak User
+
+After obtaining a Client Credentials access token, the application calls:
+
+```http
+POST /api/client/users
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+Example request:
+
+```json
+{
+  "username": "john",
+  "email": "john@example.com",
+  "password": "Secret123!"
+}
+```
+
+The `clientId` is determined from the authenticated access token. It does not
+need to be supplied by the application in the request body.
+
+A successful request returns:
+
+```text
+201 Created
+```
+
+### Why Use Client Credentials Here?
+
+The application is acting as a machine-to-machine client. There is no end-user
+interaction involved when the application provisions the corresponding TSCloak
+identity.
+
+```text
+Application
+    |
+    | client_id + client_secret
+    v
+POST /token
+    |
+    | grant_type=client_credentials
+    v
+Access Token
+    |
+    | Bearer token
+    v
+POST /api/client/users
+    |
+    v
+TSCloak Identity
+```
+
+The client credentials therefore allow the application's backend to perform
+the TSCloak-side identity operation without requiring an administrator to
+manually create the user.
+
+### Responsibility Boundary
+
+| Responsibility | Application | TSCloak |
+|---|---:|---:|
+| Application user record | ✅ | |
+| Application-specific roles | ✅ | |
+| Application-specific permissions | ✅ | |
+| Business data | ✅ | |
+| Identity record | | ✅ |
+| Username / email identity | | ✅ |
+| Authentication credentials | | ✅ |
+| User authentication | | ✅ |
+| OIDC tokens | | ✅ |
+
+For example, the application might maintain:
+
+```text
+Application DB
+
+john
+ ├── applicationUserId
+ ├── email
+ ├── role = MANAGER
+ ├── permissions = [...]
+ └── application-specific data
+```
+
+while TSCloak maintains the authentication identity:
+
+```text
+TSCloak
+
+john
+ ├── username
+ ├── email
+ ├── credentials
+ └── client association
+```
+
+The two records can be associated by an application-defined identifier or
+other application-level mapping.
+
+> The Client Credentials token authenticates the application to TSCloak. It
+> does not represent the newly created end user.
+
+### Provisioning Consideration
+
+Because the application database and TSCloak are separate systems, user
+provisioning consists of two operations:
+
+```text
+Create application user
+        |
+        v
+Create TSCloak identity
+```
+
+The application should define how it handles a failure in either operation,
+for example by retrying the TSCloak operation or marking the application user
+as pending until the identity has been successfully created.
+
 <a id="authorization-code-vs-client-credentials"></a>
 ## 🔄 Authorization Code vs Client Credentials
 
