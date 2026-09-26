@@ -56,7 +56,13 @@ export class ClientResponseDto {
 
   @ApiProperty({
     example: ['none'],
-    enum: ['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'],
+    enum: [
+      'none',
+      'client_secret_basic',
+      'client_secret_post',
+      'client_secret_jwt',
+      'private_key_jwt',
+    ],
     description: 'Client authentication methods used at the token endpoint.',
     type: [String],
   })

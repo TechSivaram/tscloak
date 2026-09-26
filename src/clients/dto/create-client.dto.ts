@@ -83,7 +83,13 @@ export class CreateClientDto {
 
   @ApiProperty({
     example: ['none'],
-    enum: ['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'],
+    enum: [
+      'none',
+      'client_secret_basic',
+      'client_secret_post',
+      'client_secret_jwt',
+      'private_key_jwt',
+    ],
     isArray: true,
     description: 'Client authentication methods accepted at the token endpoint.',
   })
@@ -91,7 +97,13 @@ export class CreateClientDto {
   @ArrayMinSize(1)
   @IsString({ each: true })
   @IsIn(
-    ['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'],
+    [
+      'none',
+      'client_secret_basic',
+      'client_secret_post',
+      'client_secret_jwt',
+      'private_key_jwt',
+    ],
     { each: true },
   )
   tokenEndpointAuthMethods: string[];

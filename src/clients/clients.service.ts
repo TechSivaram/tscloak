@@ -204,7 +204,8 @@ export class ClientsService {
 
     if (
       input.tokenEndpointAuthMethods?.includes('client_secret_basic') ||
-      input.tokenEndpointAuthMethods?.includes('client_secret_post')
+      input.tokenEndpointAuthMethods?.includes('client_secret_post') ||
+      input.tokenEndpointAuthMethods?.includes('client_secret_jwt')
     ) {
       clientSecret = randomBytes(48).toString('base64url');
     }

@@ -95,11 +95,13 @@
 
       const activeAuthMethod = selectedAuthMethods.includes('private_key_jwt') && values('jwks_uri')
         ? 'private_key_jwt'
-        : selectedAuthMethods.includes('client_secret_basic')
-          ? 'client_secret_basic'
-          : selectedAuthMethods.includes('client_secret_post')
-            ? 'client_secret_post'
-            : 'none';
+        : selectedAuthMethods.includes('client_secret_jwt')
+          ? 'client_secret_jwt'
+          : selectedAuthMethods.includes('client_secret_basic')
+            ? 'client_secret_basic'
+            : selectedAuthMethods.includes('client_secret_post')
+              ? 'client_secret_post'
+              : 'none';
 
       const payload = {
 

@@ -26,6 +26,12 @@ export class OidcClientAdapter {
       return undefined;
     }
 
+    console.log('OIDC CLIENT AUTH DEBUG', {
+      clientId,
+      token_endpoint_auth_method: 'private_key_jwt',
+      jwks_uri: client.jwksUri,
+    });
+
     return this.toOidcClient(client);
   }
 
@@ -205,6 +211,7 @@ export class OidcClientAdapter {
     }
     if (methods.includes('client_secret_basic')) return 'client_secret_basic';
     if (methods.includes('client_secret_post')) return 'client_secret_post';
+    if (methods.includes('client_secret_jwt')) return 'client_secret_jwt';
     return 'none';
   }
 
@@ -217,16 +224,22 @@ export class OidcClientAdapter {
 
     const authorization = request.headers?.authorization;
 
+    // client_secret_basic
     if (typeof authorization === 'string' && /^Basic\s/i.test(authorization)) {
       return 'client_secret_basic';
     }
 
     const params = request.oidc.params ?? {};
 
-    if (typeof params.client_secret === 'string' && params.client_secret) {
+    // client_secret_post
+    if (
+      typeof params.client_secret === 'string' &&
+      params.client_secret.length > 0
+    ) {
       return 'client_secret_post';
     }
 
+    // client_secret_jwt / private_key_jwt
     if (typeof params.client_assertion === 'string') {
       try {
         const encodedHeader = params.client_assertion.split('.')[0];
@@ -245,15 +258,17 @@ export class OidcClientAdapter {
           return undefined;
         }
 
-        if (alg.startsWith('HS')) {
+        // HMAC => client_secret_jwt
+        if (/^HS\d+$/i.test(alg)) {
           return 'client_secret_jwt';
         }
 
+        // Asymmetric => private_key_jwt
         if (
-          alg.startsWith('RS') ||
-          alg.startsWith('PS') ||
-          alg.startsWith('ES') ||
-          alg.startsWith('Ed')
+          /^RS\d+$/i.test(alg) ||
+          /^PS\d+$/i.test(alg) ||
+          /^ES\d+$/i.test(alg) ||
+          /^EdDSA$/i.test(alg)
         ) {
           return 'private_key_jwt';
         }
@@ -264,6 +279,7 @@ export class OidcClientAdapter {
       }
     }
 
+    // No client authentication
     return 'none';
   }
 }

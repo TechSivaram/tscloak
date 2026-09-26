@@ -17,8 +17,8 @@ import { SigningKeyService } from 'src/signing-keys/services/signing-key/signing
 import { ClientsService } from '../../clients/clients.service';
 import { OidcClientAdapter } from '../adapters/oidc-client.adapter/oidc-client.adapter';
 import { OidcAdapter } from '../adapters/oidc.adapter/oidc.adapter';
-import { OidcRepository } from '../repositories/oidc.repository';
 import { oidcRequestContext } from '../oidc-request-context';
+import { OidcRepository } from '../repositories/oidc.repository';
 import { ClientRegistrationPolicyService } from './client-registration-policy/client-registration-policy.service';
 
 @Injectable()
@@ -73,9 +73,9 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
         // Keep the current request available to the client adapter. The
         // provider parses token endpoint auth parameters before it loads the
         // client, so the adapter can choose the matching registered method.
-        provider.use((ctx, next) =>
-          oidcRequestContext.run(ctx, () => next()),
-        );
+        provider.use((ctx, next) => {
+          return oidcRequestContext.run(ctx, () => next());
+        });
 
         /**
          * oidc-provider's built-in UserInfo endpoint rejects every access
