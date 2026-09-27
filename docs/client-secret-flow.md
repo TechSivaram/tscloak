@@ -19,6 +19,9 @@ The protocol behavior remains delegated to `oidc-provider`, while TSCloak owns c
 - [Client Credentials Request](#client-credentials-request)
 - [Client Secret Basic](#client-secret-basic)
 - [Client Secret Post](#client-secret-post)
+- [Client Secret JWT](#client-secret-jwt)
+- [Private Key JWT](#private-key-jwt)
+- [PKCE and Client Authentication](#pkce-and-client-authentication)
 - [Token Processing Flow](#token-processing-flow)
 - [Access Token Principal](#access-token-principal)
 - [Client Credentials and API Access](#client-credentials-and-api-access)
@@ -285,6 +288,179 @@ curl -X POST http://localhost:4200/token \\
 ```
 
 The provider validates the credentials against the registered client configuration.
+
+---
+
+<a id="client-secret-jwt"></a>
+## 🔏 Client Credentials with `client_secret_jwt`
+
+`client_secret_jwt` is a token-endpoint client authentication method in which the
+client proves possession of its registered client secret by signing a JWT.
+
+The client sends the JWT as a `client_assertion` in the token request.
+
+Example request:
+
+```text
+grant_type=client_credentials
+client_id=<client-id>
+client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
+client_assertion=<signed-jwt>
+```
+
+The request must not also send the same client credentials using another
+authentication mechanism, such as HTTP Basic authentication.
+
+A typical HS256 assertion contains claims such as:
+
+```json
+{
+  "iss": "<client-id>",
+  "sub": "<client-id>",
+  "aud": "<token-endpoint>",
+  "jti": "<unique-value>",
+  "iat": 0,
+  "exp": 0
+}
+```
+
+The exact validation of the assertion and client authentication is delegated to
+`oidc-provider`.
+
+---
+
+<a id="private-key-jwt"></a>
+## 🔐 Client Credentials with `private_key_jwt`
+
+`private_key_jwt` is a token-endpoint client authentication method in which the
+client signs a JWT with its private key.
+
+TSCloak registers the client's public key through the client's JWKS metadata.
+For a client using `jwks_uri`, the registered metadata conceptually contains:
+
+```json
+{
+  "token_endpoint_auth_method": "private_key_jwt",
+  "jwks_uri": "https://example.com/client-jwks"
+}
+```
+
+The client then sends:
+
+```text
+grant_type=client_credentials
+client_id=<client-id>
+client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
+client_assertion=<signed-jwt>
+```
+
+A typical RSA assertion contains:
+
+```json
+{
+  "iss": "<client-id>",
+  "sub": "<client-id>",
+  "aud": "<token-endpoint>",
+  "jti": "<unique-value>",
+  "iat": 0,
+  "exp": 0
+}
+```
+
+The JWT header identifies the signing key, for example:
+
+```json
+{
+  "alg": "RS256",
+  "kid": "<client-key-id>"
+}
+```
+
+The corresponding public key must be available from the client's JWKS.
+
+### JWKS URI and local development
+
+When `jwks_uri` is configured, `oidc-provider` fetches the client's JWKS in
+order to verify the assertion signature.
+
+During local development, loopback and private-network addresses can be
+rejected by the provider's HTTP fetch/SSRF protection. A publicly reachable
+HTTPS JWKS endpoint can therefore be useful when testing `jwks_uri` from a
+local development environment.
+
+The private signing key must never be exposed through the JWKS endpoint. The
+client JWKS contains only the public key material needed for verification.
+
+### TSCloak and `private_key_jwt`
+
+The client adapter must expose a single OIDC
+`token_endpoint_auth_method` value to `oidc-provider`, for example:
+
+```text
+token_endpoint_auth_method = private_key_jwt
+```
+
+If TSCloak stores multiple supported authentication methods for one client,
+the adapter must select the method applicable to the current token request
+before returning the OIDC client metadata. The OIDC client metadata field itself
+is singular.
+
+---
+
+<a id="pkce-and-client-authentication"></a>
+## 🔑 PKCE and Client Authentication
+
+PKCE and token-endpoint client authentication solve different security problems.
+
+| Mechanism | Purpose | Applies to |
+|---|---|---|
+| `private_key_jwt` | Authenticates the client application at the token endpoint | Client authentication |
+| `client_secret_jwt` | Authenticates the client application at the token endpoint | Client authentication |
+| PKCE | Binds an authorization-code exchange to the client that initiated it | Authorization Code flow |
+
+Therefore, `private_key_jwt` does **not** by itself require PKCE.
+
+For a Client Credentials request:
+
+```text
+grant_type=client_credentials
+```
+
+there is no authorization code, so PKCE is not part of that flow.
+
+For an Authorization Code flow, PKCE can be used independently of the
+client's token-endpoint authentication method. A client can therefore use
+both:
+
+```text
+token_endpoint_auth_method = private_key_jwt
+```
+
+and PKCE for an authorization-code exchange.
+
+Conceptually:
+
+```mermaid
+flowchart TD
+    A["Authorization Code Flow"] --> B["PKCE"]
+    A --> C["Client Authentication"]
+    C --> D["private_key_jwt / client_secret_jwt / other registered method"]
+    B --> E["code_challenge / code_verifier"]
+    D --> F["Token Endpoint"]
+    E --> F
+```
+
+For Client Credentials:
+
+```mermaid
+flowchart TD
+    A["Client Application"] --> B["/token"]
+    B --> C["Client Authentication"]
+    C --> D["private_key_jwt / client_secret_jwt / client_secret_basic / client_secret_post"]
+    D --> E["Access Token"]
+```
+
+There is no authorization-code or PKCE step in the Client Credentials flow.
 
 ---
 
@@ -595,6 +771,7 @@ TSCloak's user authentication and machine-to-machine authentication have differe
 | Authorization code | Yes | No |
 | PKCE | Yes | No |
 | Client authentication | Depends on registered client configuration | Client authentication is central to the grant |
+| Possible client authentication | `client_secret_basic`, `client_secret_post`, `client_secret_jwt`, `private_key_jwt`, or another registered method | `client_secret_basic`, `client_secret_post`, `client_secret_jwt`, `private_key_jwt`, or another registered method |
 | User identity | Present | Not present |
 | Typical use | User-facing application | Service-to-service API access |
 
@@ -738,9 +915,12 @@ The key characteristics are:
 - Confidential clients can authenticate using a client secret.
 - `client_secret_basic` supplies credentials through HTTP Basic authentication.
 - `client_secret_post` supplies credentials in the token request body.
+- `client_secret_jwt` authenticates the client with a JWT signed using the client secret.
+- `private_key_jwt` authenticates the client with a JWT signed using the client's private key and verified using the registered public JWKS.
 - `grant_type=client_credentials` requests a machine-to-machine access token.
 - No end-user login or consent interaction is required.
 - The resulting principal represents the client rather than a user.
 - Protected APIs can distinguish client credentials from user authentication.
 - Client authentication and application authorization remain separate concerns.
 - OAuth 2.0 / OIDC protocol processing remains the responsibility of `oidc-provider`.
+- PKCE is not required for Client Credentials; PKCE is associated with the Authorization Code flow.
