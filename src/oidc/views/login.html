@@ -219,7 +219,9 @@
     }
 
     .federation-button {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 12px 13px;
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -230,6 +232,26 @@
       text-align: center;
       text-decoration: none;
       transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .federation-button-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .federation-provider-icon {
+      display: block;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+    }
+
+    .federation-button-content > span {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .federation-button:hover {

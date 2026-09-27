@@ -18,6 +18,7 @@ import { AuthenticationService } from '../../authentication/authentication.servi
 import { ClientsService } from '../../clients/clients.service';
 import { InteractionMode } from '../../clients/enums/interaction-mode.enum';
 import { FederationService } from '../../federation/federation.service';
+import { renderFederationLoginButton } from './federation-login-button';
 
 import type { Response } from 'express';
 import { readFile } from 'node:fs/promises';
@@ -643,7 +644,7 @@ export class OidcInteractionController {
         });
         const authorizeUrl = `/api/federation/providers/${encodeURIComponent(provider.id)}/authorize?${query.toString()}`;
 
-        return `<a class="federation-button" href="${this.escapeHtml(authorizeUrl)}">Continue with ${this.escapeHtml(provider.name)}</a>`;
+        return renderFederationLoginButton(provider.name, authorizeUrl);
       })
       .join('');
 

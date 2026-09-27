@@ -119,6 +119,7 @@
     .forEach((button) => button.addEventListener('click', logout));
   function ensureSidebarNavigation() {
     document.querySelectorAll('.sidebar nav').forEach((nav) => {
+      nav.classList.add('navigation');
       const getOrCreateLink = (href, label) => {
         const matchingLinks = Array.from(nav.querySelectorAll(`a[href="${href}"]`));
         const link = matchingLinks.shift() || document.createElement('a');
@@ -142,7 +143,22 @@
       settingsLink.after(federationLink);
       federationLink.after(profileLink);
 
+      const icons = {
+        './dashboard.html': '⌂',
+        './users.html': '♙',
+        './settings.html': '⚙',
+        './federation.html': '⇄',
+        './profile.html': '◉',
+      };
       nav.querySelectorAll('a[href$=".html"]').forEach((link) => {
+        link.classList.add('nav-item');
+        let icon = link.querySelector('span');
+        if (!icon) {
+          icon = document.createElement('span');
+          icon.setAttribute('aria-hidden', 'true');
+          icon.textContent = icons[link.getAttribute('href')] || '•';
+          link.insertBefore(icon, link.firstChild);
+        }
         link.classList.toggle(
           'active',
           new URL(link.getAttribute('href'), window.location.href).pathname ===
@@ -152,7 +168,93 @@
     });
   }
 
+  function ensureSidebarBrandAndFooter() {
+    document.querySelectorAll('.sidebar').forEach((sidebar) => {
+      const brand = sidebar.querySelector('.brand');
+      const logo = brand?.querySelector('img');
+      if (brand && logo && !brand.querySelector('.brand-mark')) {
+        const mark = document.createElement('div');
+        mark.className = 'brand-mark';
+        mark.appendChild(logo);
+        const details = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'brand-name';
+        name.textContent = 'TSCloak';
+        const subtitle = document.createElement('div');
+        subtitle.className = 'brand-subtitle';
+        subtitle.textContent = 'Client Administration';
+        details.append(name, subtitle);
+        brand.replaceChildren(mark, details);
+      }
+
+      const signouts = Array.from(sidebar.querySelectorAll('.signout'));
+      const signout = signouts.shift();
+      signouts.forEach((duplicate) => duplicate.remove());
+      if (!signout) return;
+
+      let footer = sidebar.querySelector('.sidebar-footer');
+      if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'sidebar-footer';
+      }
+      footer.appendChild(signout);
+      sidebar.appendChild(footer);
+    });
+  }
+
+  function setupResponsiveNavigation() {
+    const sidebar = document.querySelector('.sidebar');
+    const header = document.querySelector('.main-area > header');
+    if (!sidebar || !header) return;
+
+    sidebar.id = 'clientAdminSidebar';
+    let button = header.querySelector('.menu-button');
+    if (!button) {
+      button = document.createElement('button');
+      button.className = 'menu-button';
+      button.type = 'button';
+      button.setAttribute('aria-label', 'Open navigation');
+      button.setAttribute('aria-controls', sidebar.id);
+      button.setAttribute('aria-expanded', 'false');
+      button.textContent = '☰';
+      header.insertBefore(button, header.firstChild);
+    }
+
+    let overlay = document.querySelector('.mobile-overlay');
+    if (!overlay) {
+      overlay = document.createElement('button');
+      overlay.className = 'mobile-overlay';
+      overlay.type = 'button';
+      overlay.setAttribute('aria-label', 'Close navigation');
+      document.body.appendChild(overlay);
+    }
+
+    const close = () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+      button.setAttribute('aria-expanded', 'false');
+      button.setAttribute('aria-label', 'Open navigation');
+    };
+    button.addEventListener('click', () => {
+      const open = !sidebar.classList.contains('open');
+      sidebar.classList.toggle('open', open);
+      overlay.classList.toggle('visible', open);
+      button.setAttribute('aria-expanded', String(open));
+      button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    });
+    overlay.addEventListener('click', close);
+    sidebar.querySelectorAll('a').forEach((link) => link.addEventListener('click', close));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') close();
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 760) close();
+    });
+  }
+
   ensureSidebarNavigation();
+  ensureSidebarBrandAndFooter();
+  setupResponsiveNavigation();
   window.ClientAdmin = { api, loadMe, logout };
   loadMe().catch((error) => console.warn('Unable to load account profile for header', error));
 })();
