@@ -1,6 +1,6 @@
 <div align="center">
 
-# <img src="public/assets/tscloak-icon.png" alt="TSCloak" width="42" valign="middle"> TSCloak Federation
+# <img src="../public/assets/tscloak-icon.png" alt="TSCloak" width="42" valign="middle"> TSCloak Federation
 
 ### External Identity Providers. One TSCloak Issuer.
 
