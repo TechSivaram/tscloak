@@ -59,6 +59,27 @@ export class IdentityService {
     return this.createUserWithRoles(input);
   }
 
+  /** Creates a local account for a verified external OIDC identity. */
+  async createFederatedUser(
+    clientId: string,
+    email: string | null,
+  ): Promise<User> {
+    const username = `federated_${randomBytes(16).toString('hex')}`;
+    const password = randomBytes(32).toString('base64url');
+
+    // User.email is required and unique per client. Keep accounts with no
+    // provider email usable without pretending the generated address is real.
+    const storedEmail =
+      email?.trim() || `${username}@federated.invalid`;
+
+    return this.createUser({
+      username,
+      email: storedEmail,
+      password,
+      clientId,
+    });
+  }
+
   private async createUserWithRoles(
     input: CreateUserInput,
     roleNames: string[] = ['USER'],

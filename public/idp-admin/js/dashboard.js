@@ -78,35 +78,6 @@
 
 
     /*
-     * Get initials for the avatar.
-     */
-    function getInitials(name) {
-
-        if (!name) {
-            return "AD";
-        }
-
-        const parts =
-            String(name)
-                .trim()
-                .split(/\s+/)
-                .filter(Boolean);
-
-        if (parts.length === 1) {
-
-            return parts[0]
-                .substring(0, 2)
-                .toUpperCase();
-        }
-
-        return (
-            parts[0][0] +
-            parts[parts.length - 1][0]
-        ).toUpperCase();
-    }
-
-
-    /*
      * Call the OIDC UserInfo endpoint.
      *
      * Your TSCloak provider exposes /me.
@@ -193,41 +164,8 @@
             "Administrator";
 
 
-        const roles =
-            Array.isArray(user.roles)
-                ? user.roles
-                : [];
-
-
-        const primaryRole =
-            roles.length > 0
-                ? roles[0]
-                : "Administrator";
-
-        const roleSummary =
-            roles.length > 1
-                ? `${primaryRole} +${roles.length - 1} roles`
-                : primaryRole;
-
-
-        const userName =
-            $("#userName");
-
         const welcomeName =
             $("#welcomeName");
-
-        const userAvatar =
-            $("#userAvatar");
-
-        const userRole =
-            $("#userRole");
-
-
-        if (userName) {
-
-            userName.textContent =
-                name;
-        }
 
 
         if (welcomeName) {
@@ -237,36 +175,6 @@
         }
 
 
-        if (userAvatar) {
-
-            userAvatar.textContent =
-                getInitials(name);
-        }
-
-
-        if (userRole) {
-
-            userRole.textContent =
-                roleSummary;
-
-            userRole.title =
-                roles.length > 0
-                    ? roles.join(", ")
-                    : "Administrator";
-
-            userRole.dataset.roleTooltip =
-                roles.length > 0
-                    ? roles.join(", ")
-                    : "Administrator";
-        }
-
-        const profile =
-            document.querySelector(".profile");
-
-        if (profile) {
-            profile.title =
-                `Roles: ${roles.length > 0 ? roles.join(", ") : "Administrator"}`;
-        }
     }
 
 
@@ -673,11 +581,6 @@
             );
 
             setText(
-                "#sidebarStatus",
-                getOverallStatus(data.status)
-            );
-
-            setText(
                 "#oidcProviderStatus",
                 data.status?.oidcProvider
             );
@@ -726,7 +629,6 @@
             );
 
             setText("#overallStatus", null);
-            setText("#sidebarStatus", null);
             setText("#oidcProviderStatus", null);
             setText("#databaseStatus", null);
             setText("#registrationStatus", null);

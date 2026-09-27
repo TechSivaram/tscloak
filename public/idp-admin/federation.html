@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TSCloak | Federation</title>
+    <link rel="icon" type="image/png" href="/assets/tscloak-icon.png" />
+    <link rel="stylesheet" href="./css/dashboard.css" />
+  </head>
+  <body class="page-federation">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <img src="../assets/tscloak-icon.png" alt="TSCloak" />
+          </div>
+          <div>
+            <div class="brand-name">TSCloak</div>
+            <div class="brand-subtitle">Administration</div>
+          </div>
+        </div>
+        <nav class="navigation">
+          <a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a>
+          <a class="nav-item" href="./clients.html"><span>▣</span>Clients</a>
+          <a class="nav-item" href="./users.html"><span>♙</span>Users</a>
+          <a class="nav-item" href="./roles.html"><span>◆</span>Roles</a>
+          <a class="nav-item active" href="./federation.html"><span aria-hidden="true">⇄</span>Federation</a>
+          <div class="nav-section-title">Registration</div>
+          <a class="nav-item" href="./initial-access-tokens.html"><span>⌁</span>Initial Access Tokens</a>
+          <div class="nav-section-title">Configuration</div>
+          <a class="nav-item" href="./security-policy.html"><span>⚙</span>Security Policy</a>
+        </nav>
+      </aside>
+      <div class="main-area">
+        <header class="topbar">
+          <div class="page-heading">
+            <span class="breadcrumb">TSCloak / Administration</span>
+            <h1>Federation</h1>
+          </div>
+          <div class="topbar-actions">
+            <span data-user-name>Administrator</span
+            ><button class="text-button" data-logout>Sign out</button>
+          </div>
+        </header>
+        <main class="content">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Identity providers</p>
+                <h3>Federation providers</h3>
+              </div>
+              <button class="button primary" id="showProviderForm">
+                Add provider
+              </button>
+            </div>
+            <p data-message></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Issuer</th>
+                    <th>Client ID</th>
+                    <th>Scopes</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="providerRows">
+                  <tr>
+                    <td colspan="7">Loading providers...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel" id="providerFormPanel" hidden>
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Shared configuration</p>
+                <h3 id="providerFormTitle">Add federation provider</h3>
+              </div>
+              <button class="text-button" id="cancelProviderForm" type="button">
+                Cancel
+              </button>
+            </div>
+            <form class="admin-form" id="providerForm">
+              <label>Name<input name="name" required minlength="2" /></label>
+              <label
+                >Type<select name="type" required>
+                  <option value="oidc">OIDC</option>
+                </select></label
+              >
+              <label
+                >Issuer URL<input
+                  name="issuer"
+                  type="url"
+                  required
+                  placeholder="https://accounts.google.com"
+              /></label>
+              <label
+                >Upstream client ID<input name="clientId" required
+              /></label>
+              <label
+                >Upstream client secret<input
+                  name="clientSecret"
+                  type="password"
+                  autocomplete="new-password"
+                /><small id="secretHelp"
+                  >Required when creating a provider.</small
+                ></label
+              >
+              <label
+                >Scopes<textarea
+                  name="scopes"
+                  rows="3"
+                  placeholder="openid profile email"
+                >
+openid profile email</textarea
+                ><small>Separate scopes with spaces or commas.</small></label
+              >
+              <label
+                >Availability<select name="enabled">
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select></label
+              >
+              <button class="button primary" type="submit">
+                Create provider
+              </button>
+            </form>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="./js/admin-common.js"></script>
+  </body>
+</html>

@@ -3,6 +3,7 @@ import { RouterModule } from '@nestjs/core';
 import { IdentityModule } from '../identity/identity.module';
 // import { AuthenticationModule } from '../authentication/authentication.module';
 import { AdminModule } from 'src/admin/admin.module';
+import { FederationModule } from 'src/federation/federation.module';
 import { RegistrationModule } from 'src/registration/registration.module';
 import { SecurityModule } from 'src/security/security.module';
 import { ClientsModule } from '../clients/clients.module';
@@ -15,6 +16,7 @@ import { ClientsModule } from '../clients/clients.module';
     SecurityModule,
     RegistrationModule,
     AdminModule,
+    FederationModule,
     RouterModule.register([
       {
         path: 'api', // Common prefix applied to ALL children below
@@ -25,6 +27,7 @@ import { ClientsModule } from '../clients/clients.module';
           SecurityModule, // Resolves to: /api + /security
           RegistrationModule, // Resolves to: /api + /registration
           AdminModule, // Resolves to: /api + /admin
+          FederationModule, // Resolves to: /api + /federation
         ],
       },
     ]),

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TSCloak | Client Federation</title>
+    <link rel="icon" type="image/png" href="/assets/tscloak-icon.png" />
+    <link rel="stylesheet" href="./css/client-admin.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="../assets/tscloak-icon.png" alt="TSCloak" /><strong
+            >TSCloak</strong
+          ><small>Client Administration</small>
+        </div>
+        <nav>
+          <a href="./dashboard.html">Dashboard</a
+          ><a href="./users.html">Users</a
+          ><a href="./settings.html">Client settings</a
+          ><a class="active" href="./federation.html">Federation</a
+          ><a href="./profile.html">Profile</a>
+        </nav>
+        <button class="signout" data-logout>Sign out</button>
+      </aside>
+      <div class="main-area">
+        <header>
+          <div>
+            <span class="eyebrow">Client administration</span>
+            <h1>Federation</h1>
+          </div>
+          <div class="user-chip">
+            <strong data-user-name>Administrator</strong
+            ><span data-user-role>IDP_CLIENT_ADMIN</span>
+          </div>
+        </header>
+        <main>
+          <section class="hero compact">
+            <div>
+              <span class="eyebrow">Your client workspace</span>
+              <h2>Federation providers</h2>
+              <p>
+                Choose which centrally configured providers are available to
+                users of this client.
+              </p>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Provider availability</h3>
+              <button class="refresh" id="refreshFederation">Refresh</button>
+            </div>
+            <p class="message" id="federationMessage" aria-live="polite"></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Provider</th>
+                    <th>Type</th>
+                    <th>Availability</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="providerRows">
+                  <tr>
+                    <td colspan="4">Loading providers...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="./js/common.js"></script>
+    <script src="./js/federation.js"></script>
+  </body>
+</html>

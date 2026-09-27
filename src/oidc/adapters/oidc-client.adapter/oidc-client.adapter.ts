@@ -26,12 +26,6 @@ export class OidcClientAdapter {
       return undefined;
     }
 
-    console.log('OIDC CLIENT AUTH DEBUG', {
-      clientId,
-      token_endpoint_auth_method: 'private_key_jwt',
-      jwks_uri: client.jwksUri,
-    });
-
     return this.toOidcClient(client);
   }
 

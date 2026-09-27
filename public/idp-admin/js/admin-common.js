@@ -91,11 +91,14 @@
 
   function renderShell() {
     const user = JSON.parse(sessionStorage.getItem(userKey) || "null");
-    const name = user?.name || user?.preferred_username || user?.username || "Administrator";
+    const name = "Administrator";
     const nameElement = document.querySelector("[data-user-name]");
     if (nameElement) nameElement.textContent = name;
 
+    ensureSidebarNavigation();
+    ensureSidebarFooter();
     normalizeTopbar(name, user);
+    loadHeaderProfile();
     setupMobileNavigation();
 
     document.querySelectorAll("[data-logout]").forEach(button => {
@@ -114,6 +117,86 @@
     document.querySelector(".topbar-actions")?.prepend(refreshButton);
 
     setupCreateFormCancellation();
+  }
+
+  function ensureSidebarNavigation() {
+    const navigation = document.querySelector(".sidebar .navigation");
+    if (!navigation) return;
+
+    const federationLinks = navigation.querySelectorAll(
+      'a.nav-item[href="./federation.html"]',
+    );
+    let federationLink = federationLinks[0];
+    if (!federationLink) {
+      federationLink = document.createElement("a");
+      federationLink.className = "nav-item";
+      federationLink.href = "./federation.html";
+      const icon = document.createElement("span");
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "⇄";
+      federationLink.append(icon, document.createTextNode("Federation"));
+      const registrationSection = navigation.querySelector(
+        ".nav-section-title",
+      );
+      navigation.insertBefore(federationLink, registrationSection || null);
+    }
+    federationLinks.forEach((link, index) => {
+      if (index > 0) link.remove();
+    });
+
+    const currentPath = window.location.pathname;
+    navigation.querySelectorAll("a.nav-item").forEach(link => {
+      link.classList.toggle("active", new URL(link.href).pathname === currentPath);
+    });
+  }
+
+  function ensureSidebarFooter() {
+    document.querySelectorAll(".sidebar").forEach(sidebar => {
+      const existingFooters = sidebar.querySelectorAll(".sidebar-footer");
+      let footer = existingFooters[0];
+      existingFooters.forEach((item, index) => {
+        if (index > 0) item.remove();
+      });
+
+      if (!footer) {
+        footer = document.createElement("div");
+        footer.className = "sidebar-footer";
+        const status = document.createElement("div");
+        status.className = "provider-status";
+        const dot = document.createElement("span");
+        dot.className = "status-dot";
+        const details = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = "Admin Console";
+        const subtitle = document.createElement("small");
+        subtitle.textContent = "Authenticated session";
+        details.append(title, subtitle);
+        status.append(dot, details);
+        footer.appendChild(status);
+      }
+
+      const status = footer.querySelector(".provider-status");
+      let title = status?.querySelector("strong");
+      let subtitle = status?.querySelector("small");
+      if (!status) {
+        const card = document.createElement("div");
+        card.className = "provider-status";
+        footer.replaceChildren(card);
+        const dot = document.createElement("span");
+        dot.className = "status-dot";
+        const details = document.createElement("div");
+        title = document.createElement("strong");
+        subtitle = document.createElement("small");
+        details.append(title, subtitle);
+        card.append(dot, details);
+      }
+      if (title) title.textContent = "Admin Console";
+      if (subtitle) subtitle.textContent = "Authenticated session";
+
+      const navigation = sidebar.querySelector(".navigation");
+      if (navigation) navigation.after(footer);
+      else sidebar.appendChild(footer);
+    });
   }
 
   function normalizeTopbar(name, user) {
@@ -144,6 +227,80 @@
       const profileMenu = actions.querySelector("#profileMenu");
       profileButton.addEventListener("click", event => { event.stopPropagation(); profileMenu.classList.toggle("open"); });
       document.addEventListener("click", () => profileMenu.classList.remove("open"));
+    }
+    ensureAvatarMarkup(actions.querySelector(".avatar"));
+  }
+
+  function initialsFor(name) {
+    const parts = String(name || "Administrator").trim().split(/\s+/).filter(Boolean);
+    return parts.length > 1
+      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+      : (parts[0] || "AD").slice(0, 2).toUpperCase();
+  }
+
+  function ensureAvatarMarkup(avatar) {
+    if (!avatar || avatar.querySelector("img")) return;
+    const fallback = document.createElement("span");
+    fallback.className = "avatar-fallback";
+    fallback.id = "userAvatarFallback";
+    fallback.textContent = avatar.textContent.trim() || "AD";
+    const image = document.createElement("img");
+    image.id = "userAvatarImage";
+    image.alt = "";
+    image.hidden = true;
+    avatar.replaceChildren(image, fallback);
+  }
+
+  function renderHeaderProfile(profile) {
+    const displayName = profile.displayName || profile.username || "Administrator";
+    const roles = Array.isArray(profile.roles) ? profile.roles : [];
+    const roleSummary = roles.length
+      ? `${roles[0]} · ${roles.length} roles`
+      : "Administrator";
+    const fullRoles = roles.length ? roles.join(", ") : "Administrator";
+    const name = document.getElementById("userName");
+    const role = document.getElementById("userRole");
+    if (name) name.textContent = displayName;
+    if (role) {
+      role.textContent = roleSummary;
+      role.title = fullRoles;
+      role.dataset.roleTooltip = fullRoles;
+    }
+    const image = document.getElementById("userAvatarImage");
+    const fallback = document.getElementById("userAvatarFallback");
+    if (!image || !fallback) return;
+    const showFallback = () => {
+      image.hidden = true;
+      image.removeAttribute("src");
+      image.onerror = null;
+      fallback.textContent = initialsFor(displayName);
+      fallback.setAttribute("aria-label", `${displayName} initials`);
+      fallback.hidden = false;
+    };
+    fallback.hidden = true;
+    image.hidden = true;
+    image.removeAttribute("src");
+    try {
+      const url = profile.avatarUrl ? new URL(profile.avatarUrl) : null;
+      if (!url || url.protocol !== "https:") {
+        showFallback();
+        return;
+      }
+      image.alt = `${displayName} profile picture`;
+      image.onerror = showFallback;
+      image.src = url.toString();
+      image.hidden = false;
+    } catch {
+      showFallback();
+    }
+  }
+
+  async function loadHeaderProfile() {
+    try {
+      const response = await apiFetch("/api/account/profile");
+      if (response?.ok) renderHeaderProfile(await response.json());
+    } catch (error) {
+      console.warn("Unable to load account profile for header", error);
     }
   }
 

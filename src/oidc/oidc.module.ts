@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { ConfigModule } from '@nestjs/config';
 
@@ -15,10 +15,12 @@ import { SecurityModule } from 'src/security/security.module';
 import { SigningKeysModule } from 'src/signing-keys/signing-keys.module';
 import { ClientRegistrationPolicyModule } from './services/client-registration-policy/client-registration-policy.module';
 import { OidcOptionsService } from './services/oidc-options.service';
+import { FederationModule } from 'src/federation/federation.module';
 
 @Module({
   imports: [
     ConfigModule,
+    forwardRef(() => FederationModule),
 
     AuthenticationModule,
     ClientsModule,

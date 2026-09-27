@@ -11,6 +11,8 @@ import { SecurityModule } from 'src/security/security.module';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
+import { FederatedIdentity } from '../federation/entities/federated-identity.entity';
+import { FederationProvider } from '../federation/entities/federation-provider.entity';
 
 import { IdentityService } from './identity.service';
 
@@ -28,7 +30,13 @@ import { PasswordResetTokenRepository } from './repositories/password-reset-toke
     forwardRef(() => ClientsModule),
     forwardRef(() => SecurityModule),
 
-    TypeOrmModule.forFeature([User, Role, PasswordResetToken]),
+    TypeOrmModule.forFeature([
+      User,
+      Role,
+      PasswordResetToken,
+      FederatedIdentity,
+      FederationProvider,
+    ]),
     ProvidersModule,
   ],
 

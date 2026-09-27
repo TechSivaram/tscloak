@@ -6,11 +6,13 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { FederatedIdentity } from 'src/federation/entities/federated-identity.entity';
 import { Client } from '../../clients/entities/client.entity';
 import { Role } from './role.entity';
 
@@ -69,4 +71,7 @@ export class User {
     },
   })
   roles: Role[];
+
+  @OneToMany(() => FederatedIdentity, (identity) => identity.user)
+  federatedIdentities: FederatedIdentity[];
 }

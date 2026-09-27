@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  NotFoundException,
   Post,
   Req,
   UseGuards,
@@ -14,6 +16,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { ClientsService } from '../clients/clients.service';
+import { FederatedIdentity } from '../federation/entities/federated-identity.entity';
 import { OidcAuthGuard } from 'src/security/guards/oidc-auth.guard';
 import type { AuthenticatedRequest } from 'src/security/types/authenticated-request';
 
@@ -23,12 +30,50 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordResponseDto } from './dto/forgot-password-response.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AccountProfile, AccountProfileMapper } from './account-profile.mapper';
 import { IdentityService } from './identity.service';
 
 @ApiTags('Account')
 @Controller('account')
 export class AccountController {
-  constructor(private readonly identityService: IdentityService) {}
+  constructor(
+    private readonly identityService: IdentityService,
+    private readonly clientsService: ClientsService,
+    @InjectRepository(FederatedIdentity)
+    private readonly federatedIdentities: Repository<FederatedIdentity>,
+  ) {}
+
+  @Get('profile')
+  @UseGuards(OidcAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get the authenticated user profile',
+    description:
+      'Returns safe profile details for the user in the validated client scope, including federation display information when available.',
+  })
+  @ApiResponse({ status: 200, description: 'Profile returned.' })
+  @ApiResponse({ status: 401, description: 'Authentication failed.' })
+  async profile(@Req() request: AuthenticatedRequest): Promise<AccountProfile> {
+    const user = await this.identityService.findById(
+      request.user.id,
+      request.user.clientId,
+    );
+
+    if (!user) {
+      throw new NotFoundException('Authenticated user was not found');
+    }
+
+    const [client, federatedIdentity] = await Promise.all([
+      this.clientsService.findByClientId(request.user.clientId),
+      this.federatedIdentities.findOne({
+        where: { userId: user.id },
+        relations: { provider: true },
+        order: { updatedAt: 'DESC', createdAt: 'DESC' },
+      }),
+    ]);
+
+    return AccountProfileMapper.toResponse(user, client, federatedIdentity);
+  }
 
   /**
    * Self-service password change for an authenticated user.

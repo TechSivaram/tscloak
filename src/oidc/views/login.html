@@ -196,6 +196,47 @@
       box-shadow: none;
     }
 
+    .federation-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .federation-divider::before,
+    .federation-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .federation-buttons {
+      display: grid;
+      gap: 10px;
+    }
+
+    .federation-button {
+      display: block;
+      padding: 12px 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      background: white;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .federation-button:hover {
+      border-color: var(--tscloak-blue);
+      background: var(--tscloak-blue-light);
+    }
+
     .error {
       margin-bottom: 20px;
 
@@ -408,6 +449,8 @@
         </button>
 
       </form>
+
+      {{FEDERATION_PROVIDERS}}
 
       <div class="forgot-password">
 

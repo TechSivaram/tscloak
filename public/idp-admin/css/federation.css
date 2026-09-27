@@ -1,0 +1,23 @@
+@import url('./admin-common.css');
+
+body.page-federation .panel + .panel {
+  margin-top: 20px;
+}
+body.page-federation textarea {
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  resize: vertical;
+  color: var(--text);
+  font: inherit;
+}
+body.page-federation .provider-actions {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+body.page-federation .status-badge {
+  white-space: nowrap;
+}

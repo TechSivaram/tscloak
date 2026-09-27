@@ -17,6 +17,7 @@ import {
 import { AuthenticationService } from '../../authentication/authentication.service';
 import { ClientsService } from '../../clients/clients.service';
 import { InteractionMode } from '../../clients/enums/interaction-mode.enum';
+import { FederationService } from '../../federation/federation.service';
 
 import type { Response } from 'express';
 import { readFile } from 'node:fs/promises';
@@ -43,6 +44,7 @@ export class OidcInteractionController {
     private readonly authenticationService: AuthenticationService,
     private readonly oidcService: OidcService,
     private readonly clientsService: ClientsService,
+    private readonly federationService: FederationService,
   ) {}
 
   // ============================================================
@@ -127,15 +129,16 @@ export class OidcInteractionController {
     // ==========================================================
 
     if (prompt === 'login') {
-      const template = await readFile(
-        join(process.cwd(), 'src', 'oidc', 'views', 'login.html'),
-        'utf8',
+      const redirectUri =
+        typeof details.params?.redirect_uri === 'string'
+          ? details.params.redirect_uri
+          : '';
+      const html = await this.renderLoginPage(
+        uid,
+        typeof clientId === 'string' ? clientId : '',
+        redirectUri,
+        '',
       );
-
-      const html = template
-        .replaceAll('{{UID}}', encodeURIComponent(uid))
-        .replaceAll('{{CLIENT_ID}}', this.escapeHtml(String(clientId ?? '')))
-        .replaceAll('{{ERROR}}', '');
 
       response.status(200).type('html').send(html);
 
@@ -348,11 +351,6 @@ export class OidcInteractionController {
         },
       });
     } catch (error) {
-      const template = await readFile(
-        join(process.cwd(), 'src', 'oidc', 'views', 'login.html'),
-        'utf8',
-      );
-
       const message =
         error instanceof Error ? error.message : 'Authentication failed';
 
@@ -362,11 +360,16 @@ export class OidcInteractionController {
         typeof details.params?.client_id === 'string'
           ? details.params.client_id
           : '';
-
-      const html = template
-        .replaceAll('{{UID}}', encodeURIComponent(uid))
-        .replaceAll('{{CLIENT_ID}}', this.escapeHtml(clientId))
-        .replaceAll('{{ERROR}}', this.escapeHtml(message));
+      const redirectUri =
+        typeof details.params?.redirect_uri === 'string'
+          ? details.params.redirect_uri
+          : '';
+      const html = await this.renderLoginPage(
+        uid,
+        clientId,
+        redirectUri,
+        this.escapeHtml(message),
+      );
 
       response.status(401).type('html').send(html);
     }
@@ -595,5 +598,60 @@ export class OidcInteractionController {
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
+  }
+
+  private async renderLoginPage(
+    uid: string,
+    clientId: string,
+    redirectUri: string,
+    error: string,
+  ): Promise<string> {
+    const template = await readFile(
+      join(process.cwd(), 'src', 'oidc', 'views', 'login.html'),
+      'utf8',
+    );
+    const federationProvidersHtml =
+      clientId && redirectUri
+        ? await this.renderFederationProviders(uid, clientId, redirectUri)
+        : '';
+
+    return template
+      .replaceAll('{{UID}}', encodeURIComponent(uid))
+      .replaceAll('{{CLIENT_ID}}', this.escapeHtml(clientId))
+      .replaceAll('{{ERROR}}', error)
+      .replaceAll('{{FEDERATION_PROVIDERS}}', federationProvidersHtml);
+  }
+
+  private async renderFederationProviders(
+    uid: string,
+    clientId: string,
+    redirectUri: string,
+  ): Promise<string> {
+    const providers =
+      await this.federationService.findEnabledProviderOptions(clientId);
+
+    if (providers.length === 0) {
+      return '';
+    }
+
+    const buttons = providers
+      .map((provider) => {
+        const query = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          interaction_uid: uid,
+        });
+        const authorizeUrl = `/api/federation/providers/${encodeURIComponent(provider.id)}/authorize?${query.toString()}`;
+
+        return `<a class="federation-button" href="${this.escapeHtml(authorizeUrl)}">Continue with ${this.escapeHtml(provider.name)}</a>`;
+      })
+      .join('');
+
+    return `
+      <div class="federation-options">
+        <div class="federation-divider"><span>or</span></div>
+        <div class="federation-buttons">${buttons}</div>
+      </div>
+    `;
   }
 }

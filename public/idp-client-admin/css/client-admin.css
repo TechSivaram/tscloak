@@ -261,6 +261,27 @@ button {
   color: white;
   font-size: 11px;
   font-weight: 850;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header-avatar-image[hidden],
+.header-avatar-fallback[hidden] {
+  display: none;
+}
+
+.header-avatar-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
 }
 
 .header-identity {
@@ -629,6 +650,48 @@ form .actions {
 
 .profile {
   overflow: hidden;
+}
+
+.profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--line);
+}
+
+.profile-avatar[hidden] {
+  display: none;
+}
+
+.profile-avatar-fallback {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--mint);
+  color: var(--green);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.profile-avatar-fallback[hidden] {
+  display: none;
+}
+
+.profile-federation {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .profile dl {
