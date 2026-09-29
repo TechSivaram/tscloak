@@ -77,11 +77,14 @@
       const profileLink = document.createElement('a');
       profileLink.href = './profile.html';
       profileLink.textContent = 'Profile';
+      const securityLink = document.createElement('a');
+      securityLink.href = './security.html';
+      securityLink.textContent = 'Security & MFA';
       const logoutButton = document.createElement('button');
       logoutButton.type = 'button';
       logoutButton.dataset.headerLogout = '';
       logoutButton.textContent = 'Sign out';
-      menu.append(profileLink, logoutButton);
+      menu.append(profileLink, securityLink, logoutButton);
       chip.append(avatar, identity, menuButton, menu);
 
       const showFallback = () => {

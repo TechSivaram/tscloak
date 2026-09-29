@@ -4,6 +4,7 @@ import { IdentityModule } from '../identity/identity.module';
 // import { AuthenticationModule } from '../authentication/authentication.module';
 import { AdminModule } from 'src/admin/admin.module';
 import { FederationModule } from 'src/federation/federation.module';
+import { MfaModule } from 'src/mfa/mfa.module';
 import { RegistrationModule } from 'src/registration/registration.module';
 import { SecurityModule } from 'src/security/security.module';
 import { ClientsModule } from '../clients/clients.module';
@@ -16,7 +17,9 @@ import { ClientsModule } from '../clients/clients.module';
     SecurityModule,
     RegistrationModule,
     AdminModule,
+    MfaModule,
     FederationModule,
+
     RouterModule.register([
       {
         path: 'api', // Common prefix applied to ALL children below
@@ -28,6 +31,7 @@ import { ClientsModule } from '../clients/clients.module';
           RegistrationModule, // Resolves to: /api + /registration
           AdminModule, // Resolves to: /api + /admin
           FederationModule, // Resolves to: /api + /federation
+          MfaModule, // Resolves to: /api + /mfa
         ],
       },
     ]),

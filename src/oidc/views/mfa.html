@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify identity - TSCloak</title>
+  <link rel="icon" type="image/png" href="/assets/tscloak-icon.png" />
+<style>
+    :root {
+      --tscloak-blue: #1f3f82;
+      --tscloak-blue-dark: #163266;
+      --tscloak-blue-light: #eef3fb;
+
+      --text-primary: #172033;
+      --text-muted: #667085;
+
+      --border: #d0d5dd;
+      --background: #f5f7fa;
+
+      --error-bg: #fff0f0;
+      --error-border: #ffcccc;
+      --error-text: #c00;
+
+      --success-bg: #ecfdf3;
+      --success-border: #abefc6;
+      --success-text: #067647;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      font-family: Inter, Arial, Helvetica, sans-serif;
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(31, 63, 130, 0.08),
+          transparent 40%
+        ),
+        var(--background);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+
+      padding: 36px 32px;
+
+      background: white;
+
+      border: 1px solid rgba(31, 63, 130, 0.08);
+      border-radius: 16px;
+
+      box-shadow:
+        0 12px 40px rgba(31, 63, 130, 0.10);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo-image {
+      width: 82px;
+      height: 82px;
+
+      display: block;
+
+      object-fit: contain;
+
+      margin: 0 auto 12px;
+    }
+
+    .logo h1 {
+      margin: 0;
+
+      color: var(--tscloak-blue);
+
+      font-size: 30px;
+      font-weight: 700;
+
+      letter-spacing: -0.5px;
+    }
+
+    .logo p {
+      margin: 7px 0 0;
+
+      color: var(--text-muted);
+
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      color: var(--text-primary);
+
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+
+      padding: 12px 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      color: var(--text-primary);
+      background: white;
+
+      font-size: 15px;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+
+      border-color: var(--tscloak-blue);
+
+      box-shadow:
+        0 0 0 3px rgba(31, 63, 130, 0.12);
+    }
+
+    button {
+      width: 100%;
+
+      padding: 13px;
+
+      border: none;
+      border-radius: 8px;
+
+      background: var(--tscloak-blue);
+      color: white;
+
+      font-size: 15px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        background 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+
+      box-shadow:
+        0 5px 12px rgba(31, 63, 130, 0.20);
+    }
+
+    button:hover {
+      background: var(--tscloak-blue-dark);
+
+      box-shadow:
+        0 7px 18px rgba(31, 63, 130, 0.25);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.65;
+
+      cursor: not-allowed;
+
+      box-shadow: none;
+    }
+
+    .federation-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .federation-divider::before,
+    .federation-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .federation-buttons {
+      display: grid;
+      gap: 10px;
+    }
+
+    .federation-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      background: white;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .federation-button-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .federation-provider-icon {
+      display: block;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+    }
+
+    .federation-button-content > span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .federation-button:hover {
+      border-color: var(--tscloak-blue);
+      background: var(--tscloak-blue-light);
+    }
+
+    .error {
+      margin-bottom: 20px;
+
+      padding: 12px;
+
+      background: var(--error-bg);
+
+      border: 1px solid var(--error-border);
+
+      border-radius: 8px;
+
+      color: var(--error-text);
+
+      font-size: 14px;
+    }
+
+    .forgot-password {
+      margin-top: 14px;
+
+      text-align: center;
+    }
+
+    .forgot-password a {
+      color: var(--tscloak-blue);
+
+      font-size: 13px;
+      font-weight: 500;
+
+      text-decoration: none;
+    }
+
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+
+    .forgot-password-panel {
+      margin-top: 4px;
+    }
+
+    .forgot-password-header {
+      margin-bottom: 24px;
+
+      text-align: center;
+    }
+
+    .forgot-password-header h2 {
+      margin: 0 0 8px;
+
+      color: var(--text-primary);
+
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .forgot-password-header p {
+      margin: 0;
+
+      color: var(--text-muted);
+
+      font-size: 13px;
+
+      line-height: 1.6;
+    }
+
+    .forgot-password-message {
+      margin-bottom: 20px;
+
+      padding: 12px;
+
+      border-radius: 8px;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+    }
+
+    .forgot-password-message.error {
+      background: var(--error-bg);
+
+      border: 1px solid var(--error-border);
+
+      color: var(--error-text);
+    }
+
+    .forgot-password-message.success {
+      background: var(--success-bg);
+
+      border: 1px solid var(--success-border);
+
+      color: var(--success-text);
+    }
+
+    .back-to-login {
+      margin-top: 18px;
+
+      text-align: center;
+    }
+
+    .back-to-login a {
+      color: var(--tscloak-blue);
+
+      font-size: 13px;
+      font-weight: 500;
+
+      text-decoration: none;
+    }
+
+    .back-to-login a:hover {
+      text-decoration: underline;
+    }
+
+    .footer {
+      margin-top: 26px;
+
+      text-align: center;
+
+      color: #98a2b3;
+
+      font-size: 11px;
+    }
+
+    .footer strong {
+      color: var(--tscloak-blue);
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 14px;
+      }
+
+      .login-container {
+        padding: 30px 24px;
+      }
+
+      .logo-image {
+        width: 72px;
+        height: 72px;
+      }
+    }
+  </style>
+  <style>
+    .mfa-header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .mfa-header h2 {
+      margin: 0 0 8px;
+      color: var(--text-primary);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .mfa-header p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      background: white;
+      font-size: 15px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--tscloak-blue);
+      box-shadow: 0 0 0 3px rgba(31, 63, 130, 0.12);
+    }
+
+    .error {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: 8px;
+      color: var(--error-text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .client {
+      margin-top: 18px;
+      text-align: center;
+      color: #98a2b3;
+      font-size: 11px;
+    }
+
+    @media (max-width: 480px) {
+      .mfa-header h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <img
+        src="/assets/tscloak-icon.png"
+        alt="TSCloak"
+        class="logo-image"
+      />
+
+      <h1>TSCloak</h1>
+
+      <p>
+        Secure Identities. Trusted Access.
+      </p>
+    </div>
+
+    <div class="mfa-header">
+      <h2>Verify your identity</h2>
+      <p>
+        Enter the verification code from your authenticator app
+        or use one of your recovery codes.
+      </p>
+    </div>
+
+    {{ERROR}}
+
+    <form method="POST" action="/interaction/{{UID}}/mfa">
+      <div class="form-group">
+        <label for="method">Verification method</label>
+        <select id="method" name="method">
+          <option value="totp">Authenticator code</option>
+          <option value="recovery">Recovery code</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="code">Verification code</label>
+        <input
+          id="code"
+          name="code"
+          type="text"
+          autocomplete="one-time-code"
+          inputmode="numeric"
+          required
+          autofocus
+          placeholder="Enter your code"
+        />
+      </div>
+
+      <button type="submit">Verify</button>
+    </form>
+
+    <div class="client">
+      Client: {{CLIENT_ID}}
+    </div>
+
+    <div class="footer">
+      Secured by <strong>TSCloak</strong>
+    </div>
+  </div>
+</body>
+</html>

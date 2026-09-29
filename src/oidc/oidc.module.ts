@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
-
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { OidcModule as NestOidcModule } from 'nest-oidc-provider';
 
@@ -10,12 +10,15 @@ import { OidcPersistenceModule } from './oidc-persistence.module';
 
 import { AuthenticationModule } from 'src/authentication/authentication.module';
 import { ClientsModule } from 'src/clients/clients.module';
+import { FederationModule } from 'src/federation/federation.module';
 import { IdentityModule } from 'src/identity/identity.module';
+import { MfaModule } from 'src/mfa/mfa.module';
 import { SecurityModule } from 'src/security/security.module';
 import { SigningKeysModule } from 'src/signing-keys/signing-keys.module';
+import { OidcMfaChallenge } from './entities/oidc-mfa-challenge.entity';
 import { ClientRegistrationPolicyModule } from './services/client-registration-policy/client-registration-policy.module';
+import { OidcMfaChallengeService } from './services/oidc-mfa-challenge.service';
 import { OidcOptionsService } from './services/oidc-options.service';
-import { FederationModule } from 'src/federation/federation.module';
 
 @Module({
   imports: [
@@ -27,6 +30,8 @@ import { FederationModule } from 'src/federation/federation.module';
     IdentityModule,
     SecurityModule,
     OidcPersistenceModule,
+    MfaModule,
+    TypeOrmModule.forFeature([OidcMfaChallenge]),
 
     /**
      * Required by OidcOptionsService.
@@ -57,6 +62,6 @@ import { FederationModule } from 'src/federation/federation.module';
 
   controllers: [OidcInteractionController],
 
-  providers: [OidcOptionsService],
+  providers: [OidcOptionsService, OidcMfaChallengeService],
 })
 export class OidcModule {}

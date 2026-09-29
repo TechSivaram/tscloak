@@ -1,0 +1,627 @@
+/* =========================================================
+   TSCloak Administration — Security & MFA
+   Uses dashboard.css for the shared application shell/tokens.
+   ========================================================= */
+
+.page-security .content {
+    max-width: 1450px;
+}
+
+/* =========================================================
+   SECURITY INTRO
+   ========================================================= */
+
+.security-intro {
+    min-height: 128px;
+    margin-bottom: 22px;
+    padding: 25px 27px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    background:
+        linear-gradient(
+            100deg,
+            rgba(19, 136, 8, .045),
+            rgba(255, 255, 255, 0) 55%,
+            rgba(255, 153, 51, .045)
+        ),
+        #ffffff;
+
+    box-shadow: var(--shadow);
+
+    position: relative;
+    overflow: hidden;
+}
+
+.security-intro::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    width: 4px;
+
+    background: var(--green);
+}
+
+.security-intro > div:first-child {
+    min-width: 0;
+}
+
+.security-intro h2 {
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 23px;
+    line-height: 1.2;
+
+    letter-spacing: -.5px;
+}
+
+.security-intro p:not(.eyebrow) {
+    max-width: 680px;
+
+    margin: 7px 0 0;
+
+    color: var(--muted);
+
+    line-height: 1.55;
+}
+
+/* =========================================================
+   MFA STATUS
+   ========================================================= */
+
+.security-status {
+    min-width: 260px;
+
+    padding: 13px 15px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: var(--surface);
+
+    box-shadow: 0 3px 12px rgba(16, 50, 22, .04);
+}
+
+.security-status strong {
+    display: block;
+
+    color: var(--text);
+
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.security-status small {
+    display: block;
+
+    margin-top: 3px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.security-status .status-dot {
+    width: 7px;
+    height: 7px;
+
+    margin-top: 0;
+
+    background: var(--saffron);
+
+    box-shadow:
+        0 0 0 3px rgba(255, 153, 51, .20);
+}
+
+.security-status .status-dot.enabled {
+    background: var(--green);
+
+    box-shadow:
+        0 0 0 3px rgba(19, 136, 8, .14);
+}
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+
+.security-panel {
+    margin-bottom: 20px;
+
+    overflow: hidden;
+}
+
+.security-panel .panel-heading {
+    min-height: 72px;
+
+    padding: 17px 20px;
+
+    display: flex;
+    align-items: center;
+
+    border-bottom: 1px solid var(--border);
+
+    background:
+        linear-gradient(
+            100deg,
+            rgba(19, 136, 8, .035),
+            rgba(255, 255, 255, 0) 68%
+        );
+}
+
+.security-panel .panel-heading h3 {
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 15px;
+}
+
+.security-body {
+    padding: 24px 22px 26px;
+}
+
+.security-copy {
+    max-width: 780px;
+
+    margin: 0 0 18px;
+
+    color: var(--muted);
+
+    line-height: 1.6;
+}
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+
+.security-message,
+.page-message {
+    min-height: 18px;
+
+    margin: 12px 0 0;
+
+    color: var(--green);
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.error-message {
+    color: #b42318 !important;
+}
+
+/* =========================================================
+   MFA SETUP
+   ========================================================= */
+
+.setup-grid {
+    display: grid;
+
+    grid-template-columns: 220px minmax(0, 1fr);
+
+    gap: 28px;
+
+    align-items: start;
+}
+
+.qr-card {
+    width: 220px;
+
+    padding: 15px;
+
+    display: grid;
+    place-items: center;
+
+    gap: 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: #fbfdfb;
+}
+
+.qr-card img {
+    width: 184px;
+    height: 184px;
+
+    display: block;
+
+    image-rendering: auto;
+
+    border-radius: 4px;
+}
+
+.qr-card span {
+    color: var(--muted);
+
+    font-size: 10px;
+
+    line-height: 1.35;
+
+    text-align: center;
+}
+
+.setup-details {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 15px;
+}
+
+.setup-details label {
+    display: grid;
+
+    gap: 7px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.setup-details textarea {
+    width: 100%;
+
+    min-height: 76px;
+
+    padding: 9px 11px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: var(--text);
+
+    resize: vertical;
+
+    font:
+        11px/1.45
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Consolas,
+        monospace;
+}
+
+.setup-details textarea:focus {
+    outline: 2px solid rgba(19, 136, 8, .13);
+    border-color: var(--green);
+}
+
+.secret-value {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.secret-value code {
+    flex: 1;
+    min-width: 0;
+
+    min-height: 42px;
+
+    padding: 11px;
+
+    overflow-wrap: anywhere;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--primary-soft);
+
+    color: var(--text);
+
+    font:
+        12px
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Consolas,
+        monospace;
+}
+
+.security-hint {
+    margin: 0;
+
+    color: var(--light);
+
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   VERIFICATION
+   ========================================================= */
+
+.verify-box {
+    margin-top: 24px;
+
+    padding: 20px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: #fbfdfb;
+}
+
+.verify-box h3 {
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 15px;
+}
+
+.verify-box p:not(.eyebrow) {
+    margin: 5px 0 15px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.verify-box form {
+    max-width: none;
+
+    display: grid;
+
+    gap: 8px;
+}
+
+.verify-box form > label {
+    color: var(--muted);
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.verify-row {
+    display: flex;
+
+    gap: 9px;
+}
+
+.verify-row input {
+    flex: 1;
+
+    min-width: 0;
+    min-height: 39px;
+
+    padding: 0 11px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 650;
+
+    letter-spacing: 3px;
+
+    text-align: center;
+}
+
+.verify-row input::placeholder {
+    color: var(--light);
+    letter-spacing: 2px;
+}
+
+.verify-row input:focus {
+    outline: 2px solid rgba(19, 136, 8, .14);
+
+    border-color: var(--green);
+}
+
+.verify-row .button {
+    flex: none;
+}
+
+.button.small {
+    min-height: 39px;
+
+    padding: 0 12px;
+
+    font-size: 11px;
+}
+
+/* =========================================================
+   RECOVERY CODES
+   ========================================================= */
+
+.warning-box {
+    margin-bottom: 17px;
+
+    padding: 13px 15px;
+
+    display: grid;
+
+    gap: 4px;
+
+    border: 1px solid #e4d8bd;
+    border-radius: 9px;
+
+    background: #fffaf0;
+
+    color: #6d532f;
+}
+
+.warning-box strong {
+    font-size: 12px;
+}
+
+.warning-box span {
+    font-size: 10px;
+
+    line-height: 1.5;
+}
+
+.recovery-codes {
+    max-width: 620px;
+
+    margin-bottom: 15px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 9px;
+}
+
+.recovery-codes code {
+    padding: 12px 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--primary-soft);
+
+    color: var(--text);
+
+    font:
+        700 12px
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Consolas,
+        monospace;
+
+    letter-spacing: .5px;
+
+    text-align: center;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+    .security-intro {
+        align-items: flex-start;
+    }
+
+    .security-status {
+        min-width: 230px;
+    }
+
+    .setup-grid {
+        grid-template-columns: 190px minmax(0, 1fr);
+
+        gap: 20px;
+    }
+
+    .qr-card {
+        width: 190px;
+    }
+
+    .qr-card img {
+        width: 160px;
+        height: 160px;
+    }
+}
+
+@media (max-width: 760px) {
+    .security-intro {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        padding: 20px;
+    }
+
+    .security-intro h2 {
+        font-size: 20px;
+    }
+
+    .security-status {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .security-panel .panel-heading {
+        min-height: 66px;
+
+        padding: 16px 15px;
+    }
+
+    .security-body {
+        padding: 20px 15px 22px;
+    }
+
+    .setup-grid {
+        grid-template-columns: 1fr;
+
+        gap: 18px;
+    }
+
+    .qr-card {
+        width: 100%;
+        max-width: 220px;
+    }
+
+    .qr-card img {
+        width: 184px;
+        height: 184px;
+    }
+
+    .secret-value {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .secret-value .button {
+        width: 100%;
+    }
+
+    .verify-box {
+        margin-top: 20px;
+
+        padding: 17px;
+    }
+
+    .verify-row {
+        flex-direction: column;
+    }
+
+    .verify-row input {
+        width: 100%;
+    }
+
+    .verify-row .button {
+        width: 100%;
+    }
+
+    .recovery-codes {
+        grid-template-columns: 1fr;
+    }
+}

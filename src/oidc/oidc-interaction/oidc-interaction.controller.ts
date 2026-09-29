@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Post,
+  Res,
+} from '@nestjs/common';
 
 import {
   ApiBody,
@@ -18,11 +27,18 @@ import { AuthenticationService } from '../../authentication/authentication.servi
 import { ClientsService } from '../../clients/clients.service';
 import { InteractionMode } from '../../clients/enums/interaction-mode.enum';
 import { FederationService } from '../../federation/federation.service';
+import { MfaService } from '../../mfa/services/mfa.service';
+import { OidcMfaChallengeService } from '../services/oidc-mfa-challenge.service';
 import { renderFederationLoginButton } from './federation-login-button';
 
 import type { Response } from 'express';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import {
+  OidcMfaMethod,
+  VerifyOidcMfaDto,
+} from 'src/mfa/dto/verify-oidc-mfa.dto';
+import { MfaAttemptRateLimitService } from 'src/mfa/services/mfa-attempt-rate-limit.service';
 
 interface LoginDto {
   username: string;
@@ -46,6 +62,9 @@ export class OidcInteractionController {
     private readonly oidcService: OidcService,
     private readonly clientsService: ClientsService,
     private readonly federationService: FederationService,
+    private readonly mfaService: MfaService,
+    private readonly oidcMfaChallengeService: OidcMfaChallengeService,
+    private readonly mfaAttemptRateLimitService: MfaAttemptRateLimitService,
   ) {}
 
   // ============================================================
@@ -134,6 +153,20 @@ export class OidcInteractionController {
         typeof details.params?.redirect_uri === 'string'
           ? details.params.redirect_uri
           : '';
+
+      const pendingMfa = await this.oidcMfaChallengeService.get(uid);
+
+      if (pendingMfa) {
+        const html = await this.renderMfaPage(
+          uid,
+          typeof clientId === 'string' ? clientId : '',
+          '',
+        );
+
+        response.status(200).type('html').send(html);
+        return;
+      }
+
       const html = await this.renderLoginPage(
         uid,
         typeof clientId === 'string' ? clientId : '',
@@ -344,11 +377,28 @@ export class OidcInteractionController {
         details.params.redirect_uri,
       );
 
+      const userMfa = await this.mfaService.getUserMfa(user.id);
+
+      if (userMfa?.enabled) {
+        await this.oidcMfaChallengeService.create(uid, user.id);
+
+        const clientId =
+          typeof details.params?.client_id === 'string'
+            ? details.params.client_id
+            : '';
+
+        const html = await this.renderMfaPage(uid, clientId, '');
+
+        response.status(200).type('html').send(html);
+        return;
+      }
+
       await interaction.finished({
         login: {
           accountId: user.id,
           remember: true,
           ts: Math.floor(Date.now() / 1000),
+          amr: ['pwd'],
         },
       });
     } catch (error) {
@@ -369,6 +419,155 @@ export class OidcInteractionController {
         uid,
         clientId,
         redirectUri,
+        this.escapeHtml(message),
+      );
+
+      response.status(401).type('html').send(html);
+    }
+  }
+
+  // ============================================================
+  // POST /interaction/:uid/mfa
+  // HOSTED MFA VERIFICATION
+  // ============================================================
+
+  @Post(':uid/mfa')
+  @ApiOperation({
+    summary: 'Hosted UI MFA Verification',
+    description:
+      'Verifies the pending MFA challenge using a TOTP or one-time recovery code and completes the OIDC login interaction only after successful verification.',
+  })
+  @ApiParam({
+    name: 'uid',
+    description: 'OIDC interaction identifier.',
+    example: '4f8b7c9a6d2e4f1a',
+  })
+  @ApiBody({
+    type: VerifyOidcMfaDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'MFA verification succeeded and the OIDC login interaction was completed.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or unsupported MFA interaction.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired MFA challenge or verification code.',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many MFA verification attempts. Please try again later.',
+  })
+  async verifyMfa(
+    @Param('uid') uid: string,
+    @Body() dto: VerifyOidcMfaDto,
+    @OidcInteraction()
+    interaction: InteractionHelper,
+    @Res() response: Response,
+  ): Promise<void> {
+    try {
+      const details = await interaction.details();
+
+      if (details.prompt?.name !== 'login') {
+        response
+          .status(400)
+          .send('This endpoint is not handling a login interaction.');
+
+        return;
+      }
+
+      const challenge = await this.oidcMfaChallengeService.require(uid);
+
+      const key = `oidc-mfa:${uid}:${challenge.userId}`;
+
+      this.mfaAttemptRateLimitService.assertAllowed(key);
+
+      const clientId =
+        typeof details.params?.client_id === 'string'
+          ? details.params.client_id
+          : '';
+
+      let valid = false;
+
+      if (dto.method === OidcMfaMethod.TOTP) {
+        valid = await this.mfaService.verifyTotp(challenge.userId, dto.code);
+      } else if (dto.method === OidcMfaMethod.RECOVERY) {
+        valid = await this.mfaService.verifyRecoveryCode(
+          challenge.userId,
+          dto.code,
+        );
+      }
+
+      if (!valid) {
+        this.mfaAttemptRateLimitService.recordFailure(key);
+
+        const html = await this.renderMfaPage(
+          uid,
+          clientId,
+          'Invalid MFA code. Please try again.',
+        );
+
+        response.status(401).type('html').send(html);
+
+        return;
+      }
+
+      await interaction.finished({
+        login: {
+          accountId: challenge.userId,
+          remember: true,
+          ts: Math.floor(Date.now() / 1000),
+          amr: ['pwd', 'otp'],
+        },
+      });
+
+      this.mfaAttemptRateLimitService.reset(key);
+
+      await this.oidcMfaChallengeService.remove(uid);
+    } catch (error) {
+      /*
+       * Preserve HTTP 429 from the MFA attempt rate limiter.
+       * Do not convert it into the normal 401 MFA error response.
+       */
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.TOO_MANY_REQUESTS
+      ) {
+        const details = await interaction.details();
+
+        const clientId =
+          typeof details.params?.client_id === 'string'
+            ? details.params.client_id
+            : '';
+
+        const html = await this.renderMfaPage(
+          uid,
+          clientId,
+          'Too many MFA verification attempts. Please try again later.',
+        );
+
+        response.status(HttpStatus.TOO_MANY_REQUESTS).type('html').send(html);
+
+        return;
+      }
+
+      const message =
+        error instanceof Error ? error.message : 'MFA verification failed';
+
+      const details = await interaction.details();
+
+      const clientId =
+        typeof details.params?.client_id === 'string'
+          ? details.params.client_id
+          : '';
+
+      const html = await this.renderMfaPage(
+        uid,
+        clientId,
         this.escapeHtml(message),
       );
 
@@ -599,6 +798,26 @@ export class OidcInteractionController {
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
+  }
+
+  private async renderMfaPage(
+    uid: string,
+    clientId: string,
+    error: string,
+  ): Promise<string> {
+    const template = await readFile(
+      join(process.cwd(), 'src', 'oidc', 'views', 'mfa.html'),
+      'utf8',
+    );
+
+    const errorHtml = error
+      ? `<div class="error">${this.escapeHtml(error)}</div>`
+      : '';
+
+    return template
+      .replaceAll('{{UID}}', encodeURIComponent(uid))
+      .replaceAll('{{CLIENT_ID}}', this.escapeHtml(clientId))
+      .replaceAll('{{ERROR}}', errorHtml);
   }
 
   private async renderLoginPage(

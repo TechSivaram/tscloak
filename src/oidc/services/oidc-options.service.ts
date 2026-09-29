@@ -70,6 +70,32 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
       factory: ({ issuer, config, module }) => {
         const provider = new module.Provider(issuer, config);
 
+        /**
+         * Expose authentication method information from the
+         * established OIDC session to oidc-provider.
+         *
+         * The interaction controller stores AMR values in the
+         * login result:
+         *
+         *   password only  -> ['pwd']
+         *   password + MFA -> ['pwd', 'otp']
+         *
+         * oidc-provider reads these values from the OIDC context
+         * when constructing the ID token claims.
+         */
+        Object.defineProperties(provider.OIDCContext.prototype, {
+          acr: {
+            get() {
+              return this.session.acr;
+            },
+          },
+          amr: {
+            get() {
+              return this.session.amr;
+            },
+          },
+        });
+
         // Keep the current request available to the client adapter. The
         // provider parses token endpoint auth parameters before it loads the
         // client, so the adapter can choose the matching registered method.
@@ -105,6 +131,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
           };
 
           let tokenInfo;
+
           try {
             tokenInfo = await this.oidcTokenService.validate(accessToken);
           } catch {
@@ -113,13 +140,16 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
           }
 
           const scopes = new Set(tokenInfo.scope?.split(' ').filter(Boolean));
+
           if (!scopes.has('openid')) {
             ctx.status = 403;
             ctx.set(
               'WWW-Authenticate',
               'Bearer error="insufficient_scope", scope="openid"',
             );
-            ctx.body = { error: 'insufficient_scope' };
+            ctx.body = {
+              error: 'insufficient_scope',
+            };
             return;
           }
 
@@ -133,15 +163,20 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
             return;
           }
 
-          const claims: Record<string, unknown> = { sub: user.id };
+          const claims: Record<string, unknown> = {
+            sub: user.id,
+          };
+
           if (scopes.has('profile')) {
             claims.name = user.username;
             claims.preferred_username = user.username;
           }
+
           if (scopes.has('email')) {
             claims.email = user.email;
             claims.email_verified = true;
           }
+
           if (scopes.has('roles')) {
             claims.roles = user.roles?.map((role) => role.name) ?? [];
           }
@@ -226,6 +261,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
 
         provider.on('grant.error', (ctx, error) => {
           console.error('========== OIDC GRANT ERROR ==========');
+          console.error('URL:', ctx?.request?.url);
           console.error('Error:', error);
           console.error('Stack:', error?.stack);
           console.error('======================================');
@@ -266,6 +302,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
 
         formats: {
           default: 'opaque',
+
           customizers: {
             jwt: async (_ctx, token, structuredToken) => {
               const scopes = new Set(
@@ -408,36 +445,57 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
             }),
           };
         },
+
         /**
          * OIDC FEATURES
          */
         features: {
           /**
-           * Issue JWT access tokens for the provider's default API resource.
-           * oidc-provider 9 selects token format through ResourceServer
-           * metadata rather than the legacy formats.AccessToken option.
+           * Allow authorization requests to explicitly request
+           * standalone OIDC claims such as amr.
+           */
+          claimsParameter: {
+            enabled: true,
+          },
+
+          /**
+           * Issue JWT access tokens for the provider's
+           * default API resource.
+           *
+           * oidc-provider 9 selects token format through
+           * ResourceServer metadata rather than the legacy
+           * formats.AccessToken option.
            */
           resourceIndicators: {
             enabled: true,
+
             defaultResource: async (_ctx, client) =>
               `urn:tscloak:client:${encodeURIComponent(client.clientId)}`,
-            // Carry the default resource from the authorization request into
-            // the code-exchange access token, including OpenID scope requests.
+
+            // Carry the default resource from the authorization
+            // request into the code-exchange access token,
+            // including OpenID scope requests.
             useGrantedResource: async () => true,
+
             getResourceServerInfo: async (_ctx, resourceIndicator, client) => {
               const registeredClient = await this.clientsService.findByClientId(
                 client.clientId,
               );
-              const clientResource = `urn:tscloak:client:${encodeURIComponent(client.clientId)}`;
+
+              const clientResource = `urn:tscloak:client:${encodeURIComponent(
+                client.clientId,
+              )}`;
 
               return {
                 audience:
                   resourceIndicator === clientResource
                     ? client.clientId
                     : resourceIndicator,
+
                 scope:
                   registeredClient?.allowedScopes.join(' ') ??
                   'openid profile email offline_access roles',
+
                 accessTokenFormat: 'jwt',
               };
             },
@@ -553,7 +611,24 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
            */
           email: ['email', 'email_verified'],
 
+          /**
+           * Application roles.
+           */
           roles: ['roles'],
+
+          /**
+           * Authentication Methods References.
+           *
+           * This is a standalone OIDC claim and is requested
+           * through the authorization `claims` parameter.
+           *
+           * Values are supplied by the OIDC authentication
+           * session:
+           *
+           *   password only  -> ['pwd']
+           *   password + TOTP -> ['pwd', 'otp']
+           */
+          amr: null,
         },
       },
     };

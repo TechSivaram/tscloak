@@ -4,12 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { getDatabaseConfig } from './config/database.config';
 
-import { OidcModule } from './oidc/oidc.module';
-import { ApiModule } from './api/api.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { SigningKeysModule } from './signing-keys/signing-keys.module';
 import { join } from 'path';
 import { AdminModule } from './admin/admin.module';
+import { ApiModule } from './api/api.module';
+import { OidcModule } from './oidc/oidc.module';
+import { SigningKeysModule } from './signing-keys/signing-keys.module';
 
 @Module({
   imports: [
