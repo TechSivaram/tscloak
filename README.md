@@ -53,6 +53,8 @@ The goal is to provide a maintainable architecture for building an authorization
 - 🛡️ Database-backed security policy management
 - ⏱️ Configurable OIDC token lifetimes from security policy
 - 🔑 RSA signing key management and JWKS publication
+- 🔐 Optional user MFA with TOTP and recovery codes
+- 🛡️ MFA challenge protection and attempt rate limiting
 
 ---
 
@@ -163,6 +165,16 @@ This index includes every main section and subsection in the same order as the d
   - [Persistence and Scaling](#persistence-and-scaling)
   - [Security Considerations](#security-considerations)
   - [Current Scope](#current-scope)
+- [🔐 Multi-Factor Authentication (MFA)](#multi-factor-authentication-mfa)
+  - [Supported Method](#supported-method)
+  - [MFA Enrollment](#mfa-enrollment)
+  - [Recovery Codes](#recovery-codes)
+  - [OIDC Login with MFA](#oidc-login-with-mfa)
+  - [MFA Challenge](#mfa-challenge)
+  - [MFA API](#mfa-api)
+  - [Rate Limiting](#mfa-rate-limiting)
+  - [Security and Storage](#mfa-security-and-storage)
+  - [MFA E2E Coverage](#mfa-e2e-coverage)
 - [🔑 Signing Keys and JWKS](#signing-keys-and-jwks)
   - [Why Signing Keys Are Required](#why-signing-keys-are-required)
   - [Signing Key Management](#signing-key-management)
@@ -680,6 +692,7 @@ flowchart TD
     E --> I["oidc.module.ts"]
     A --> J["security"]
     J --> J1["security-policy.service.ts"]
+    A --> M["mfa"]
     A --> K["signing-keys"]
     A --> L["app.module.ts"]
     A --> K["main.ts"]
@@ -695,6 +708,7 @@ flowchart TD
 | **Sessions** | Application session management |
 | **OIDC** | Protocol configuration, adapters, and OIDC integration |
 | **Security** | Security policy administration and runtime policy access |
+| **MFA** | User MFA enrollment, TOTP verification, recovery codes, and MFA challenges |
 | **Signing Keys** | Signing key persistence and key management |
 
 ---
@@ -2312,6 +2326,316 @@ The currently implemented Security Policy Management feature provides:
 
 The policy model also provides a foundation for future additions such as validation rules, policy-change auditing, multi-tenant policies, and more advanced runtime configuration strategies.
 
+
+<a id="multi-factor-authentication-mfa"></a>
+## 🔐 Multi-Factor Authentication (MFA)
+
+TSCloak supports optional per-user Multi-Factor Authentication (MFA) using **Time-based One-Time Passwords (TOTP)**.
+
+MFA is integrated into the OIDC login interaction. When MFA is enabled for a user, successful password authentication does not immediately complete the OIDC login. The user must also complete the MFA challenge before TSCloak finishes the authorization interaction and allows the authorization flow to continue.
+
+The current implementation supports:
+
+- TOTP-based MFA.
+- QR-code and manual-secret enrollment.
+- One-time recovery codes.
+- Recovery-code regeneration.
+- MFA enable/disable lifecycle.
+- MFA challenge state tied to the OIDC interaction.
+- MFA attempt rate limiting.
+- Encrypted storage of the TOTP secret.
+- Hashed storage of recovery codes.
+- OIDC authentication-method indication through `amr`.
+
+### Supported Method
+
+The currently supported MFA method is:
+
+| Method | Status |
+|---|---|
+| TOTP | ✅ Implemented |
+| Recovery codes | ✅ Implemented as a recovery mechanism |
+| SMS | ❌ Not implemented |
+| Email OTP | ❌ Not implemented |
+| WebAuthn / Passkeys | ❌ Not implemented |
+
+TOTP is based on the user's enrolled secret and a time-based six-digit verification code.
+
+### MFA Enrollment
+
+MFA enrollment is a two-step operation:
+
+```text
+Start Enrollment
+      │
+      ▼
+Generate TOTP Secret
+      │
+      ├── Return manual secret
+      ├── Return otpauth URI
+      └── Return QR code
+      │
+      ▼
+User configures authenticator
+      │
+      ▼
+Submit current TOTP
+      │
+      ▼
+Verify TOTP
+      │
+      ├── Invalid → enrollment remains disabled
+      │
+      └── Valid
+           │
+           ▼
+      Enable MFA
+           │
+           ▼
+      Generate 10 recovery codes
+```
+
+Starting enrollment does **not** enable MFA. MFA becomes enabled only after the enrollment verification code is successfully validated.
+
+The enrollment response provides:
+
+- `secret` — manual TOTP secret.
+- `otpauthUri` — authenticator provisioning URI.
+- `qrCode` — QR code data URL.
+- `method` — currently `totp`.
+- `enabled` — `false` until verification succeeds.
+
+The TOTP secret is encrypted before it is persisted.
+
+### Recovery Codes
+
+When MFA enrollment is completed, TSCloak generates **10 recovery codes**.
+
+Recovery codes are intended for situations where the user cannot provide a TOTP code.
+
+Properties of recovery codes:
+
+- 10 codes are generated during enrollment.
+- Codes are returned only when generated.
+- Only hashes are persisted.
+- A successful recovery-code authentication consumes the code.
+- A consumed code cannot be used again.
+- Regenerating recovery codes invalidates the previous set.
+- Recovery-code consumption is protected against concurrent reuse.
+
+A recovery code is therefore a one-time authentication factor rather than a reusable password.
+
+### OIDC Login with MFA
+
+The OIDC login flow changes when MFA is enabled:
+
+```mermaid
+sequenceDiagram
+    participant C as Client Application
+    participant T as TSCloak
+    participant U as User
+
+    C->>T: Authorization Request
+    T->>U: Login Interaction
+    U->>T: Username + Password
+    T->>T: Verify Password
+    T->>U: MFA Challenge
+    U->>T: TOTP or Recovery Code
+    T->>T: Verify MFA
+    T->>T: Complete OIDC Login
+    T->>U: Continue to Consent / Authorization
+    T-->>C: Authorization Code
+```
+
+The important security boundary is that the OIDC login interaction is not completed until the MFA challenge succeeds.
+
+For a successful password + MFA authentication, TSCloak records the authentication methods as:
+
+```json
+{
+  "amr": ["pwd", "otp"]
+}
+```
+
+A password-only authentication is represented as:
+
+```json
+{
+  "amr": ["pwd"]
+}
+```
+
+Clients requesting `amr` in the ID Token can use the standard OIDC claims mechanism supported by TSCloak.
+
+### MFA Challenge
+
+When password authentication succeeds for a user with MFA enabled, TSCloak creates an MFA challenge associated with the current OIDC interaction.
+
+The challenge contains:
+
+- OIDC `interactionUid`.
+- Authenticated `userId`.
+- Expiration timestamp.
+
+The current challenge lifetime is **5 minutes**.
+
+The challenge is server-side state. The client does not get to decide whether MFA has already been completed.
+
+A challenge is rejected when:
+
+- It does not exist.
+- It has expired.
+- It has already been removed after successful MFA completion.
+
+After successful MFA authentication, the challenge is removed.
+
+### MFA API
+
+The MFA API is exposed under `/api/mfa`.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/mfa/enroll` | Start MFA enrollment |
+| `POST` | `/api/mfa/enroll/verify` | Verify enrollment TOTP and enable MFA |
+| `GET` | `/api/mfa/status` | Get current MFA status |
+| `POST` | `/api/mfa/disable` | Disable MFA after TOTP verification |
+| `POST` | `/api/mfa/recovery-codes/regenerate` | Replace the current recovery-code set |
+
+#### Start Enrollment
+
+```http
+POST /api/mfa/enroll
+Authorization: Bearer ACCESS_TOKEN
+```
+
+The response includes the TOTP provisioning information required by an authenticator application.
+
+#### Verify Enrollment
+
+```http
+POST /api/mfa/enroll/verify
+Authorization: Bearer ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "code": "123456"
+}
+```
+
+A valid current TOTP enables MFA and returns the newly generated recovery codes.
+
+#### Check Status
+
+```http
+GET /api/mfa/status
+Authorization: Bearer ACCESS_TOKEN
+```
+
+The status response reports whether MFA is enabled, the configured method, and enrollment time.
+
+#### Disable MFA
+
+```http
+POST /api/mfa/disable
+Authorization: Bearer ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "code": "123456"
+}
+```
+
+Disabling MFA requires a valid current TOTP.
+
+When MFA is disabled, the encrypted TOTP secret and stored recovery codes are cleared.
+
+#### Regenerate Recovery Codes
+
+```http
+POST /api/mfa/recovery-codes/regenerate
+Authorization: Bearer ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "code": "123456"
+}
+```
+
+Regeneration requires a valid current TOTP.
+
+The previous recovery-code set is deleted before the new set is stored. The newly generated codes are returned in the response.
+
+### MFA Rate Limiting
+
+MFA verification attempts are rate limited to reduce brute-force attempts.
+
+The implementation applies rate limiting to both:
+
+- API MFA verification operations.
+- OIDC Hosted UI MFA challenges.
+
+The current in-memory attempt policy is:
+
+- Maximum of 5 failed attempts within a 5-minute window.
+- Further attempts are temporarily blocked for 60 seconds.
+- Successful MFA authentication resets the applicable failure state.
+
+Rate limiting is an application-level protection and is separate from OIDC protocol validation.
+
+For horizontally scaled production deployments, the current in-memory limiter should be replaced or extended with shared state so that limits are consistent across application instances.
+
+### Security and Storage
+
+TSCloak intentionally separates the values that must be recoverable from values that only need verification.
+
+#### TOTP secret
+
+The TOTP secret must be recoverable by the server to validate future TOTP codes, so it is stored encrypted.
+
+The encryption key is supplied through:
+
+```text
+MFA_ENCRYPTION_KEY
+```
+
+The application expects this value to provide the key material required by the MFA encryption service.
+
+The TOTP secret must not be logged.
+
+#### Recovery codes
+
+Recovery codes do not need to be recovered in plaintext after generation. TSCloak therefore stores only password-style hashes of recovery codes.
+
+Plaintext recovery codes should not be logged or persisted by application code.
+
+#### Authentication state
+
+MFA completion is tied to server-side OIDC interaction state. A client cannot simply submit an authorization-code completion request and bypass the MFA challenge.
+
+### MFA E2E Coverage
+
+MFA behavior is covered through end-to-end tests that act as external clients of the running TSCloak instance.
+
+Current coverage includes:
+
+- MFA enrollment lifecycle.
+- Invalid enrollment TOTP.
+- Successful enrollment.
+- MFA-enabled OIDC login.
+- Successful TOTP authentication.
+- Successful recovery-code authentication.
+- Recovery-code reuse rejection.
+- Recovery-code exhaustion.
+- Recovery-code regeneration.
+- Old recovery-code invalidation after regeneration.
+- Concurrent recovery-code consumption.
+- MFA challenge bypass protection.
+- MFA challenge reuse protection.
+- Invalid/expired challenge rejection.
+- MFA attempt rate limiting.
+
+The concurrent recovery-code test verifies the one-time-use property using two independent OIDC interactions. One concurrent request succeeds and the competing request is rejected; a subsequent attempt with the same recovery code is also rejected.
+
 <a id="signing-keys-and-jwks"></a>
 ## 🔑 Signing Keys and JWKS
 
@@ -2815,6 +3139,9 @@ TSCloak is designed around the following principles:
 - [x] Database-backed security policy management
 - [x] OIDC token lifetime configuration
 - [x] RSA signing key management and JWKS support
+- [x] Optional user MFA with TOTP
+- [x] MFA recovery codes
+- [x] MFA challenge protection and rate limiting
 
 <a id="planned"></a>
 ### Planned
