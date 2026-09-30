@@ -9,97 +9,463 @@
   <link rel="stylesheet" href="./css/dashboard.css">
   <link rel="stylesheet" href="./css/security.css">
 </head>
+
 <body class="page-security">
   <div class="app-shell">
+
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark"><img src="../assets/tscloak-icon.png" alt="TSCloak"></div>
-        <div><div class="brand-name">TSCloak</div><div class="brand-subtitle">Client Administration</div></div>
+        <div class="brand-mark">
+          <img src="../assets/tscloak-icon.png" alt="TSCloak">
+        </div>
+
+        <div>
+          <div class="brand-name">TSCloak</div>
+          <div class="brand-subtitle">Client Administration</div>
+        </div>
       </div>
+
       <nav class="navigation">
-        <a class="nav-item" href="./dashboard.html"><span>⌂</span>Dashboard</a>
-        <a class="nav-item" href="./users.html"><span>♙</span>Users</a>
-        
+        <a class="nav-item" href="./dashboard.html">
+          <span>⌂</span>Dashboard
+        </a>
+
+        <a class="nav-item" href="./users.html">
+          <span>♙</span>Users
+        </a>
+
+        <a class="nav-item" href="./settings.html">
+          <span>⚙</span>Client settings
+        </a>
+
+        <a class="nav-item" href="./profile.html">
+          <span>◎</span>Profile
+        </a>       
       </nav>
+
+      <button class="signout" data-logout>Sign out</button>
     </aside>
+
     <div class="main-area">
+
       <header class="topbar">
         <div class="page-heading">
           <span class="breadcrumb">TSCloak / Client Administration</span>
           <h1>Security &amp; MFA</h1>
         </div>
-        <div class="user-chip"><strong data-user-name>Administrator</strong><span data-user-role>IDP_CLIENT_ADMIN</span></div>
+
+        <div class="user-chip">
+          <strong data-user-name>Administrator</strong>
+          <span data-user-role>IDP_CLIENT_ADMIN</span>
+        </div>
       </header>
+
       <main>
+
         <section class="security-intro">
           <div>
             <p class="eyebrow">Account security</p>
+
             <h2>Security &amp; MFA</h2>
-            <p>Protect your administrator account with a time-based one-time password authenticator.</p>
+
+            <p>
+              Protect your administrator account with a time-based
+              one-time password authenticator.
+            </p>
           </div>
+
           <div class="security-status" id="statusCard">
             <span class="status-dot" id="statusDot"></span>
-            <div><strong id="statusTitle">Loading…</strong><small id="statusDescription">Checking your MFA configuration.</small></div>
+
+            <div>
+              <strong id="statusTitle">Loading…</strong>
+
+              <small id="statusDescription">
+                Checking your MFA configuration.
+              </small>
+            </div>
           </div>
         </section>
 
         <section class="panel security-panel" id="setupPanel">
           <div class="panel-heading">
-            <div><p class="eyebrow">Authenticator app</p><h3>Set up MFA</h3></div>
+            <div>
+              <p class="eyebrow">Authenticator app</p>
+              <h3>Set up MFA</h3>
+            </div>
           </div>
+
           <div class="security-body">
-            <p class="security-copy">Use an authenticator application such as Google Authenticator, Microsoft Authenticator, or another TOTP-compatible app. MFA is enabled only after the verification code is accepted.</p>
-            <button class="button primary" type="button" id="startButton">Enable MFA</button>
-            <p class="security-message" id="setupMessage" role="status"></p>
+            <p class="security-copy">
+              Use an authenticator application such as Google Authenticator,
+              Microsoft Authenticator, or another TOTP-compatible app.
+              MFA is enabled only after the verification code is accepted.
+            </p>
+
+            <button
+              class="button primary"
+              type="button"
+              id="startButton"
+            >
+              Enable MFA
+            </button>
+
+            <p
+              class="security-message"
+              id="setupMessage"
+              role="status"
+            ></p>
           </div>
         </section>
 
-        <section class="panel security-panel setup-panel" id="verificationPanel" hidden>
+        <section
+          class="panel security-panel setup-panel"
+          id="verificationPanel"
+          hidden
+        >
           <div class="panel-heading">
-            <div><p class="eyebrow">Step 1</p><h3>Scan the QR code</h3></div>
+            <div>
+              <p class="eyebrow">Step 1</p>
+              <h3>Scan the QR code</h3>
+            </div>
           </div>
+
           <div class="security-body setup-grid">
+
             <div class="qr-card">
-              <img id="qrCode" alt="MFA setup QR code">
-              <span>Scan with your authenticator app</span>
+              <img
+                id="qrCode"
+                alt="MFA setup QR code"
+              >
+
+              <span>
+                Scan with your authenticator app
+              </span>
             </div>
+
             <div class="setup-details">
-              <label>Manual setup key
-                <div class="secret-value"><code id="secret">—</code><button type="button" id="copySecret" class="button secondary small">Copy</button></div>
+
+              <label>
+                Manual setup key
+
+                <div class="secret-value">
+                  <code id="secret">—</code>
+
+                  <button
+                    type="button"
+                    id="copySecret"
+                    class="button secondary small"
+                  >
+                    Copy
+                  </button>
+                </div>
               </label>
-              <label>Setup URI
-                <textarea id="otpauthUri" readonly rows="3"></textarea>
+
+              <label>
+                Setup URI
+
+                <textarea
+                  id="otpauthUri"
+                  readonly
+                  rows="3"
+                ></textarea>
               </label>
-              <p class="security-hint">Keep the setup key private. It is shown here only during enrollment.</p>
+
+              <p class="security-hint">
+                Keep the setup key private. It is shown here only during enrollment.
+              </p>
+
             </div>
           </div>
+
           <div class="verify-box">
-            <div><p class="eyebrow">Step 2</p><h3>Verify your authenticator</h3><p>Enter the current 6-digit code generated by your authenticator app.</p></div>
-            <form id="verifyForm" novalidate>
-              <label for="totpCode">Authenticator code</label>
-              <div class="verify-row"><input id="totpCode" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required><button class="button primary" type="submit" id="verifyButton">Verify &amp; enable</button></div>
+
+            <div>
+              <p class="eyebrow">Step 2</p>
+
+              <h3>Verify your authenticator</h3>
+
+              <p>
+                Enter the current 6-digit code generated by your authenticator app.
+              </p>
+            </div>
+
+            <form
+              id="verifyForm"
+              novalidate
+            >
+              <label for="totpCode">
+                Authenticator code
+              </label>
+
+              <div class="verify-row">
+
+                <input
+                  id="totpCode"
+                  name="code"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  maxlength="6"
+                  pattern="[0-9]{6}"
+                  placeholder="123456"
+                  required
+                >
+
+                <button
+                  class="button primary"
+                  type="submit"
+                  id="verifyButton"
+                >
+                  Verify &amp; enable
+                </button>
+
+              </div>
             </form>
-            <p class="security-message" id="verifyMessage" role="status"></p>
+
+            <p
+              class="security-message"
+              id="verifyMessage"
+              role="status"
+            ></p>
+
           </div>
         </section>
 
-        <section class="panel security-panel recovery-panel" id="recoveryPanel" hidden>
+        <section
+          class="panel security-panel recovery-panel"
+          id="recoveryPanel"
+          hidden
+        >
           <div class="panel-heading">
-            <div><p class="eyebrow">Recovery</p><h3>Save your recovery codes</h3></div>
+            <div>
+              <p class="eyebrow">Recovery</p>
+              <h3>Save your recovery codes</h3>
+            </div>
           </div>
+
           <div class="security-body">
-            <div class="warning-box"><strong>Save these codes now.</strong><span>Each recovery code can be used once. They are not shown again after you leave this page.</span></div>
-            <div class="recovery-codes" id="recoveryCodes"></div>
-            <button class="button secondary" type="button" id="copyRecovery">Copy recovery codes</button>
-            <p class="security-message" id="recoveryMessage" role="status"></p>
+
+            <div class="warning-box">
+              <strong>Save these codes now.</strong>
+
+              <span>
+                Each recovery code can be used once.
+                They are not shown again after you leave this page.
+              </span>
+            </div>
+
+            <div
+              class="recovery-codes"
+              id="recoveryCodes"
+            ></div>
+
+            <button
+              class="button secondary"
+              type="button"
+              id="copyRecovery"
+            >
+              Copy recovery codes
+            </button>
+
+            <p
+              class="security-message"
+              id="recoveryMessage"
+              role="status"
+            ></p>
+
           </div>
         </section>
 
-        <p class="page-message" data-message role="status"></p>
+        <section
+          class="panel security-panel management-panel"
+          id="authenticatorPanel"
+          hidden
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Authenticator</p>
+              <h3>MFA management</h3>
+            </div>
+          </div>
+
+          <div class="security-body">
+
+            <div class="management-row">
+
+              <div class="management-copy">
+                <strong>Disable MFA</strong>
+
+                <span>
+                  Remove authenticator-based MFA from your client
+                  administrator account. You will need your current
+                  authenticator code to confirm.
+                </span>
+              </div>
+
+              <button
+                class="button secondary danger-outline"
+                type="button"
+                id="disableButton"
+              >
+                Disable MFA
+              </button>
+
+            </div>
+
+            <p
+              class="security-message"
+              id="disableMessage"
+              role="status"
+            ></p>
+
+          </div>
+        </section>
+
+        <section
+          class="panel security-panel management-panel"
+          id="recoveryManagementPanel"
+          hidden
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Recovery</p>
+              <h3>Manage recovery codes</h3>
+            </div>
+          </div>
+
+          <div class="security-body">
+
+            <div class="management-row">
+
+              <div class="management-copy">
+                <strong>Regenerate recovery codes</strong>
+
+                <span>
+                  Generate a new set of recovery codes.
+                  All previously generated recovery codes
+                  will immediately become invalid.
+                </span>
+              </div>
+
+              <button
+                class="button secondary"
+                type="button"
+                id="regenerateButton"
+              >
+                Regenerate codes
+              </button>
+
+            </div>
+
+            <p
+              class="security-message"
+              id="regenerateMessage"
+              role="status"
+            ></p>
+
+          </div>
+        </section>
+
+        <p
+          class="page-message"
+          data-message
+          role="status"
+        ></p>
+
       </main>
     </div>
   </div>
-  <div class="mobile-overlay" id="mobileOverlay"></div>
+
+  <div
+    class="mobile-overlay"
+    id="mobileOverlay"
+  ></div>
+
+  <div
+    class="modal-backdrop"
+    id="confirmModal"
+    hidden
+  >
+    <div
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmTitle"
+    >
+
+      <div
+        class="confirm-icon"
+        id="confirmIcon"
+      >
+        !
+      </div>
+
+      <div class="confirm-content">
+
+        <p
+          class="eyebrow"
+          id="confirmEyebrow"
+        >
+          MFA protection
+        </p>
+
+        <h2 id="confirmTitle">
+          Confirm action
+        </h2>
+
+        <p id="confirmDescription"></p>
+
+        <div
+          class="confirm-code-field"
+          id="confirmCodeField"
+        >
+
+          <label for="confirmTotpCode">
+            Current authenticator code
+          </label>
+
+          <input
+            id="confirmTotpCode"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            placeholder="123456"
+          >
+
+          <p
+            class="security-message"
+            id="confirmCodeMessage"
+            role="alert"
+          ></p>
+
+        </div>
+
+        <div class="confirm-actions">
+
+          <button
+            class="button secondary"
+            type="button"
+            id="confirmCancel"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="button primary"
+            type="button"
+            id="confirmProceed"
+          >
+            Confirm
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <script src="./js/common.js"></script>
   <script src="./js/security.js"></script>
 </body>
