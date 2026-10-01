@@ -271,6 +271,7 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
       },
 
       issuer: this.config.get<string>('OIDC_ISSUER') ?? 'http://localhost:3000',
+      proxy: true,
 
       path: '',
 
