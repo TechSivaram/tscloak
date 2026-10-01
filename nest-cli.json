@@ -12,6 +12,10 @@
       {
         "include": "providers/mail/assets/*",
         "watchAssets": true
+      },
+      {
+        "include": "../data/**/*",
+        "outDir": "dist/data"
       }
     ]
   }
