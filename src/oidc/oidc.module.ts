@@ -63,5 +63,7 @@ import { OidcOptionsService } from './services/oidc-options.service';
   controllers: [OidcInteractionController],
 
   providers: [OidcOptionsService, OidcMfaChallengeService],
+
+  exports: [OidcMfaChallengeService],
 })
 export class OidcModule {}

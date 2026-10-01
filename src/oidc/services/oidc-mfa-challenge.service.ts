@@ -2,7 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { OidcMfaChallenge } from '../entities/oidc-mfa-challenge.entity';
+import {
+  OidcMfaAuthMethod,
+  OidcMfaChallenge,
+} from '../entities/oidc-mfa-challenge.entity';
 
 const MFA_CHALLENGE_TTL_SECONDS = 300;
 
@@ -13,17 +16,24 @@ export class OidcMfaChallengeService {
     private readonly repository: Repository<OidcMfaChallenge>,
   ) {}
 
-  async create(interactionUid: string, userId: string): Promise<void> {
+  async create(
+    interactionUid: string,
+    userId: string,
+    authMethod: OidcMfaAuthMethod = 'pwd',
+  ): Promise<void> {
     await this.repository.delete({
       interactionUid,
     });
 
-    const expiresAt = new Date(Date.now() + MFA_CHALLENGE_TTL_SECONDS * 1000);
+    const expiresAt = new Date(
+      Date.now() + MFA_CHALLENGE_TTL_SECONDS * 1000,
+    );
 
     await this.repository.save(
       this.repository.create({
         interactionUid,
         userId,
+        authMethod,
         expiresAt,
       }),
     );

@@ -13,6 +13,7 @@ import { OidcFederationService } from './providers/oidc-federation/oidc-federati
 import { SecurityModule } from 'src/security/security.module';
 import { IdentityModule } from 'src/identity/identity.module';
 import { OidcModule } from 'src/oidc/oidc.module';
+import { MfaModule } from 'src/mfa/mfa.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OidcModule } from 'src/oidc/oidc.module';
     ClientsModule,
     IdentityModule,
     SecurityModule,
+    MfaModule,
     forwardRef(() => OidcModule),
   ],
   providers: [

@@ -117,6 +117,32 @@ export class OidcInteractionController {
         : null;
 
     // ==========================================================
+    // PENDING MFA CHALLENGE
+    // ==========================================================
+    //
+    // A pending MFA challenge always takes precedence over the normal
+    // hosted/external login UI. This is important for federation:
+    // the federation callback creates the challenge and redirects the
+    // browser back to this interaction.
+    //
+    // Never redirect a pending MFA interaction to an external login UI,
+    // otherwise the MFA page cannot be reached.
+    // ==========================================================
+
+    const pendingMfa = await this.oidcMfaChallengeService.get(uid);
+
+    if (pendingMfa) {
+      const html = await this.renderMfaPage(
+        uid,
+        typeof clientId === 'string' ? clientId : '',
+        '',
+      );
+
+      response.status(200).type('html').send(html);
+      return;
+    }
+
+    // ==========================================================
     // EXTERNAL INTERACTION UI
     // ==========================================================
 
@@ -153,19 +179,6 @@ export class OidcInteractionController {
         typeof details.params?.redirect_uri === 'string'
           ? details.params.redirect_uri
           : '';
-
-      const pendingMfa = await this.oidcMfaChallengeService.get(uid);
-
-      if (pendingMfa) {
-        const html = await this.renderMfaPage(
-          uid,
-          typeof clientId === 'string' ? clientId : '',
-          '',
-        );
-
-        response.status(200).type('html').send(html);
-        return;
-      }
 
       const html = await this.renderLoginPage(
         uid,
@@ -380,7 +393,7 @@ export class OidcInteractionController {
       const userMfa = await this.mfaService.getUserMfa(user.id);
 
       if (userMfa?.enabled) {
-        await this.oidcMfaChallengeService.create(uid, user.id);
+        await this.oidcMfaChallengeService.create(uid, user.id, 'pwd');
 
         const clientId =
           typeof details.params?.client_id === 'string'
@@ -472,14 +485,6 @@ export class OidcInteractionController {
     try {
       const details = await interaction.details();
 
-      if (details.prompt?.name !== 'login') {
-        response
-          .status(400)
-          .send('This endpoint is not handling a login interaction.');
-
-        return;
-      }
-
       const challenge = await this.oidcMfaChallengeService.require(uid);
 
       const key = `oidc-mfa:${uid}:${challenge.userId}`;
@@ -516,12 +521,14 @@ export class OidcInteractionController {
         return;
       }
 
+      const amr = [challenge.authMethod, 'otp'];
+
       await interaction.finished({
         login: {
           accountId: challenge.userId,
           remember: true,
           ts: Math.floor(Date.now() / 1000),
-          amr: ['pwd', 'otp'],
+          amr,
         },
       });
 

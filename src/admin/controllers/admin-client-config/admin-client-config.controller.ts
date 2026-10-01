@@ -1,7 +1,15 @@
-import { Controller, Get, NotFoundException, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  NotFoundException,
+  Query,
+  Req,
+} from '@nestjs/common';
 
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import type { Request } from 'express';
 import { ClientsService } from '../../../clients/clients.service';
 
 @Controller('admin/config')
@@ -33,6 +41,7 @@ export class AdminClientConfigController {
     description: 'Unknown portal or no enabled client.',
   })
   async getOidcClient(
+    @Req() req: Request,
     @Query('portal') portal: string = 'admin',
     @Query('clientId') clientId?: string,
   ): Promise<{
@@ -40,11 +49,19 @@ export class AdminClientConfigController {
     redirectUri: string;
     postLogoutRedirectUri?: string;
   }> {
+    const referer = req.get('referer');
+
+    if (!referer) {
+      throw new BadRequestException('Referer header is required');
+    }
+
+    const origin = new URL(referer).origin;
+
     const callbackPath =
       portal === 'idp-client-admin'
-        ? '/idp-client-admin/callback.html'
+        ? origin + '/idp-client-admin/callback.html'
         : portal === 'idp-admin'
-          ? '/idp-admin/callback.html'
+          ? origin + '/idp-admin/callback.html'
           : null;
 
     /*
@@ -74,8 +91,8 @@ export class AdminClientConfigController {
      */
     const postLogoutPath =
       portal === 'idp-client-admin'
-        ? `/idp-client-admin/${client.clientId}/`
-        : '/idp-admin/';
+        ? origin + `/idp-client-admin/${client.clientId}/`
+        : origin + '/idp-admin/';
 
     return {
       clientId: client.clientId,
@@ -103,7 +120,7 @@ export class AdminClientConfigController {
     if (callbackPath) {
       const match = redirectUris.find((uri) => {
         try {
-          return new URL(uri).pathname === callbackPath;
+          return new URL(uri).toString().includes(callbackPath);
         } catch {
           return false;
         }
@@ -117,7 +134,7 @@ export class AdminClientConfigController {
     return (
       redirectUris.find((uri) => {
         try {
-          return new URL(uri).pathname.endsWith('callback.html');
+          return new URL(uri).toString().includes('callback.html');
         } catch {
           return false;
         }
@@ -142,7 +159,8 @@ export class AdminClientConfigController {
   ): string | undefined {
     const exact = postLogoutRedirectUris.find((uri) => {
       try {
-        return new URL(uri).pathname
+        return new URL(uri)
+          .toString()
           .replace(/\/+$/, '')
           .toLowerCase()
           .includes(postLogoutPath.replace(/\/+$/, '').toLowerCase());
@@ -158,7 +176,11 @@ export class AdminClientConfigController {
     return (
       postLogoutRedirectUris.find((uri) => {
         try {
-          return new URL(uri).pathname.startsWith(postLogoutPath);
+          return new URL(uri)
+            .toString()
+            .replace(/\/+$/, '')
+            .toLowerCase()
+            .includes(postLogoutPath.replace(/\/+$/, '').toLowerCase());
         } catch {
           return false;
         }

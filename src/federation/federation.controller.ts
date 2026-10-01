@@ -39,6 +39,9 @@ import { OidcAuthGuard } from '../security/guards/oidc-auth.guard';
 import { RolesGuard } from '../security/guards/roles.guard';
 import type { AuthenticatedRequest } from '../security/types/authenticated-request';
 
+import { MfaService } from '../mfa/services/mfa.service';
+import { OidcMfaChallengeService } from '../oidc/services/oidc-mfa-challenge.service';
+
 @ApiTags('Federation')
 @Controller('federation')
 export class FederationController {
@@ -48,6 +51,8 @@ export class FederationController {
     private readonly federationService: FederationService,
     private readonly federationCryptoService: FederationCryptoService,
     private readonly oidcService: OidcService,
+    private readonly mfaService: MfaService,
+    private readonly oidcMfaChallengeService: OidcMfaChallengeService,
   ) {}
 
   @Post('providers')
@@ -315,10 +320,12 @@ export class FederationController {
       }
 
       stage = 'consume federation transaction by state';
+
       const transaction =
         await this.federationService.consumeTransaction(state);
 
       stage = 'load stored OIDC interaction by UID';
+
       const storedInteraction =
         await this.oidcService.provider.Interaction.find(
           transaction.interactionUid,
@@ -329,6 +336,7 @@ export class FederationController {
       }
 
       stage = 'validate interaction UID and client binding';
+
       if (
         storedInteraction.uid !== transaction.interactionUid ||
         storedInteraction.params?.client_id !== transaction.clientId
@@ -341,6 +349,7 @@ export class FederationController {
       const provider = transaction.provider;
 
       stage = 'exchange upstream authorization code';
+
       const tokenResponse = await this.federationService.exchangeCode(
         provider,
         code,
@@ -348,6 +357,7 @@ export class FederationController {
       );
 
       stage = 'extract upstream ID token';
+
       const idToken = tokenResponse['id_token'];
 
       if (typeof idToken !== 'string') {
@@ -357,6 +367,7 @@ export class FederationController {
       }
 
       stage = 'verify upstream ID token signature and claims';
+
       const claims = await this.federationService.verifyIdToken(
         provider,
         idToken,
@@ -364,6 +375,7 @@ export class FederationController {
       );
 
       stage = 'find or create federated identity';
+
       const federatedIdentity =
         await this.federationService.findOrCreateFederatedIdentity(
           provider.id,
@@ -371,13 +383,66 @@ export class FederationController {
           claims,
         );
 
+      /*
+       * Federation authentication has now identified the local TSCloak
+       * user. Before completing the OIDC interaction, apply the same MFA
+       * requirement used by the hosted username/password login flow.
+       */
+      stage = 'check local TSCloak user MFA';
+
+      const userMfa = await this.mfaService.getUserMfa(
+        federatedIdentity.userId,
+      );
+
+      if (userMfa?.enabled) {
+        await this.oidcMfaChallengeService.create(
+          transaction.interactionUid,
+          federatedIdentity.userId,
+          'federated',
+        );
+
+        /*
+         * Do not complete the OIDC interaction here.
+         *
+         * The upstream federation authentication has identified the local
+         * user, but TSCloak MFA is still pending. The MFA challenge is the
+         * server-side state that binds this interaction to that user.
+         *
+         * Redirect directly to the configured interaction UI instead of the
+         * /auth/:uid resume URL. The /auth/:uid route is intended to resume
+         * the authorization request after an interaction has been resolved.
+         * At this point MFA has NOT been resolved yet.
+         *
+         * Once MFA succeeds, the interaction controller calls
+         * interaction.finished() with the federated + otp AMR values.
+         */
+        const interactionUrl = `/interaction/${encodeURIComponent(
+          transaction.interactionUid,
+        )}`;
+
+        response.status(303);
+        response.setHeader('Location', interactionUrl);
+        response.setHeader('Content-Length', '0');
+        response.end();
+
+        return;
+      }
+
+      /*
+       * No MFA is enabled for this local user.
+       *
+       * Preserve the existing federation behavior and complete the
+       * OIDC login interaction immediately.
+       */
       stage = 'save login result to existing OIDC interaction';
+
       storedInteraction.result = {
         ...(storedInteraction.lastSubmission ?? {}),
         login: {
           accountId: federatedIdentity.userId,
           remember: true,
           ts: Math.floor(Date.now() / 1000),
+          amr: ['federated'],
         },
       };
 
@@ -391,6 +456,7 @@ export class FederationController {
       await storedInteraction.save(interactionTtl);
 
       stage = 'redirect browser to OIDC interaction resume route';
+
       response.status(303);
       response.setHeader('Location', storedInteraction.returnTo);
       response.setHeader('Content-Length', '0');
@@ -399,6 +465,7 @@ export class FederationController {
       if (process.env.NODE_ENV !== 'production') {
         const message = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
+
         this.logger.error(
           `Federation callback failed during: ${stage}: ${message}`,
           stack,

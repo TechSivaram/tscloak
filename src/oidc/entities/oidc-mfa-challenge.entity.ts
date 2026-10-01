@@ -1,9 +1,11 @@
 import {
-    Column,
-    CreateDateColumn,
-    Entity,
-    PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
+
+export type OidcMfaAuthMethod = 'pwd' | 'federated';
 
 @Entity('oidc_mfa_challenges')
 export class OidcMfaChallenge {
@@ -15,6 +17,9 @@ export class OidcMfaChallenge {
 
   @Column()
   userId: string;
+
+  @Column({ type: 'varchar', default: 'pwd' })
+  authMethod: OidcMfaAuthMethod;
 
   @Column({ type: 'datetime' })
   expiresAt: Date;

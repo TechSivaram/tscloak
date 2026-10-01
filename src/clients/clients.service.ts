@@ -64,7 +64,10 @@ export class ClientsService {
       clients.find((client) =>
         client.redirectUris.some((uri) => {
           try {
-            return new URL(uri).pathname === callbackPath;
+            return (
+              new URL(uri).toString().replace(/\/+$/, '').toLowerCase() ===
+              callbackPath.toLowerCase().replace(/\/+$/, '')
+            );
           } catch {
             return false;
           }
