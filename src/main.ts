@@ -59,6 +59,10 @@ async function bootstrap() {
   const httpAdapter = app.getHttpAdapter();
   const instance = httpAdapter.getInstance();
 
+  // Trust Render's reverse proxy so Express recognizes the
+  // original request as HTTPS via X-Forwarded-Proto.
+  instance.set('trust proxy', 1);
+
   console.log(
     instance._router?.stack
       ?.filter((layer: any) => layer.route)
