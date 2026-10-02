@@ -24,8 +24,8 @@ export function initialAccessTokenTemplate(
   const logoPath = join(__dirname, '../assets/tscloak-logo.png');
 
   const registrationUrl =
-    `${process.env.IDP_ADMIN_UI_URL ?? 'http://localhost:3000/idp-admin'}` +
-    `/register.html?initial_access_token=${encodeURIComponent(data.token)}`;
+    `${process.env.OIDC_ISSUER ?? 'http://localhost:3000'}` +
+    `/idp-admin/register.html?initial_access_token=${encodeURIComponent(data.token)}`;
 
   const html = readFileSync(templatePath, 'utf8')
     .replaceAll('{{TOKEN}}', data.token)
