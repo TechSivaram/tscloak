@@ -53,16 +53,23 @@ export class ClientAdminSettingsController {
     @Req() request: AuthenticatedRequest,
     @Body() dto: UpdateClientSettingsDto,
   ): Promise<ClientResponseDto> {
-    return this.toResponse(
-      await this.clientsService.updateClient(request.user.clientId ?? '', dto),
+    const result = await this.clientsService.updateClient(
+      request.user.clientId ?? '',
+      dto,
     );
+
+    return this.toResponse(result.client, result.clientSecret);
   }
 
-  private toResponse(client: any): ClientResponseDto {
+  private toResponse(
+    client: any,
+    clientSecret?: string | null,
+  ): ClientResponseDto {
     if (!client) throw new NotFoundException('Client not found');
     return {
       id: client.id,
       clientId: client.clientId,
+      ...(clientSecret ? { clientSecret } : {}),
       name: client.name,
       redirectUris: client.redirectUris,
       postLogoutRedirectUris: client.postLogoutRedirectUris ?? [],

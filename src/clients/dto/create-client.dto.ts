@@ -1,6 +1,7 @@
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsIn,
   IsOptional,
@@ -107,6 +108,15 @@ export class CreateClientDto {
     { each: true },
   )
   tokenEndpointAuthMethods: string[];
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the client is enabled.',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 
   @ApiPropertyOptional({
     example: 'https://app.example.com/.well-known/jwks.json',

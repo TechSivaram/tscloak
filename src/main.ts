@@ -14,6 +14,12 @@ async function bootstrap() {
   // Product landing page
   app.use('/', express.static(join(process.cwd(), 'public')));
 
+  app.use(
+    express.json({
+      type: ['application/json', 'application/scim+json'],
+    }),
+  );
+
   /*
    * Multi-tenant client-admin portal: /idp-client-admin/{clientId}/
    * Falls back here only when no static asset matched above.

@@ -4,6 +4,8 @@
   const form = document.getElementById('clientForm');
   const submitButton = form.querySelector('button[type="submit"]');
   const actions = form.querySelector('.form-actions');
+  const secretPanel = document.getElementById('clientSecretPanel');
+  const generatedClientSecret = document.getElementById('generatedClientSecret');
   let editingClientId = null;
 
   /**
@@ -144,9 +146,22 @@
         form.elements.postLogoutRedirectUris.value = (
           client.postLogoutRedirectUris || []
         ).join('\n');
-        form.elements.allowedScopes.value =
-          client.allowedScopes.join(' ');
-        form.elements.grantTypes.value = client.grantTypes.join(' ');
+        const standardScopes = new Set(['openid', 'profile', 'email', 'offline_access', 'roles', 'scim']);
+        const standardGrantTypes = new Set(['authorization_code', 'refresh_token', 'client_credentials']);
+        const allowedScopes = client.allowedScopes || [];
+        const grantTypes = client.grantTypes || [];
+        form.querySelectorAll('[name="allowedScopeOptions"]').forEach((checkbox) => {
+          checkbox.checked = allowedScopes.includes(checkbox.value);
+        });
+        form.elements.additionalScopes.value = allowedScopes
+          .filter((scope) => !standardScopes.has(scope))
+          .join(' ');
+        form.querySelectorAll('[name="grantTypeOptions"]').forEach((checkbox) => {
+          checkbox.checked = grantTypes.includes(checkbox.value);
+        });
+        form.elements.additionalGrantTypes.value = grantTypes
+          .filter((grantType) => !standardGrantTypes.has(grantType))
+          .join(' ');
         form.elements.responseTypes.value =
           client.responseTypes.join(' ');
         form.elements.jwksUri.value = client.jwksUri || '';
@@ -183,6 +198,12 @@
       .addEventListener('click', () => {
         editingClientId = null;
         form.reset();
+        form.querySelectorAll('[name="allowedScopeOptions"]').forEach((checkbox) => {
+          checkbox.checked = ['openid', 'profile', 'email'].includes(checkbox.value);
+        });
+        form.querySelectorAll('[name="grantTypeOptions"]').forEach((checkbox) => {
+          checkbox.checked = ['authorization_code', 'refresh_token'].includes(checkbox.value);
+        });
         setClientFormMode(false);
         formPanel.hidden = !formPanel.hidden;
       });
@@ -235,13 +256,19 @@
           'postLogoutRedirectUris',
         ),
 
-        allowedScopes: String(get('allowedScopes') || '')
-          .split(/\s+/)
-          .filter(Boolean),
+        allowedScopes: [
+          ...formData.getAll('allowedScopeOptions'),
+          ...String(get('additionalScopes') || '')
+            .split(/\s+/)
+            .filter(Boolean),
+        ].filter((value, index, values) => values.indexOf(value) === index),
 
-        grantTypes: String(get('grantTypes') || '')
-          .split(/\s+/)
-          .filter(Boolean),
+        grantTypes: [
+          ...formData.getAll('grantTypeOptions'),
+          ...String(get('additionalGrantTypes') || '')
+            .split(/\s+/)
+            .filter(Boolean),
+        ].filter((value, index, values) => values.indexOf(value) === index),
 
         responseTypes: String(get('responseTypes') || '')
           .split(/\s+/)
@@ -274,6 +301,11 @@
       });
 
       if (result && result.ok) {
+        const data = await result.json();
+        if (data.clientSecret) {
+          generatedClientSecret.textContent = data.clientSecret;
+          secretPanel.hidden = false;
+        }
         formPanel.hidden = true;
         event.target.reset();
         loadClients();

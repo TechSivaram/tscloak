@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiConsumes,
   ApiOperation,
   ApiProduces,
@@ -23,10 +24,8 @@ import {
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { ScimAuthGuard, type ScimRequest } from '../guards/scim-auth.guard';
-import type {
-  ScimUserInput,
-  ScimUserPatchOperation,
-} from '../services/scim-user.service';
+import type { ScimUserPatchOperation } from '../services/scim-user.service';
+import { ScimUserDto } from '../dto/scim-user.dto';
 import { ScimUserService } from '../services/scim-user.service';
 
 const USER_SCHEMA = 'urn:ietf:params:scim:schemas:core:2.0:User';
@@ -76,9 +75,10 @@ export class ScimUserController {
   @ApiOperation({
     summary: 'Create a SCIM user under the authenticated client',
   })
+  @ApiBody({ type: ScimUserDto })
   async create(
     @Req() request: ScimRequest,
-    @Body() body: ScimUserInput,
+    @Body() body: ScimUserDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     const user = await this.users.create(request.scim!.clientId, body);
@@ -99,7 +99,7 @@ export class ScimUserController {
   update(
     @Req() request: ScimRequest,
     @Param('id') id: string,
-    @Body() body: ScimUserInput,
+    @Body() body: ScimUserDto,
   ) {
     return this.users
       .update(id, request.scim!.clientId, body)

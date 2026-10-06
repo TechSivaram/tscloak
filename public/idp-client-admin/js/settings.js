@@ -1,7 +1,31 @@
 (async () => {
   const form = document.getElementById('settingsForm');
   const message = document.getElementById('message');
-  const list = name => String(new FormData(form).get(name) || '').split(/\r?\n|,|\s+/).map(value => value.trim()).filter(Boolean);
+  const standardScopes = new Set(['openid', 'profile', 'email', 'offline_access', 'roles', 'scim']);
+  const standardGrantTypes = new Set(['authorization_code', 'refresh_token', 'client_credentials']);
+
+  const list = name => String(new FormData(form).get(name) || '')
+    .split(/\r?\n|,|\s+/)
+    .map(value => value.trim())
+    .filter(Boolean);
+
+  const selected = name => new FormData(form).getAll(name);
+
+  function setOptions(name, values, standardValues) {
+    const set = new Set(values || []);
+    form.querySelectorAll(`[name="${name}"]`).forEach(checkbox => {
+      checkbox.checked = set.has(checkbox.value);
+    });
+    return (values || []).filter(value => !standardValues.has(value)).join(' ');
+  }
+
+  function enforceScimDependency() {
+    const scim = form.querySelector('[name="allowedScopeOptions"][value="scim"]');
+    const clientCredentials = form.querySelector('[name="grantTypeOptions"][value="client_credentials"]');
+    if (scim?.checked && clientCredentials) {
+      clientCredentials.checked = true;
+    }
+  }
 
   async function load() {
     const response = await ClientAdmin.api('/api/client-admin/settings');
@@ -11,39 +35,65 @@
     form.elements.name.value = client.name;
     form.elements.redirectUris.value = client.redirectUris.join('\n');
     form.elements.postLogoutRedirectUris.value = client.postLogoutRedirectUris.join('\n');
-    form.elements.allowedScopes.value = client.allowedScopes.join(' ');
-    form.elements.grantTypes.value = client.grantTypes.join(' ');
+
+    form.elements.additionalScopes.value = setOptions('allowedScopeOptions', client.allowedScopes || [], standardScopes);
+    form.elements.additionalGrantTypes.value = setOptions('grantTypeOptions', client.grantTypes || [], standardGrantTypes);
     form.elements.responseTypes.value = client.responseTypes.join(' ');
     form.elements.jwksUri.value = client.jwksUri || '';
+
     const authMethods = new Set(client.tokenEndpointAuthMethods || ['none']);
-    form.querySelectorAll('[name="tokenEndpointAuthMethods"]').forEach(checkbox => { checkbox.checked = authMethods.has(checkbox.value); });
+    form.querySelectorAll('[name="tokenEndpointAuthMethods"]').forEach(checkbox => {
+      checkbox.checked = authMethods.has(checkbox.value);
+    });
+
     form.elements.interactionMode.value = client.interactionMode;
     form.elements.interactionLoginUrl.value = client.interactionLoginUrl || '';
     form.elements.interactionConsentUrl.value = client.interactionConsentUrl || '';
+    enforceScimDependency();
   }
+
+  form.querySelectorAll('[name="allowedScopeOptions"]').forEach(checkbox => {
+    checkbox.addEventListener('change', enforceScimDependency);
+  });
 
   await load();
   document.getElementById('cancelSettings').onclick = load;
+
   form.onsubmit = async event => {
     event.preventDefault();
-    const values = Object.fromEntries(new FormData(form));
+    enforceScimDependency();
+
+    const formData = new FormData(form);
     const response = await ClientAdmin.api('/api/client-admin/settings', {
       method: 'PUT',
       body: JSON.stringify({
-        name: values.name,
+        name: formData.get('name'),
         redirectUris: list('redirectUris'),
         postLogoutRedirectUris: list('postLogoutRedirectUris'),
-        allowedScopes: list('allowedScopes'),
-        grantTypes: list('grantTypes'),
+        allowedScopes: [
+          ...selected('allowedScopeOptions'),
+          ...list('additionalScopes'),
+        ].filter((value, index, values) => values.indexOf(value) === index),
+        grantTypes: [
+          ...selected('grantTypeOptions'),
+          ...list('additionalGrantTypes'),
+        ].filter((value, index, values) => values.indexOf(value) === index),
         responseTypes: list('responseTypes'),
-        tokenEndpointAuthMethods: new FormData(form).getAll('tokenEndpointAuthMethods'),
-        jwksUri: values.jwksUri || undefined,
-        interactionMode: values.interactionMode,
-        interactionLoginUrl: values.interactionLoginUrl || undefined,
-        interactionConsentUrl: values.interactionConsentUrl || undefined,
+        tokenEndpointAuthMethods: formData.getAll('tokenEndpointAuthMethods'),
+        jwksUri: formData.get('jwksUri') || undefined,
+        interactionMode: formData.get('interactionMode'),
+        interactionLoginUrl: formData.get('interactionLoginUrl') || undefined,
+        interactionConsentUrl: formData.get('interactionConsentUrl') || undefined,
       }),
     });
-    message.textContent = response && response.ok ? 'Client settings saved.' : 'Unable to save client settings.';
-    if (response && response.ok) load();
+    if (response && response.ok) {
+      const data = await response.json();
+      message.textContent = data.clientSecret
+        ? `Client settings saved. New client secret: ${data.clientSecret}`
+        : 'Client settings saved.';
+      load();
+    } else {
+      message.textContent = 'Unable to save client settings.';
+    }
   };
 })();

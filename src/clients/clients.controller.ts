@@ -86,6 +86,10 @@ export class ClientsController {
 
       clientId: result.client.clientId,
 
+      ...(result.clientSecret
+        ? { clientSecret: result.clientSecret }
+        : {}),
+
       name: result.client.name,
 
       redirectUris: result.client.redirectUris,
@@ -134,11 +138,15 @@ export class ClientsController {
     @Param('clientId') clientId: string,
     @Body() dto: UpdateClientDto,
   ): Promise<ClientResponseDto> {
-    const client = await this.clientsService.updateClient(clientId, dto);
+    const result = await this.clientsService.updateClient(clientId, dto);
+    const client = result.client;
 
     return {
       id: client.id,
       clientId: client.clientId,
+      ...(result.clientSecret
+        ? { clientSecret: result.clientSecret }
+        : {}),
       name: client.name,
       redirectUris: client.redirectUris,
       postLogoutRedirectUris: client.postLogoutRedirectUris ?? [],

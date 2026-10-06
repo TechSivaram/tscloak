@@ -65,6 +65,16 @@
             </table>
           </div>
         </section>
+        <section class="panel" id="clientSecretPanel" hidden>
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Client credentials</p>
+              <h3>Save this client secret</h3>
+            </div>
+          </div>
+          <p>The client secret is shown only when it is newly generated. Store it securely.</p>
+          <code id="generatedClientSecret"></code>
+        </section>
         <section class="panel" id="clientFormPanel" hidden>
           <div class="panel-header">
             <div>
@@ -83,9 +93,27 @@
                 placeholder="https://app.example.com/callback"></textarea><small>Enter one URI per
                 line.</small></label><label>Post-logout redirect URIs<textarea name="postLogoutRedirectUris"
                 placeholder="https://app.example.com/logout/callback"></textarea><small>Enter one URI per
-                line.</small></label><label>Allowed scopes<input name="allowedScopes"
-                value="openid profile email"></label><label>Grant types<input name="grantTypes"
-                value="authorization_code refresh_token"></label><label>Response types<input name="responseTypes"
+                line.</small></label><fieldset class="selection-fieldset"><legend>Allowed scopes</legend>
+                <div class="selection-options">
+                  <label><input type="checkbox" name="allowedScopeOptions" value="openid"> OpenID</label>
+                  <label><input type="checkbox" name="allowedScopeOptions" value="profile"> Profile</label>
+                  <label><input type="checkbox" name="allowedScopeOptions" value="email"> Email</label>
+                  <label><input type="checkbox" name="allowedScopeOptions" value="offline_access"> Offline access</label>
+                  <label><input type="checkbox" name="allowedScopeOptions" value="roles"> Roles</label>
+                  <label><input type="checkbox" name="allowedScopeOptions" value="scim"> SCIM provisioning</label>
+                </div>
+                <input name="additionalScopes" placeholder="Additional scopes (space separated)">
+                <small>Select standard scopes or enter custom scopes.</small>
+              </fieldset>
+              <fieldset class="selection-fieldset"><legend>Grant types</legend>
+                <div class="selection-options">
+                  <label><input type="checkbox" name="grantTypeOptions" value="authorization_code"> Authorization Code</label>
+                  <label><input type="checkbox" name="grantTypeOptions" value="refresh_token"> Refresh Token</label>
+                  <label><input type="checkbox" name="grantTypeOptions" value="client_credentials"> Client Credentials</label>
+                </div>
+                <input name="additionalGrantTypes" placeholder="Additional grant types (space separated)">
+                <small>Select supported grant types or enter custom grant types.</small>
+              </fieldset><label>Response types<input name="responseTypes"
                 value="code"></label><label>Interaction mode<select name="interactionMode" id="interactionMode">
                 <option value="hosted">Hosted TSCloak pages</option>
                 <option value="external">External client pages</option>

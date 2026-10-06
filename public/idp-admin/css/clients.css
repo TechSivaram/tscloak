@@ -21,3 +21,24 @@ body.page-clients .admin-form small {
 	font-size: 10px;
 	font-weight: 400;
 }
+
+body.page-clients .selection-fieldset {
+  margin: 0; padding: 12px 14px 14px; border: 1px solid var(--border); border-radius: 8px;
+}
+body.page-clients .selection-fieldset legend { padding: 0 6px; color: var(--text); font-weight: 800; font-size: 12px; }
+body.page-clients .selection-options { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 12px; }
+body.page-clients .selection-options label { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+body.page-clients .selection-options input[type="checkbox"] { width: 16px; min-height: auto; margin: 0; }
+body.page-clients .selection-fieldset > input { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; }
+body.page-clients .selection-fieldset small { display: block; margin-top: 6px; }
+
+body.page-clients #clientSecretPanel code {
+  display: block;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f7fbf7;
+  word-break: break-all;
+  font-size: 14px;
+}

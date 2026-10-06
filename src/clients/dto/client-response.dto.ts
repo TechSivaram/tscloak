@@ -13,6 +13,11 @@ export class ClientResponseDto {
   })
   clientId: string;
 
+  @ApiPropertyOptional({
+    description: 'Newly generated client secret. Returned only immediately after creation or when a secret is generated for an existing client.',
+  })
+  clientSecret?: string;
+
   @ApiProperty({
     example: 'My Web Application',
     description: 'Display name of the OAuth/OIDC client.',

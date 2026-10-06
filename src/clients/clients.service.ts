@@ -36,6 +36,8 @@ export interface CreateClientInput {
   interactionLoginUrl?: string;
 
   interactionConsentUrl?: string;
+
+  enabled?: boolean;
 }
 
 export interface CreatedClient {
@@ -44,6 +46,11 @@ export interface CreatedClient {
 }
 
 export type UpdateClientInput = Partial<CreateClientInput>;
+
+export interface UpdatedClient {
+  client: Client;
+  clientSecret: string | null;
+}
 export interface ClientStatusUpdate {
   enabled?: boolean;
 }
@@ -159,7 +166,7 @@ export class ClientsService {
   async updateClient(
     clientId: string,
     input: UpdateClientInput & ClientStatusUpdate,
-  ): Promise<Client> {
+  ): Promise<UpdatedClient> {
     const client = await this.findByClientId(clientId);
 
     if (!client) {
@@ -187,7 +194,32 @@ export class ClientsService {
       client.interactionConsentUrl = input.interactionConsentUrl || null;
     if (input.enabled !== undefined) client.enabled = input.enabled;
 
-    return this.save(client);
+    // A client_credentials-enabled client needs a client credential available
+    // for token requests. Preserve an existing secret; generate one only when
+    // the client does not already have one. Selecting a token endpoint
+    // authentication method that uses a client secret has the same behavior.
+    let generatedClientSecret: string | null = null;
+    const requiresClientSecret =
+      client.grantTypes?.includes('client_credentials') ||
+      client.tokenEndpointAuthMethods?.some((method) =>
+        [
+          'client_secret_basic',
+          'client_secret_post',
+          'client_secret_jwt',
+        ].includes(method),
+      );
+
+    if (requiresClientSecret && !client.clientSecret) {
+      generatedClientSecret = randomBytes(48).toString('base64url');
+      client.clientSecret = generatedClientSecret;
+    }
+
+    const saved = await this.save(client);
+
+    return {
+      client: saved,
+      clientSecret: generatedClientSecret,
+    };
   }
   constructor(
     private readonly clients: ClientRepository,
@@ -205,11 +237,17 @@ export class ClientsService {
 
     let clientSecret: string | null = null;
 
-    if (
-      input.tokenEndpointAuthMethods?.includes('client_secret_basic') ||
-      input.tokenEndpointAuthMethods?.includes('client_secret_post') ||
-      input.tokenEndpointAuthMethods?.includes('client_secret_jwt')
-    ) {
+    const requiresClientSecret =
+      input.grantTypes?.includes('client_credentials') ||
+      input.tokenEndpointAuthMethods?.some((method) =>
+        [
+          'client_secret_basic',
+          'client_secret_post',
+          'client_secret_jwt',
+        ].includes(method),
+      );
+
+    if (requiresClientSecret) {
       clientSecret = randomBytes(48).toString('base64url');
     }
 
@@ -244,7 +282,7 @@ export class ClientsService {
 
     client.interactionConsentUrl = input.interactionConsentUrl ?? null;
 
-    client.enabled = true;
+    client.enabled = input.enabled ?? true;
 
     const saved = await this.save(client);
 
