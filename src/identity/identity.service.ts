@@ -25,8 +25,12 @@ export interface CreateUserInput {
 }
 
 export interface UpdateUserInput {
+  username?: string;
   email?: string;
   enabled?: boolean;
+  givenName?: string | null;
+  familyName?: string | null;
+  displayName?: string | null;
 }
 
 @Injectable()
@@ -121,6 +125,9 @@ export class IdentityService {
 
     user.username = input.username;
     user.email = input.email;
+    user.givenName = null;
+    user.familyName = null;
+    user.displayName = null;
     user.passwordHash = passwordHash;
     user.enabled = true;
     user.clientId = clientId;
@@ -166,13 +173,36 @@ export class IdentityService {
       throw new NotFoundException('User not found');
     }
 
-    if (input.email !== undefined) {
+    if (input.username !== undefined && input.username !== user.username) {
+      const existingUsername = await this.users.findByUsername(
+        input.username,
+        clientId,
+      );
+
+      if (existingUsername && existingUsername.id !== user.id) {
+        throw new ConflictException('Username already exists');
+      }
+
+      user.username = input.username;
+    }
+
+    if (input.email !== undefined && input.email !== user.email) {
+      const existingEmail = await this.users.findByEmail(input.email, clientId);
+
+      if (existingEmail && existingEmail.id !== user.id) {
+        throw new ConflictException('Email already exists');
+      }
+
       user.email = input.email;
     }
 
     if (input.enabled !== undefined) {
       user.enabled = input.enabled;
     }
+
+    if (input.givenName !== undefined) user.givenName = input.givenName;
+    if (input.familyName !== undefined) user.familyName = input.familyName;
+    if (input.displayName !== undefined) user.displayName = input.displayName;
 
     return this.users.save(user);
   }

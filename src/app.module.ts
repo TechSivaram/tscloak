@@ -9,6 +9,7 @@ import { join } from 'path';
 import { AdminModule } from './admin/admin.module';
 import { ApiModule } from './api/api.module';
 import { OidcModule } from './oidc/oidc.module';
+import { ScimModule } from './scim/scim.module';
 import { SigningKeysModule } from './signing-keys/signing-keys.module';
 
 @Module({
@@ -20,6 +21,8 @@ import { SigningKeysModule } from './signing-keys/signing-keys.module';
     }),
 
     TypeOrmModule.forRoot(getDatabaseConfig()),
+
+    ScimModule,
 
     ApiModule,
 

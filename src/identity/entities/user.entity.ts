@@ -29,6 +29,15 @@ export class User {
   @Column()
   email: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  givenName: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  familyName: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  displayName: string | null;
+
   @Column()
   passwordHash: string;
 

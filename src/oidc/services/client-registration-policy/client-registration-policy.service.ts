@@ -9,7 +9,7 @@ export class ClientRegistrationPolicyService {
         _ctx: unknown,
         properties: Record<string, unknown>,
       ) => {
-        const allowed = ['authorization_code', 'refresh_token'];
+        const allowed = ['authorization_code', 'refresh_token', 'client_credentials'];
 
         const grantTypes = properties.grant_types;
 
@@ -65,6 +65,7 @@ export class ClientRegistrationPolicyService {
           'email',
           'offline_access',
           'roles',
+          'scim',
         ];
 
         const scope = properties.scope;
