@@ -2,12 +2,14 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ClientsService } from '../clients/clients.service';
 import { IdentityService } from '../identity/identity.service';
+import { User } from '../identity/entities/user.entity';
 
 import { CreateFederationProviderDto } from './dto/create-federation-provider.dto';
 import { UpdateClientFederationProviderDto } from './dto/update-client-federation-provider.dto';
@@ -324,11 +326,13 @@ export class FederationService {
   async findFederatedIdentity(
     providerId: string,
     subject: string,
+    internalClientId: string,
   ): Promise<FederatedIdentity | null> {
     return this.identityRepository.findOne({
       where: {
         providerId,
         subject,
+        clientId: internalClientId,
       },
       relations: {
         user: true,
@@ -349,9 +353,38 @@ export class FederationService {
       );
     }
 
-    const existing = await this.findFederatedIdentity(providerId, subject);
+    // Resolve the public OAuth client ID to the internal database client ID.
+    // Never use an identity mapping owned by another TSCloak client.
+    const client = await this.clientsService.findByClientId(clientId);
+    if (!client || !client.enabled) {
+      throw new UnauthorizedException('TSCloak client is unavailable');
+    }
+
+    // Re-check provider availability at callback time as well as authorize
+    // time, so a disabled provider cannot complete an in-flight login.
+    if (!(await this.isProviderEnabledForClient(providerId, clientId))) {
+      throw new UnauthorizedException(
+        'Federation provider is not enabled for this client',
+      );
+    }
+
+    const existing = await this.findFederatedIdentity(
+      providerId,
+      subject,
+      client.id,
+    );
 
     if (existing) {
+      // Defense in depth: the identity row and local user must belong to the
+      // same client, and disabled users must not authenticate.
+      if (
+        existing.user.clientId !== client.id ||
+        !existing.user.enabled
+      ) {
+        throw new UnauthorizedException(
+          'Federated identity is not linked to an active user for this client',
+        );
+      }
       return existing;
     }
 
@@ -359,14 +392,49 @@ export class FederationService {
       typeof claims['email'] === 'string' && claims['email'].trim()
         ? claims['email'].trim()
         : null;
-    const user = await this.identityService.createFederatedUser(
-      clientId,
+
+    // Only provision accounts from a verified provider email. The local
+    // account and federated mapping are always scoped to the requesting client.
+    if (!email || claims['email_verified'] !== true) {
+      throw new UnauthorizedException(
+        'Federation requires a verified email address',
+      );
+    }
+
+    // Include disabled accounts in this lookup so a disabled account cannot
+    // be bypassed by attempting to create another account with the same email.
+    const existingUser = await this.identityService.findByEmailForFederation(
       email,
+      clientId,
     );
+
+    let user: User;
+
+    if (existingUser) {
+      if (!existingUser.enabled || existingUser.clientId !== client.id) {
+        throw new UnauthorizedException(
+          'The matching local account is disabled or belongs to another client',
+        );
+      }
+
+      user = existingUser;
+    } else {
+      // No account exists for this email in this client. Create a separate
+      // local user using the public client ID; IdentityService resolves it to
+      // the internal clients.id UUID before persisting users.clientId.
+      user = await this.identityService.createFederatedUser(clientId, email);
+    }
+
+    if (!user || user.clientId !== client.id || !user.enabled) {
+      throw new UnauthorizedException(
+        'Federated account could not be associated with this client',
+      );
+    }
 
     return this.createFederatedIdentity(
       providerId,
       user.id,
+      client.id,
       subject,
       email,
       claims,
@@ -376,6 +444,7 @@ export class FederationService {
   async createFederatedIdentity(
     providerId: string,
     userId: string,
+    clientId: string,
     subject: string,
     email: string | null,
     profile: Record<string, unknown> | null,
@@ -383,6 +452,7 @@ export class FederationService {
     const identity = this.identityRepository.create({
       providerId,
       userId,
+      clientId,
       subject,
       email,
       profile,

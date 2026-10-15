@@ -22,5 +22,15 @@ export abstract class UserRepository {
 
   abstract findByEmail(email: string, clientId: string): Promise<User | null>;
 
+  /**
+   * Federation lookup that includes disabled accounts so a disabled account
+   * cannot be bypassed by attempting to provision another user with the same
+   * email in the same client.
+   */
+  abstract findByEmailForFederation(
+    email: string,
+    clientId: string,
+  ): Promise<User | null>;
+
   abstract save(user: User): Promise<User>;
 }

@@ -51,6 +51,17 @@ export class IdentityService {
     return this.users.findAll(clientId);
   }
 
+  async findByEmail(email: string, clientId: string): Promise<User | null> {
+    return this.users.findByEmail(email, clientId);
+  }
+
+  async findByEmailForFederation(
+    email: string,
+    clientId: string,
+  ): Promise<User | null> {
+    return this.users.findByEmailForFederation(email, clientId);
+  }
+
   async countRoles(): Promise<number> {
     return this.roles.count();
   }
@@ -73,8 +84,7 @@ export class IdentityService {
 
     // User.email is required and unique per client. Keep accounts with no
     // provider email usable without pretending the generated address is real.
-    const storedEmail =
-      email?.trim() || `${username}@federated.invalid`;
+    const storedEmail = email?.trim() || `${username}@federated.invalid`;
 
     return this.createUser({
       username,

@@ -130,6 +130,20 @@ export class TypeOrmUserRepository implements UserRepository {
     });
   }
 
+  async findByEmailForFederation(
+    email: string,
+    clientId: string,
+  ): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user')
+      .innerJoin('user.client', 'client')
+      .leftJoinAndSelect('user.roles', 'role')
+      .where('LOWER(TRIM(user.email)) = LOWER(TRIM(:email))', { email })
+      .andWhere('client.clientId = :clientId', { clientId })
+      .andWhere('client.enabled = :clientEnabled', { clientEnabled: true })
+      .getOne();
+  }
+
   async save(user: User): Promise<User> {
     return this.repository.save(user);
   }

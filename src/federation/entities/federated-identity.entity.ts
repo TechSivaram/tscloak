@@ -13,7 +13,11 @@ import { User } from '../../identity/entities/user.entity';
 import { FederationProvider } from './federation-provider.entity';
 
 @Entity('federated_identities')
-@Unique('UQ_federated_identity_provider_subject', ['providerId', 'subject'])
+@Unique('UQ_federated_identity_provider_subject_client', [
+  'providerId',
+  'subject',
+  'clientId',
+])
 export class FederatedIdentity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -51,6 +55,13 @@ export class FederatedIdentity {
     referencedColumnName: 'id',
   })
   user: User;
+
+  /** Internal database ID of the TSCloak client owning this mapping. */
+  @Column({
+    type: 'uuid',
+    nullable: false,
+  })
+  clientId: string;
 
   /**
    * Stable subject identifier returned by the external identity provider.
