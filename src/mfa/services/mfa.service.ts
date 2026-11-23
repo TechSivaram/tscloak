@@ -37,6 +37,20 @@ export class MfaService {
   ): Promise<EnrollMfaResponseDto> {
     let userMfa = await this.userMfaRepository.findOne({
       where: { userId },
+      relations: { user: { client: true } },
+      select: {
+        id: true,
+        userId: true,
+        enabled: true,
+        user: {
+          id: true,
+          email: true,
+          client: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (userMfa?.enabled) {
@@ -46,7 +60,8 @@ export class MfaService {
     const secret = this.mfaTotpService.generateSecret();
 
     const encryptedSecret = this.mfaCryptoService.encrypt(secret);
-
+    accountName =
+      userMfa?.user.client.name + '-' + userMfa?.user.email || accountName;
     const otpauthUri = this.mfaTotpService.generateOtpAuthUri(
       accountName,
       secret,
