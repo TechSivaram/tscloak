@@ -86,9 +86,7 @@ export class ClientsController {
 
       clientId: result.client.clientId,
 
-      ...(result.clientSecret
-        ? { clientSecret: result.clientSecret }
-        : {}),
+      ...(result.clientSecret ? { clientSecret: result.clientSecret } : {}),
 
       name: result.client.name,
 
@@ -144,9 +142,7 @@ export class ClientsController {
     return {
       id: client.id,
       clientId: client.clientId,
-      ...(result.clientSecret
-        ? { clientSecret: result.clientSecret }
-        : {}),
+      ...(result.clientSecret ? { clientSecret: result.clientSecret } : {}),
       name: client.name,
       redirectUris: client.redirectUris,
       postLogoutRedirectUris: client.postLogoutRedirectUris ?? [],

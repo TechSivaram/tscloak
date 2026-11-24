@@ -1,13 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import {
-    IsArray,
-    IsBoolean,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    IsUrl,
-    IsIn,
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsIn,
 } from 'class-validator';
 
 export class UpdateFederationProviderDto {

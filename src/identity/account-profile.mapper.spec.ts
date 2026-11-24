@@ -56,9 +56,9 @@ describe('AccountProfileMapper', () => {
       provider: { name: 'Google', type: 'oidc' },
     } as FederatedIdentity;
 
-    expect(AccountProfileMapper.toResponse(user, client, identity).avatarUrl).toBe(
-      picture,
-    );
+    expect(
+      AccountProfileMapper.toResponse(user, client, identity).avatarUrl,
+    ).toBe(picture);
   });
 
   it('uses given and family names when the provider name is absent', () => {

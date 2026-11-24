@@ -2,19 +2,15 @@ import request from 'supertest';
 
 describe('Dynamic Client Registration Management Security (e2e)', () => {
   const baseUrl =
-    process.env.E2E_BASE_URL ??
-    process.env.BASE_URL ??
-    'http://localhost:3000';
+    process.env.E2E_BASE_URL ?? process.env.BASE_URL ?? 'http://localhost:3000';
 
-  const registrationPath =
-    process.env.E2E_REGISTRATION_PATH ?? '/reg';
+  const registrationPath = process.env.E2E_REGISTRATION_PATH ?? '/reg';
 
   const knownClientId =
     process.env.E2E_CLIENT_ID ??
     '04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363';
 
-  const unknownClientId =
-    `client-does-not-exist-${Date.now()}`;
+  const unknownClientId = `client-does-not-exist-${Date.now()}`;
 
   async function expectUnauthorized(
     method: 'get' | 'put' | 'delete',

@@ -14,9 +14,7 @@ describe('OIDC Token Endpoint Security Edge Cases (e2e)', () => {
 
   function pkce() {
     const verifier = randomBytes(32).toString('base64url');
-    const challenge = createHash('sha256')
-      .update(verifier)
-      .digest('base64url');
+    const challenge = createHash('sha256').update(verifier).digest('base64url');
 
     return { verifier, challenge };
   }
@@ -41,18 +39,14 @@ describe('OIDC Token Endpoint Security Edge Cases (e2e)', () => {
   ) {
     const url = new URL(location, baseUrl);
 
-    return agent
-      .get(`${url.pathname}${url.search}`)
-      .redirects(0);
+    return agent.get(`${url.pathname}${url.search}`).redirects(0);
   }
 
   async function issueAuthorizationCode() {
     const agent = request.agent(baseUrl);
     const { verifier, challenge } = pkce();
 
-    let response = await agent
-      .get(authorizationPath(challenge))
-      .redirects(0);
+    let response = await agent.get(authorizationPath(challenge)).redirects(0);
 
     expect([301, 302, 303, 307, 308]).toContain(response.status);
     expect(response.headers.location).toBeDefined();
@@ -99,9 +93,7 @@ describe('OIDC Token Endpoint Security Edge Cases (e2e)', () => {
         const consentUid = url.pathname.split('/').pop();
         expect(consentUid).toBeDefined();
 
-        response = await agent
-          .get(`${url.pathname}${url.search}`)
-          .redirects(0);
+        response = await agent.get(`${url.pathname}${url.search}`).redirects(0);
 
         expect(response.status).toBe(200);
 

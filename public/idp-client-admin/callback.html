@@ -1,1 +1,15 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TSCloak | Signing in</title><link rel="icon" type="image/png" href="/assets/tscloak-icon.png"><link rel="stylesheet" href="./css/client-admin.css"></head><body><main class="login-shell"><section class="login-card"><img src="../assets/tscloak-icon.png" alt="TSCloak"><p class="eyebrow">Client administration</p><h1>Signing you in</h1><p id="status">Completing authentication...</p></section></main><script src="./js/callback.js"></script></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>TSCloak | Signing in</title><link rel="icon" type="image/png" href="/assets/tscloak-icon.png"><link rel="stylesheet" href="./css/client-admin.css">    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#101827">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/assets/pwa-192x192.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+            .catch((error) => console.error('TSCloak service worker registration failed:', error));
+        });
+      }
+    </script>
+</head><body><main class="login-shell"><section class="login-card"><img src="../assets/tscloak-icon.png" alt="TSCloak"><p class="eyebrow">Client administration</p><h1>Signing you in</h1><p id="status">Completing authentication...</p></section></main><script src="./js/callback.js"></script></body></html>

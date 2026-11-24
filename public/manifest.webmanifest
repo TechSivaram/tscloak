@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "TSCloak \u2013 Secure Identities. Trusted Access.",
+  "short_name": "TSCloak",
+  "description": "TSCloak Identity and Access Management platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#101827",
+  "icons": [
+    {
+      "src": "/assets/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -592,7 +592,14 @@ export class OidcOptionsService implements OidcModuleOptionsFactory {
          * Client-specific permissions are validated
          * from the dynamically loaded client.
          */
-        scopes: ['openid', 'profile', 'email', 'offline_access', 'roles', 'scim'],
+        scopes: [
+          'openid',
+          'profile',
+          'email',
+          'offline_access',
+          'roles',
+          'scim',
+        ],
 
         /**
          * CLAIMS ASSOCIATED WITH SCOPES

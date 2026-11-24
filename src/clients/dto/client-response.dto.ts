@@ -14,7 +14,8 @@ export class ClientResponseDto {
   clientId: string;
 
   @ApiPropertyOptional({
-    description: 'Newly generated client secret. Returned only immediately after creation or when a secret is generated for an existing client.',
+    description:
+      'Newly generated client secret. Returned only immediately after creation or when a secret is generated for an existing client.',
   })
   clientSecret?: string;
 
@@ -75,7 +76,8 @@ export class ClientResponseDto {
 
   @ApiPropertyOptional({
     example: 'https://app.example.com/.well-known/jwks.json',
-    description: 'Public JWKS URL used for private_key_jwt client authentication.',
+    description:
+      'Public JWKS URL used for private_key_jwt client authentication.',
   })
   jwksUri?: string;
 

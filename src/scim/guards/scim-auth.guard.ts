@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { createLocalJWKSet, jwtVerify, type JWTPayload } from 'jose';
@@ -40,7 +45,8 @@ export class ScimAuthGuard implements CanActivate {
 
     let payload: JWTPayload;
     try {
-      const issuer = this.config.get<string>('OIDC_ISSUER') ?? 'http://localhost:3000';
+      const issuer =
+        this.config.get<string>('OIDC_ISSUER') ?? 'http://localhost:3000';
       const verified = await jwtVerify(
         token,
         createLocalJWKSet(this.signingKeys.getPublicJwks()),
@@ -55,9 +61,17 @@ export class ScimAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired SCIM access token');
     }
 
-    const clientId = typeof payload.client_id === 'string' ? payload.client_id : undefined;
-    const scope = typeof payload.scope === 'string' ? payload.scope.split(/\s+/).filter(Boolean) : [];
-    const audience = Array.isArray(payload.aud) ? payload.aud : typeof payload.aud === 'string' ? [payload.aud] : [];
+    const clientId =
+      typeof payload.client_id === 'string' ? payload.client_id : undefined;
+    const scope =
+      typeof payload.scope === 'string'
+        ? payload.scope.split(/\s+/).filter(Boolean)
+        : [];
+    const audience = Array.isArray(payload.aud)
+      ? payload.aud
+      : typeof payload.aud === 'string'
+        ? [payload.aud]
+        : [];
 
     if (!clientId || !scope.includes('scim')) {
       throw new UnauthorizedException('SCIM scope is required');
@@ -81,7 +95,9 @@ export class ScimAuthGuard implements CanActivate {
     }
 
     if (!(client.grantTypes ?? []).includes('client_credentials')) {
-      throw new UnauthorizedException('Client credentials grant is not enabled for this client');
+      throw new UnauthorizedException(
+        'Client credentials grant is not enabled for this client',
+      );
     }
 
     request.scim = { clientId, scope, payload };

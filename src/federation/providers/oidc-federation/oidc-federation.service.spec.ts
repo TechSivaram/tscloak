@@ -9,8 +9,7 @@ describe('OidcFederationService federation callback URI', () => {
   const originalIssuer = process.env.OIDC_ISSUER;
   const downstreamRedirectUri =
     'http://localhost:3000/idp-client-admin/callback.html';
-  const federationCallbackUri =
-    'http://localhost:3000/api/federation/callback';
+  const federationCallbackUri = 'http://localhost:3000/api/federation/callback';
   const metadata = {
     issuer: 'https://accounts.google.com',
     authorization_endpoint: 'https://accounts.google.com/o/oauth2/v2/auth',

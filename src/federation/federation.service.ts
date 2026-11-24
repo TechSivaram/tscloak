@@ -377,10 +377,7 @@ export class FederationService {
     if (existing) {
       // Defense in depth: the identity row and local user must belong to the
       // same client, and disabled users must not authenticate.
-      if (
-        existing.user.clientId !== client.id ||
-        !existing.user.enabled
-      ) {
+      if (existing.user.clientId !== client.id || !existing.user.enabled) {
         throw new UnauthorizedException(
           'Federated identity is not linked to an active user for this client',
         );

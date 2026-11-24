@@ -39,7 +39,11 @@ describe('admin header profile rendering', () => {
     expect(idpCommon).toContain('window.location.href = "/idp-admin/"');
     expect(idpDashboard).toContain('`/session/end?${params.toString()}`');
     expect(clientCommon).toContain('const logout = () =>');
-    expect(clientCommon).toContain('location.href = `/session/end?${params.toString()}`');
-    expect(clientCommon).toContain("logoutButton.addEventListener('click', logout)");
+    expect(clientCommon).toContain(
+      'location.href = `/session/end?${params.toString()}`',
+    );
+    expect(clientCommon).toContain(
+      "logoutButton.addEventListener('click', logout)",
+    );
   });
 });

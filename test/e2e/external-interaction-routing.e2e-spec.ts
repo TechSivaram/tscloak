@@ -33,7 +33,8 @@ describe('OIDC external interaction URL routing (e2e)', () => {
   ) {
     let url = new URL(location, baseUrl);
     for (let i = 0; i < 15; i += 1) {
-      if (url.origin !== new URL(baseUrl).origin) return { response: undefined, url };
+      if (url.origin !== new URL(baseUrl).origin)
+        return { response: undefined, url };
       const response = await agent
         .get(`${url.pathname}${url.search}`)
         .redirects(0);
@@ -47,20 +48,23 @@ describe('OIDC external interaction URL routing (e2e)', () => {
   }
 
   async function authenticateAdmin(agent: request.SuperAgentTest) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { verifier, challenge } = pkce();
     const url = new URL(discovery.body.authorization_endpoint);
     url.searchParams.set('client_id', adminClientId);
     url.searchParams.set('redirect_uri', adminRedirectUri);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('scope', 'openid profile email');
-    url.searchParams.set('state', `external-admin-${randomBytes(6).toString('hex')}`);
+    url.searchParams.set(
+      'state',
+      `external-admin-${randomBytes(6).toString('hex')}`,
+    );
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('code_challenge_method', 'S256');
 
-    const start = await agent
-      .get(`${url.pathname}${url.search}`)
-      .redirects(0);
+    const start = await agent.get(`${url.pathname}${url.search}`).redirects(0);
     expect(isRedirect(start.status)).toBe(true);
     expect(start.headers.location).toBeDefined();
 
@@ -100,7 +104,10 @@ describe('OIDC external interaction URL routing (e2e)', () => {
     expect(login.headers.location).toBeDefined();
 
     let afterLogin = await followLocalRedirects(agent, login.headers.location);
-    if (afterLogin.response?.status === 200 && /consent/i.test(afterLogin.response.text)) {
+    if (
+      afterLogin.response?.status === 200 &&
+      /consent/i.test(afterLogin.response.text)
+    ) {
       const action = afterLogin.response.text.match(
         /<form[^>]+action=["']([^"']*\/consent[^"']*)["']/i,
       )?.[1];
@@ -116,10 +123,11 @@ describe('OIDC external interaction URL routing (e2e)', () => {
       afterLogin = await followLocalRedirects(agent, consent.headers.location);
     }
 
-    const callback = afterLogin.url.origin === new URL(adminRedirectUri).origin &&
+    const callback =
+      afterLogin.url.origin === new URL(adminRedirectUri).origin &&
       afterLogin.url.pathname === new URL(adminRedirectUri).pathname
-      ? afterLogin.url
-      : new URL(afterLogin.response?.headers.location ?? '', baseUrl);
+        ? afterLogin.url
+        : new URL(afterLogin.response?.headers.location ?? '', baseUrl);
     expect(callback.pathname).toBe(new URL(adminRedirectUri).pathname);
     const code = callback.searchParams.get('code');
     expect(code).toBeTruthy();
@@ -146,7 +154,9 @@ describe('OIDC external interaction URL routing (e2e)', () => {
       .post('/api/admin/initial-access-tokens')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(201);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const suffix = randomBytes(8).toString('hex');
     const redirectUri = appRedirectBase.endsWith('.html')
       ? appRedirectBase.replace(/\.html$/, `-${suffix}.html`)
@@ -195,7 +205,9 @@ describe('OIDC external interaction URL routing (e2e)', () => {
     agent: request.SuperAgentTest,
     client: { clientId: string; redirectUri: string },
   ) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { challenge } = pkce();
     const params = new URLSearchParams({
       client_id: client.clientId,
@@ -207,7 +219,9 @@ describe('OIDC external interaction URL routing (e2e)', () => {
       code_challenge_method: 'S256',
     });
     const response = await agent
-      .get(`${new URL(discovery.body.authorization_endpoint).pathname}?${params}`)
+      .get(
+        `${new URL(discovery.body.authorization_endpoint).pathname}?${params}`,
+      )
       .redirects(0);
     expect(isRedirect(response.status)).toBe(true);
     expect(response.headers.location).toBeDefined();
@@ -277,12 +291,17 @@ describe('OIDC external interaction URL routing (e2e)', () => {
     expect(isRedirect(login.status)).toBe(true);
     expect(login.headers.location).toBeDefined();
 
-    const continuation = await followLocalRedirects(agent, login.headers.location);
+    const continuation = await followLocalRedirects(
+      agent,
+      login.headers.location,
+    );
     expect(continuation.url.origin).toBe(new URL(externalConsent).origin);
     expect(continuation.url.pathname).toBe(new URL(externalConsent).pathname);
     expect(continuation.url.searchParams.get('view')).toBe('compact');
     expect(continuation.url.searchParams.get('prompt')).toBe('consent');
-    expect(continuation.url.searchParams.get('client_id')).toBe(client.clientId);
+    expect(continuation.url.searchParams.get('client_id')).toBe(
+      client.clientId,
+    );
     expect(continuation.url.searchParams.get('interaction_uid')).toBeTruthy();
   });
 
@@ -310,6 +329,8 @@ describe('OIDC external interaction URL routing (e2e)', () => {
     const consent = await followLocalRedirects(agent, login.headers.location);
     expect(consent.response?.status).toBe(200);
     expect(consent.url.pathname).toMatch(/^\/interaction\//);
-    expect(consent.response?.text).toMatch(/<form[^>]+action=["'][^"']*\/consent/i);
+    expect(consent.response?.text).toMatch(
+      /<form[^>]+action=["'][^"']*\/consent/i,
+    );
   });
 });

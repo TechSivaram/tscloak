@@ -10,5 +10,4 @@ export interface OidcRequestContext {
   };
 }
 
-export const oidcRequestContext =
-  new AsyncLocalStorage<OidcRequestContext>();
+export const oidcRequestContext = new AsyncLocalStorage<OidcRequestContext>();

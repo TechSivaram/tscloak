@@ -67,7 +67,10 @@ describe('OIDC prompt=none with an authenticated session (e2e)', () => {
       const loginAction = action(response.text ?? '', 'login');
       if (loginAction) {
         response = await agent
-          .post(new URL(loginAction, baseUrl).pathname + new URL(loginAction, baseUrl).search)
+          .post(
+            new URL(loginAction, baseUrl).pathname +
+              new URL(loginAction, baseUrl).search,
+          )
           .type('form')
           .send({ username, password })
           .redirects(0);
@@ -77,7 +80,10 @@ describe('OIDC prompt=none with an authenticated session (e2e)', () => {
       const consentAction = action(response.text ?? '', 'consent');
       if (consentAction) {
         response = await agent
-          .post(new URL(consentAction, baseUrl).pathname + new URL(consentAction, baseUrl).search)
+          .post(
+            new URL(consentAction, baseUrl).pathname +
+              new URL(consentAction, baseUrl).search,
+          )
           .type('form')
           .send({ decision: 'accept' })
           .redirects(0);
@@ -93,7 +99,9 @@ describe('OIDC prompt=none with an authenticated session (e2e)', () => {
 
   it('returns an authorization code for prompt=none after same-client login and consent', async () => {
     const agent = request.agent(baseUrl);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const firstPkce = pkce();
     const firstState = `establish-session-${randomBytes(6).toString('hex')}`;
     const first = await agent

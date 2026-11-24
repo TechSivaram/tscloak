@@ -27,14 +27,19 @@ describe('OIDC admin portal role enforcement (e2e)', () => {
   }
 
   async function authenticateAdmin(agent: request.SuperAgentTest) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { verifier, challenge } = pkce();
     const authorization = new URL(discovery.body.authorization_endpoint);
     authorization.searchParams.set('client_id', adminClientId);
     authorization.searchParams.set('redirect_uri', adminRedirectUri);
     authorization.searchParams.set('response_type', 'code');
     authorization.searchParams.set('scope', 'openid profile email');
-    authorization.searchParams.set('state', `role-admin-${randomBytes(6).toString('hex')}`);
+    authorization.searchParams.set(
+      'state',
+      `role-admin-${randomBytes(6).toString('hex')}`,
+    );
     authorization.searchParams.set('code_challenge', challenge);
     authorization.searchParams.set('code_challenge_method', 'S256');
 
@@ -82,7 +87,9 @@ describe('OIDC admin portal role enforcement (e2e)', () => {
         continue;
       }
 
-      throw new Error(`Unexpected admin authorization response ${response.status}`);
+      throw new Error(
+        `Unexpected admin authorization response ${response.status}`,
+      );
     }
     expect(callback).toBeDefined();
     const code = callback!.searchParams.get('code');
@@ -119,14 +126,19 @@ describe('OIDC admin portal role enforcement (e2e)', () => {
     expect(user.body.id).toBeTruthy();
 
     const agent = request.agent(baseUrl);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { challenge } = pkce();
     const authorization = new URL(discovery.body.authorization_endpoint);
     authorization.searchParams.set('client_id', adminClientId);
     authorization.searchParams.set('redirect_uri', adminRedirectUri);
     authorization.searchParams.set('response_type', 'code');
     authorization.searchParams.set('scope', 'openid profile email');
-    authorization.searchParams.set('state', `role-denied-${randomBytes(6).toString('hex')}`);
+    authorization.searchParams.set(
+      'state',
+      `role-denied-${randomBytes(6).toString('hex')}`,
+    );
     authorization.searchParams.set('code_challenge', challenge);
     authorization.searchParams.set('code_challenge_method', 'S256');
 

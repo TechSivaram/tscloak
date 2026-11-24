@@ -9,7 +9,11 @@ export class ClientRegistrationPolicyService {
         _ctx: unknown,
         properties: Record<string, unknown>,
       ) => {
-        const allowed = ['authorization_code', 'refresh_token', 'client_credentials'];
+        const allowed = [
+          'authorization_code',
+          'refresh_token',
+          'client_credentials',
+        ];
 
         const grantTypes = properties.grant_types;
 

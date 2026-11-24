@@ -10,8 +10,10 @@ describe('OIDC client-admin portal role enforcement (e2e)', () => {
     '04d26513a9de6faa2dff7aaa4ba05582d16ed23ff8b03363';
   const adminUsername = process.env.E2E_ADMIN_USERNAME ?? 'admin';
   const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? 'Password123!';
-  const roleAdminUsername = process.env.E2E_ROLE_ADMIN_USERNAME ?? adminUsername;
-  const roleAdminPassword = process.env.E2E_ROLE_ADMIN_PASSWORD ?? adminPassword;
+  const roleAdminUsername =
+    process.env.E2E_ROLE_ADMIN_USERNAME ?? adminUsername;
+  const roleAdminPassword =
+    process.env.E2E_ROLE_ADMIN_PASSWORD ?? adminPassword;
   const adminRedirectUri =
     process.env.E2E_ADMIN_REDIRECT_URI ??
     'http://localhost:3000/idp-admin/callback.html';
@@ -34,14 +36,19 @@ describe('OIDC client-admin portal role enforcement (e2e)', () => {
     agent: request.SuperAgentTest,
     credentials = { username: adminUsername, password: adminPassword },
   ) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { verifier, challenge } = pkce();
     const authorization = new URL(discovery.body.authorization_endpoint);
     authorization.searchParams.set('client_id', adminClientId);
     authorization.searchParams.set('redirect_uri', adminRedirectUri);
     authorization.searchParams.set('response_type', 'code');
     authorization.searchParams.set('scope', 'openid profile email');
-    authorization.searchParams.set('state', `role-admin-${randomBytes(6).toString('hex')}`);
+    authorization.searchParams.set(
+      'state',
+      `role-admin-${randomBytes(6).toString('hex')}`,
+    );
     authorization.searchParams.set('code_challenge', challenge);
     authorization.searchParams.set('code_challenge_method', 'S256');
 
@@ -89,7 +96,9 @@ describe('OIDC client-admin portal role enforcement (e2e)', () => {
         continue;
       }
 
-      throw new Error(`Unexpected admin authorization response ${response.status}`);
+      throw new Error(
+        `Unexpected admin authorization response ${response.status}`,
+      );
     }
     expect(callback).toBeDefined();
     const code = callback!.searchParams.get('code');
@@ -126,14 +135,19 @@ describe('OIDC client-admin portal role enforcement (e2e)', () => {
     expect(user.body.id).toBeTruthy();
 
     const agent = request.agent(baseUrl);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { challenge } = pkce();
     const authorization = new URL(discovery.body.authorization_endpoint);
     authorization.searchParams.set('client_id', adminClientId);
     authorization.searchParams.set('redirect_uri', clientAdminRedirectUri);
     authorization.searchParams.set('response_type', 'code');
     authorization.searchParams.set('scope', 'openid profile email');
-    authorization.searchParams.set('state', `role-denied-${randomBytes(6).toString('hex')}`);
+    authorization.searchParams.set(
+      'state',
+      `role-denied-${randomBytes(6).toString('hex')}`,
+    );
     authorization.searchParams.set('code_challenge', challenge);
     authorization.searchParams.set('code_challenge_method', 'S256');
 
@@ -190,14 +204,19 @@ describe('OIDC client-admin portal role enforcement (e2e)', () => {
     }
 
     const agent = request.agent(baseUrl);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { challenge } = pkce();
     const authorization = new URL(discovery.body.authorization_endpoint);
     authorization.searchParams.set('client_id', adminClientId);
     authorization.searchParams.set('redirect_uri', clientAdminRedirectUri);
     authorization.searchParams.set('response_type', 'code');
     authorization.searchParams.set('scope', 'openid profile email');
-    authorization.searchParams.set('state', `clientadmin-allowed-${randomBytes(6).toString('hex')}`);
+    authorization.searchParams.set(
+      'state',
+      `clientadmin-allowed-${randomBytes(6).toString('hex')}`,
+    );
     authorization.searchParams.set('code_challenge', challenge);
     authorization.searchParams.set('code_challenge_method', 'S256');
 
@@ -235,5 +254,4 @@ describe('OIDC client-admin portal role enforcement (e2e)', () => {
     ).toBe(true);
     expect(next.searchParams.get('error')).toBeNull();
   });
-
 });

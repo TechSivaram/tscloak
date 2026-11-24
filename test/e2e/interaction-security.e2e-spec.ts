@@ -72,7 +72,9 @@ describe('OIDC interaction state and security (e2e)', () => {
   }
 
   async function authenticateAdmin(agent: request.SuperAgentTest) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { authorization_endpoint, token_endpoint } = discovery.body;
     const { verifier, challenge } = createPkce();
     const authorizationUrl = new URL(authorization_endpoint);
@@ -80,7 +82,10 @@ describe('OIDC interaction state and security (e2e)', () => {
     authorizationUrl.searchParams.set('redirect_uri', adminRedirectUri);
     authorizationUrl.searchParams.set('response_type', 'code');
     authorizationUrl.searchParams.set('scope', 'openid profile email');
-    authorizationUrl.searchParams.set('state', `interaction-admin-${Date.now()}`);
+    authorizationUrl.searchParams.set(
+      'state',
+      `interaction-admin-${Date.now()}`,
+    );
     authorizationUrl.searchParams.set('code_challenge', challenge);
     authorizationUrl.searchParams.set('code_challenge_method', 'S256');
 
@@ -101,8 +106,11 @@ describe('OIDC interaction state and security (e2e)', () => {
         .get(`${current.pathname}${current.search}`)
         .redirects(0);
       if (response.status === 200) {
-        interactionUid = response.text.match(/\/interaction\/([^\/?#"'<>]+)/)?.[1];
-        if (!interactionUid) throw new Error('Could not find admin interaction UID');
+        interactionUid = response.text.match(
+          /\/interaction\/([^\/?#"'<>]+)/,
+        )?.[1];
+        if (!interactionUid)
+          throw new Error('Could not find admin interaction UID');
         break;
       }
       expect(isRedirect(response.status)).toBe(true);
@@ -111,7 +119,9 @@ describe('OIDC interaction state and security (e2e)', () => {
     }
     expect(interactionUid).toBeDefined();
 
-    const interactionPage = await agent.get(`/interaction/${interactionUid}`).expect(200);
+    const interactionPage = await agent
+      .get(`/interaction/${interactionUid}`)
+      .expect(200);
     const loginAction = findAction(interactionPage.text, 'login');
     const login = await agent
       .post(loginAction.path)
@@ -131,7 +141,9 @@ describe('OIDC interaction state and security (e2e)', () => {
     if (response.status === 200) {
       const page = response.text;
       expect(page.toLowerCase()).toContain('consent');
-      const consentUid = (responseUrl?.pathname ?? `/interaction/${interactionUid}`)
+      const consentUid = (
+        responseUrl?.pathname ?? `/interaction/${interactionUid}`
+      )
         .split('/')
         .filter(Boolean)
         .pop()!;
@@ -147,11 +159,12 @@ describe('OIDC interaction state and security (e2e)', () => {
       responseUrl = followed.url;
     }
 
-    const callback = responseUrl &&
+    const callback =
+      responseUrl &&
       responseUrl.origin === new URL(adminRedirectUri).origin &&
       responseUrl.pathname === new URL(adminRedirectUri).pathname
-      ? responseUrl
-      : new URL(response.headers.location ?? '', baseUrl);
+        ? responseUrl
+        : new URL(response.headers.location ?? '', baseUrl);
     expect(callback.pathname).toBe(new URL(adminRedirectUri).pathname);
     const code = callback.searchParams.get('code');
     expect(code).toBeTruthy();
@@ -186,7 +199,9 @@ describe('OIDC interaction state and security (e2e)', () => {
       .post('/api/admin/initial-access-tokens')
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(201);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const suffix = randomBytes(8).toString('hex');
     const redirectUri = testRedirectBase.endsWith('.html')
       ? testRedirectBase.replace(/\.html$/, `-${suffix}.html`)
@@ -227,8 +242,13 @@ describe('OIDC interaction state and security (e2e)', () => {
     };
   }
 
-  async function startInteraction(agent: request.SuperAgentTest, client: TestClient) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+  async function startInteraction(
+    agent: request.SuperAgentTest,
+    client: TestClient,
+  ) {
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { challenge } = createPkce();
     const params = new URLSearchParams({
       client_id: client.clientId,
@@ -240,7 +260,9 @@ describe('OIDC interaction state and security (e2e)', () => {
       code_challenge_method: 'S256',
     });
     const response = await agent
-      .get(`${new URL(discovery.body.authorization_endpoint).pathname}?${params}`)
+      .get(
+        `${new URL(discovery.body.authorization_endpoint).pathname}?${params}`,
+      )
       .redirects(0);
     expect(isRedirect(response.status)).toBe(true);
     expect(response.headers.location).toBeDefined();
@@ -255,17 +277,27 @@ describe('OIDC interaction state and security (e2e)', () => {
     const uid = `missing-${randomBytes(16).toString('hex')}`;
     const responses = await Promise.all([
       agent.get(`/interaction/${uid}`).redirects(0),
-      agent.post(`/interaction/${uid}/login`).send({ username: 'x', password: 'x' }).redirects(0),
-      agent.post(`/interaction/${uid}/consent`).send({ decision: 'accept' }).redirects(0),
+      agent
+        .post(`/interaction/${uid}/login`)
+        .send({ username: 'x', password: 'x' })
+        .redirects(0),
+      agent
+        .post(`/interaction/${uid}/consent`)
+        .send({ decision: 'accept' })
+        .redirects(0),
     ]);
-    for (const response of responses) expect(response.status).toBeGreaterThanOrEqual(400);
+    for (const response of responses)
+      expect(response.status).toBeGreaterThanOrEqual(400);
   });
 
   it.each([
     ['missing username', { password: 'anything' }],
     ['missing password', { username: 'anything' }],
     ['empty fields', { username: '', password: '' }],
-    ['malformed field types', { username: ['unexpected'], password: { value: 'unexpected' } }],
+    [
+      'malformed field types',
+      { username: ['unexpected'], password: { value: 'unexpected' } },
+    ],
   ])('does not authenticate with %s', async (_label, credentials) => {
     const client = await registerClient();
     const agent = request.agent(baseUrl);
@@ -346,7 +378,9 @@ describe('OIDC interaction state and security (e2e)', () => {
     expect(callback.url.pathname).toBe(new URL(client.redirectUri).pathname);
     expect(callback.url.searchParams.get('error')).toBe('access_denied');
 
-    const completedRead = await agent.get(`/interaction/${consentAction.uid}`).redirects(0);
+    const completedRead = await agent
+      .get(`/interaction/${consentAction.uid}`)
+      .redirects(0);
     expect(completedRead.status).toBeGreaterThanOrEqual(400);
 
     const replay = await agent

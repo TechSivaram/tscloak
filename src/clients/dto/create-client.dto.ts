@@ -92,7 +92,8 @@ export class CreateClientDto {
       'private_key_jwt',
     ],
     isArray: true,
-    description: 'Client authentication methods accepted at the token endpoint.',
+    description:
+      'Client authentication methods accepted at the token endpoint.',
   })
   @IsArray()
   @ArrayMinSize(1)
@@ -120,7 +121,8 @@ export class CreateClientDto {
 
   @ApiPropertyOptional({
     example: 'https://app.example.com/.well-known/jwks.json',
-    description: 'Public JWKS URL required when private_key_jwt is the sole selected method.',
+    description:
+      'Public JWKS URL required when private_key_jwt is the sole selected method.',
   })
   @ValidateIf(
     (client) =>

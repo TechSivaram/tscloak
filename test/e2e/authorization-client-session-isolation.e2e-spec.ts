@@ -53,14 +53,19 @@ describe('OIDC client session isolation (e2e)', () => {
   }
 
   async function authenticateAdmin(agent: request.SuperAgentTest) {
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { verifier, challenge } = createPkce();
     const authorization = new URL(discovery.body.authorization_endpoint);
     authorization.searchParams.set('client_id', adminClientId);
     authorization.searchParams.set('redirect_uri', adminRedirectUri);
     authorization.searchParams.set('response_type', 'code');
     authorization.searchParams.set('scope', 'openid profile email');
-    authorization.searchParams.set('state', `session-admin-${randomBytes(6).toString('hex')}`);
+    authorization.searchParams.set(
+      'state',
+      `session-admin-${randomBytes(6).toString('hex')}`,
+    );
     authorization.searchParams.set('code_challenge', challenge);
     authorization.searchParams.set('code_challenge_method', 'S256');
 
@@ -82,7 +87,8 @@ describe('OIDC client session isolation (e2e)', () => {
         .redirects(0);
       if (next.status === 200) {
         interactionUid = next.text.match(/\/interaction\/([^\/?#"'<>]+)/)?.[1];
-        if (!interactionUid) throw new Error('Could not determine admin interaction UID');
+        if (!interactionUid)
+          throw new Error('Could not determine admin interaction UID');
         break;
       }
       expect([301, 302, 303, 307, 308]).toContain(next.status);
@@ -91,7 +97,9 @@ describe('OIDC client session isolation (e2e)', () => {
     }
     expect(interactionUid).toBeDefined();
 
-    const loginPage = await agent.get(`/interaction/${interactionUid}`).expect(200);
+    const loginPage = await agent
+      .get(`/interaction/${interactionUid}`)
+      .expect(200);
     const login = await agent
       .post(formAction(loginPage.text, 'login'))
       .type('form')
@@ -111,7 +119,10 @@ describe('OIDC client session isolation (e2e)', () => {
         .redirects(0);
       expect([301, 302, 303, 307, 308]).toContain(consent.status);
       expect(consent.headers.location).toBeDefined();
-      const afterConsent = await followRedirects(agent, consent.headers.location);
+      const afterConsent = await followRedirects(
+        agent,
+        consent.headers.location,
+      );
       response = afterConsent.response;
       finalUrl = afterConsent.url;
     }
@@ -139,12 +150,17 @@ describe('OIDC client session isolation (e2e)', () => {
     return token.body.access_token as string;
   }
 
-  async function registerSecondClient(agent: request.SuperAgentTest, adminToken: string) {
+  async function registerSecondClient(
+    agent: request.SuperAgentTest,
+    adminToken: string,
+  ) {
     const initialToken = await agent
       .post('/api/admin/initial-access-tokens')
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(201);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const suffix = randomBytes(8).toString('hex');
     const redirectUri = testRedirectUri.endsWith('.html')
       ? testRedirectUri.replace(/\.html$/, `-${suffix}.html`)
@@ -171,7 +187,9 @@ describe('OIDC client session isolation (e2e)', () => {
     const agent = request.agent(baseUrl);
     const adminToken = await authenticateAdmin(agent);
     const secondClient = await registerSecondClient(agent, adminToken);
-    const discovery = await agent.get('/.well-known/openid-configuration').expect(200);
+    const discovery = await agent
+      .get('/.well-known/openid-configuration')
+      .expect(200);
     const { challenge } = createPkce();
     const params = new URLSearchParams({
       client_id: secondClient.clientId,
@@ -184,7 +202,9 @@ describe('OIDC client session isolation (e2e)', () => {
     });
 
     const switched = await agent
-      .get(`${new URL(discovery.body.authorization_endpoint).pathname}?${params}`)
+      .get(
+        `${new URL(discovery.body.authorization_endpoint).pathname}?${params}`,
+      )
       .redirects(0);
     expect([301, 302, 303, 307, 308]).toContain(switched.status);
     expect(switched.headers.location).toBeDefined();
@@ -193,6 +213,8 @@ describe('OIDC client session isolation (e2e)', () => {
     expect(page.response.status).toBe(200);
     expect(page.url.pathname).toMatch(/^\/interaction\//);
     expect(page.response.text).toMatch(/<form[^>]+action=["'][^"']*\/login/i);
-    expect(page.response.text).not.toMatch(/<form[^>]+action=["'][^"']*\/consent/i);
+    expect(page.response.text).not.toMatch(
+      /<form[^>]+action=["'][^"']*\/consent/i,
+    );
   });
 });

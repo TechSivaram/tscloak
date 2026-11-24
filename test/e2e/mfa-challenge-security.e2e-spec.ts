@@ -864,8 +864,7 @@ describe('OIDC MFA Login (e2e)', () => {
   // ------------------------------------------------------------
 
   it('rejects MFA verification for an unknown interaction', async () => {
-    const invalidInteractionUid =
-      `invalid-mfa-${Date.now()}-${randomBytes(8).toString('hex')}`;
+    const invalidInteractionUid = `invalid-mfa-${Date.now()}-${randomBytes(8).toString('hex')}`;
 
     const response = await request(baseUrl)
       .post(`/interaction/${invalidInteractionUid}/mfa`)

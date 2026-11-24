@@ -32,8 +32,12 @@ describe('IDP Admin sidebar navigation', () => {
     expect(common).toContain('federationLinks.forEach((link, index)');
     expect(common).toContain('if (index > 0) link.remove()');
     expect(common).toContain('federationLink.className = "nav-item"');
-    expect(common).toContain('federationLink.append(icon, document.createTextNode("Federation"))');
-    expect(common).toContain('navigation.insertBefore(federationLink, registrationSection || null)');
+    expect(common).toContain(
+      'federationLink.append(icon, document.createTextNode("Federation"))',
+    );
+    expect(common).toContain(
+      'navigation.insertBefore(federationLink, registrationSection || null)',
+    );
 
     for (const { html } of sidebarPages) {
       const federationItems = html.match(/href="\.\/federation\.html"/g) || [];
