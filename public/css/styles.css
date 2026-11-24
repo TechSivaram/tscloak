@@ -394,6 +394,153 @@ body {
 
 
 /* =====================================================
+   LIVE DEMOS
+===================================================== */
+
+.live-demos {
+    padding: 75px 0 42px;
+    background: var(--background-soft);
+}
+
+
+.live-demos-header {
+    margin: 0 auto 42px;
+    text-align: center;
+}
+
+
+.live-demos-header h2 {
+    margin-bottom: 12px;
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 1.2;
+    color: var(--text-primary);
+}
+
+
+.live-demos-header p {
+    color: var(--text-secondary);
+    font-size: 17px;
+}
+
+
+.demo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+}
+
+
+.demo-card {
+    padding: 34px 38px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: var(--shadow);
+}
+
+
+.demo-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+
+.demo-icon {
+    width: 70px;
+    height: 70px;
+    flex: 0 0 70px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: #edf3fb;
+    color: var(--primary);
+}
+
+
+.demo-icon svg {
+    width: 25px;
+    height: 25px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+.demo-card-label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+}
+
+
+.demo-card h3 {
+    color: var(--primary-dark);
+    font-size: 28px;
+    line-height: 1.2;
+}
+
+
+.demo-description {
+    min-height: 58px;
+    margin: 16px 0 24px;
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+
+.demo-credentials {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+
+.demo-credentials div {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #f3f6fa;
+}
+
+
+.demo-credentials dt {
+    margin-bottom: 3px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+
+.demo-credentials dd {
+    overflow-wrap: anywhere;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.demo-button {
+    width: 100%;
+    min-height: 58px;
+    font-size: 17px;
+}
+
+
+.demo-disclaimer {
+    margin-top: 26px;
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: 14px;
+}
+
+
+/* =====================================================
    STANDARDS
 ===================================================== */
 
@@ -918,7 +1065,8 @@ body {
 
 
     .feature-grid,
-    .architecture-grid {
+    .architecture-grid,
+    .demo-grid {
         grid-template-columns: 1fr;
     }
 
@@ -997,6 +1145,38 @@ body {
         padding:
             70px
             0;
+    }
+
+    .live-demos {
+        padding: 60px 0 34px;
+    }
+
+
+    .demo-card {
+        padding: 26px 22px;
+    }
+
+
+    .demo-card-heading {
+        gap: 15px;
+    }
+
+
+    .demo-icon {
+        width: 58px;
+        height: 58px;
+        flex-basis: 58px;
+    }
+
+
+    .demo-card h3 {
+        font-size: 23px;
+    }
+
+
+    .demo-card-label {
+        font-size: 11px;
+        letter-spacing: 1.2px;
     }
 
 
