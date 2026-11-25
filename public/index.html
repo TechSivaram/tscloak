@@ -28,6 +28,13 @@
         });
       }
     </script>
+
+<style id="tscloak-pwa-install-banner-style">
+#tscloak-pwa-install-banner{position:fixed;right:18px;bottom:72px;z-index:99999;display:none;align-items:center;gap:18px;max-width:calc(100vw - 36px);padding:14px 18px;background:#fff;color:#243449;border:1px solid #e5eaf0;border-radius:14px;box-shadow:0 8px 28px rgba(15,35,60,.20);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+#tscloak-pwa-install-banner .pwa-copy{min-width:0}#tscloak-pwa-install-banner strong{display:block;font-size:14px;margin-bottom:3px}#tscloak-pwa-install-banner small{display:block;color:#718096;font-size:12px}#tscloak-pwa-install-banner button{border:0;cursor:pointer;font:inherit}#tscloak-pwa-install-button{background:#102f50;color:#fff;font-weight:600;padding:11px 18px;border-radius:9px;white-space:nowrap}#tscloak-pwa-dismiss{background:transparent;color:#718096;padding:5px;font-size:18px}
+@media(max-width:520px){#tscloak-pwa-install-banner{left:12px;right:12px;bottom:16px;gap:10px;padding:12px}#tscloak-pwa-install-button{padding:10px 12px}}
+</style>
+
 </head>
 
 <body>
@@ -628,6 +635,39 @@
 
     </footer>
 
+
+
+<!-- PWA install banner: intentionally included on the public landing page only. -->
+<div id="tscloak-pwa-install-banner" role="region" aria-label="Install TSCloak">
+  <div class="pwa-copy"><strong>Install TSCloak</strong><small>Add TSCloak to your home screen for quick access.</small></div>
+  <button id="tscloak-pwa-install-button" type="button">Install</button>
+  <button id="tscloak-pwa-dismiss" type="button" aria-label="Dismiss install banner">×</button>
+</div>
+<script>
+(() => {
+  const banner = document.getElementById('tscloak-pwa-install-banner');
+  const installButton = document.getElementById('tscloak-pwa-install-button');
+  const dismissButton = document.getElementById('tscloak-pwa-dismiss');
+  if (!banner || !installButton || !dismissButton) return;
+  let installPrompt = null;
+  const dismissedKey = 'tscloak-pwa-banner-dismissed';
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (standalone || localStorage.getItem(dismissedKey) === '1') return;
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault(); installPrompt = event; banner.style.display = 'flex';
+  });
+  installButton.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null; banner.style.display = 'none';
+  });
+  dismissButton.addEventListener('click', () => {
+    banner.style.display = 'none'; localStorage.setItem(dismissedKey, '1');
+  });
+  window.addEventListener('appinstalled', () => { banner.style.display = 'none'; installPrompt = null; });
+})();
+</script>
 
 </body>
 </html>
